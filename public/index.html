@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="PetroSim Training Lab — Virtual petroleum and gas engineering training platform."
+  >
+
+  <title>PetroSim Training Lab</title>
+
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">PS</span>
+
+      <div>
+        <strong>PetroSim</strong>
+        <small>Training Lab</small>
+      </div>
+    </div>
+
+    <nav>
+      <a href="#home">Início</a>
+      <a href="#modules">Módulos</a>
+      <a href="#reserves">Simulador</a>
+      <a href="/login">Entrar</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <span class="eyebrow">
+          Virtual Petroleum Engineering Laboratory
+        </span>
+
+        <h1>
+          Formação técnica através de simulações interativas
+        </h1>
+
+        <p>
+          Explore reservatórios, produção, economia, operações,
+          segurança e planeamento da indústria de petróleo e gás.
+        </p>
+
+        <div class="hero-actions">
+          <a class="button primary" href="#reserves">
+            Iniciar simulação
+          </a>
+
+          <a class="button secondary" href="#modules">
+            Ver módulos
+          </a>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <span class="status-label">Estado da plataforma</span>
+
+        <div id="api-status" class="status">
+          A verificar API...
+        </div>
+      </div>
+    </section>
+
+    <section id="modules" class="section">
+      <div class="section-heading">
+        <span class="eyebrow">MVP 0.1</span>
+        <h2>Módulos de treinamento</h2>
+      </div>
+
+      <div class="module-grid">
+        <article class="module-card active">
+          <span class="module-number">01</span>
+          <h3>Reservoir Reserves Lab</h3>
+          <p>
+            Cálculo volumétrico de petróleo in situ e reservas
+            recuperáveis.
+          </p>
+          <span class="module-status">Disponível</span>
+        </article>
+
+        <article class="module-card">
+          <span class="module-number">02</span>
+          <h3>Petroleum Economics Lab</h3>
+          <p>
+            Fluxo de caixa, NPV, IRR, payback e sensibilidade.
+          </p>
+          <span class="module-status pending">Em desenvolvimento</span>
+        </article>
+
+        <article class="module-card">
+          <span class="module-number">03</span>
+          <h3>HSE Decision Trainer</h3>
+          <p>
+            Identificação de perigos e tomada de decisões operacionais.
+          </p>
+          <span class="module-status pending">Planeado</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="reserves" class="section simulator-section">
+      <div class="section-heading">
+        <span class="eyebrow">Reservoir Engineering</span>
+        <h2>Oil Reserves Calculator</h2>
+
+        <p>
+          Calcule o petróleo original in situ e as reservas
+          tecnicamente recuperáveis.
+        </p>
+      </div>
+
+      <div class="simulator-layout">
+        <form id="reserves-form" class="simulation-form">
+          <label>
+            Área do reservatório
+            <span>acres</span>
+
+            <input
+              id="area-acres"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value="5000"
+              required
+            >
+          </label>
+
+          <label>
+            Espessura útil
+            <span>ft</span>
+
+            <input
+              id="net-pay"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value="40"
+              required
+            >
+          </label>
+
+          <label>
+            Porosidade
+            <span>fração</span>
+
+            <input
+              id="porosity"
+              type="number"
+              min="0.001"
+              max="1"
+              step="0.001"
+              value="0.22"
+              required
+            >
+          </label>
+
+          <label>
+            Saturação de água
+            <span>fração</span>
+
+            <input
+              id="water-saturation"
+              type="number"
+              min="0"
+              max="0.999"
+              step="0.001"
+              value="0.28"
+              required
+            >
+          </label>
+
+          <label>
+            Fator volume de formação
+            <span>Bo</span>
+
+            <input
+              id="formation-volume-factor"
+              type="number"
+              min="0.001"
+              step="0.001"
+              value="1.25"
+              required
+            >
+          </label>
+
+          <label>
+            Fator de recuperação
+            <span>fração</span>
+
+            <input
+              id="recovery-factor"
+              type="number"
+              min="0"
+              max="1"
+              step="0.001"
+              value="0.35"
+              required
+            >
+          </label>
+
+          <button class="button primary full-width" type="submit">
+            Executar simulação
+          </button>
+
+          <p id="form-message" class="form-message"></p>
+        </form>
+
+        <div class="results-panel">
+          <div class="results-header">
+            <span>Resultados</span>
+            <strong id="result-status">Aguardando cálculo</strong>
+          </div>
+
+          <div class="result-grid">
+            <article>
+              <span>OOIP</span>
+              <strong id="ooip-result">—</strong>
+              <small>stock tank barrels</small>
+            </article>
+
+            <article>
+              <span>Reservas recuperáveis</span>
+              <strong id="recoverable-result">—</strong>
+              <small>stock tank barrels</small>
+            </article>
+
+            <article>
+              <span>Volume não recuperado</span>
+              <strong id="unrecovered-result">—</strong>
+              <small>stock tank barrels</small>
+            </article>
+
+            <article>
+              <span>Recuperação</span>
+              <strong id="recovery-result">—</strong>
+              <small>percentagem do OOIP</small>
+            </article>
+          </div>
+
+          <div class="formula-box">
+            <strong>Equação volumétrica</strong>
+
+            <code>
+              OOIP = 7758 × A × h × φ × (1 − Sw) ÷ Bo
+            </code>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>PetroSim Training Lab</span>
+    <span>Engineering simulations for education and training</span>
+  </footer>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
