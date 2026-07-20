@@ -12,19 +12,12 @@ app = FastAPI(
 
 
 class OilReservesInput(BaseModel):
-    area_acres: float = Field(gt=0, description="Reservoir area in acres")
-    net_pay_ft: float = Field(gt=0, description="Net reservoir thickness in feet")
-    porosity: float = Field(gt=0, le=1, description="Porosity as a fraction")
-    water_saturation: float = Field(ge=0, lt=1, description="Water saturation")
-    formation_volume_factor: float = Field(
-        gt=0,
-        description="Oil formation volume factor, Bo",
-    )
-    recovery_factor: float = Field(
-        ge=0,
-        le=1,
-        description="Recovery factor as a fraction",
-    )
+    area_acres: float = Field(gt=0)
+    net_pay_ft: float = Field(gt=0)
+    porosity: float = Field(gt=0, le=1)
+    water_saturation: float = Field(ge=0, lt=1)
+    formation_volume_factor: float = Field(gt=0)
+    recovery_factor: float = Field(ge=0, le=1)
 
 
 class OilReservesOutput(BaseModel):
@@ -32,15 +25,6 @@ class OilReservesOutput(BaseModel):
     recoverable_reserves_stb: float
     unrecovered_volume_stb: float
     recovery_percentage: float
-
-
-@app.get("/")
-def root():
-    return {
-        "application": "PetroSim Training Lab",
-        "api_version": "0.1.0",
-        "status": "running",
-    }
 
 
 @app.get("/api/health")
@@ -54,12 +38,6 @@ def health_check():
 
 @app.post("/api/reserves/oil", response_model=OilReservesOutput)
 def calculate_oil_reserves(data: OilReservesInput):
-    """
-    Calculate original oil in place using the volumetric method.
-
-    OOIP = 7758 × A × h × φ × (1 - Sw) / Bo
-    """
-
     ooip = (
         7758
         * data.area_acres
@@ -72,7 +50,10 @@ def calculate_oil_reserves(data: OilReservesInput):
     recoverable = ooip * data.recovery_factor
     unrecovered = ooip - recoverable
 
-    if not all(isfinite(value) for value in [ooip, recoverable, unrecovered]):
+    if not all(
+        isfinite(value)
+        for value in [ooip, recoverable, unrecovered]
+    ):
         raise HTTPException(
             status_code=422,
             detail="The supplied parameters produced an invalid result.",
