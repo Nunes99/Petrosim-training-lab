@@ -1,3 +1,6 @@
+const response = await fetch("/api/health");
+const response = await fetch("/api/index");
+
 const apiStatus = document.querySelector("#api-status");
 const form = document.querySelector("#reserves-form");
 const formMessage = document.querySelector("#form-message");
