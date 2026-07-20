@@ -1,7 +1,4 @@
-
-const response = await fetch("/api/index/health");
-const response = await fetch("/api/index/reserves/oil");
-
+const response = await fetch("/api/health");
 
 const apiStatus = document.querySelector("#api-status");
 const form = document.querySelector("#reserves-form");
