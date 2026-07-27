@@ -86,6 +86,10 @@ values
   )
 on conflict (slug) do nothing;
 
+update public.training_modules
+set is_published = true, updated_at = now()
+where slug in ('petroleum-economics', 'hse-decision-trainer');
+
 create index if not exists simulations_user_created_idx
   on public.simulations (user_id, created_at desc);
 

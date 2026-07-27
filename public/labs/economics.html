@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Laboratório de economia do petróleo PetroSimLab.">
+  <title>Petroleum Economics Lab | PetroSimLab</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>Economics Lab</small></div></a>
+    <nav><a href="/#modules">Laboratórios</a><a href="/dashboard">Meu painel</a></nav>
+  </header>
+  <main>
+    <section class="lab-hero">
+      <span class="eyebrow">Petroleum economics · 60 min</span>
+      <h1>Decisões de investimento orientadas por valor.</h1>
+      <p>Explore fluxo de caixa, NPV, IRR, payback e índice de rentabilidade em projetos de energia.</p>
+    </section>
+    <section class="section lab-content">
+      <div class="theory-panel">
+        <span class="eyebrow">Leitura obrigatória</span>
+        <h2>Fundamentos da avaliação económica</h2>
+        <p>O valor do dinheiro muda no tempo. A taxa de desconto representa o custo de oportunidade e o risco; por isso, fluxos futuros precisam ser trazidos ao valor presente.</p>
+        <div class="theory-grid">
+          <article><strong>NPV / VAL</strong><span>Valor presente dos fluxos menos o investimento. Positivo indica criação de valor.</span></article>
+          <article><strong>IRR / TIR</strong><span>Taxa que torna o NPV igual a zero. Deve superar a taxa mínima de atratividade.</span></article>
+          <article><strong>Payback</strong><span>Tempo necessário para recuperar o investimento, sem substituir a análise de valor.</span></article>
+          <article><strong>Sensibilidade</strong><span>Teste de como preço, produção, custos ou taxa alteram a decisão.</span></article>
+        </div>
+        <label class="check-label theory-check"><input id="theory-check" type="checkbox"> Li e compreendi os fundamentos da avaliação económica.</label>
+      </div>
+      <div class="simulator-layout">
+        <form id="economics-form" class="simulation-form">
+          <label>Investimento inicial <span>USD</span><input id="initial-investment" type="number" min="1" value="1000000" required></label>
+          <label>Fluxos de caixa anuais <span>separados por vírgula</span><textarea id="cash-flows" rows="4" required>300000, 350000, 400000, 450000</textarea></label>
+          <label>Taxa de desconto <span>% ao ano</span><input id="discount-rate" type="number" min="0" max="99.99" step="0.01" value="10" required></label>
+          <button id="economics-submit" class="button primary full-width" type="submit" disabled>Avaliar projeto</button>
+          <p id="economics-message" class="form-message" role="status"></p>
+        </form>
+        <section class="results-panel">
+          <div class="results-header"><span>Análise económica</span><strong id="economics-status">Aguardando dados</strong></div>
+          <div class="result-grid">
+            <article><span>NPV / VAL</span><strong id="npv-result">—</strong><small>USD</small></article>
+            <article><span>IRR / TIR</span><strong id="irr-result">—</strong><small>percentagem</small></article>
+            <article><span>Payback</span><strong id="payback-result">—</strong><small>anos</small></article>
+            <article><span>Índice de rentabilidade</span><strong id="pi-result">—</strong><small>valor presente / investimento</small></article>
+          </div>
+          <div id="economics-decision" class="decision-box">Complete a leitura e execute a avaliação.</div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Documentação</a></footer>
+  <script type="module" src="/js/economics.js"></script>
+</body>
+</html>

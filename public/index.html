@@ -16,6 +16,7 @@
     <nav aria-label="Navegação principal">
       <a href="#home">Início</a>
       <a href="#modules">Laboratórios</a>
+      <a href="/about">Sobre</a>
       <a href="#reserves">Simulador</a>
       <a class="button secondary" href="/login">Entrar</a>
     </nav>
@@ -59,13 +60,13 @@
           <span class="module-number">02 · 60 min</span>
           <h3>Petroleum Economics Lab</h3>
           <p>Explore fluxo de caixa, NPV, IRR, payback e sensibilidade em projetos de energia.</p>
-          <span class="module-status pending">Em preparação</span>
+          <a class="module-status" href="/labs/economics">Iniciar laboratório</a>
         </article>
         <article class="module-card">
           <span class="module-number">03 · 40 min</span>
           <h3>HSE Decision Trainer</h3>
           <p>Pratique identificação de perigos e decisões operacionais em cenários controlados.</p>
-          <span class="module-status pending">Em preparação</span>
+          <a class="module-status" href="/labs/hse">Iniciar laboratório</a>
         </article>
       </div>
     </section>
@@ -76,6 +77,19 @@
         <h2>Oil Reserves Calculator</h2>
         <p>Introduza os parâmetros do reservatório e interprete os volumes calculados.</p>
       </div>
+      <div class="theory-panel">
+        <div>
+          <span class="eyebrow">Base teórica</span>
+          <h3>Antes de calcular</h3>
+          <p>O método volumétrico estima o petróleo original in situ combinando geometria do reservatório, porosidade, saturação de água e comportamento volumétrico do fluido.</p>
+        </div>
+        <div class="theory-grid">
+          <article><strong>OOIP</strong><span>Volume total de petróleo nas condições de superfície antes da produção.</span></article>
+          <article><strong>Porosidade e Sw</strong><span>Definem o espaço poroso e a fração ocupada por água.</span></article>
+          <article><strong>Fator de recuperação</strong><span>Percentagem do OOIP tecnicamente recuperável.</span></article>
+        </div>
+        <label class="check-label theory-check"><input id="reserves-theory-check" type="checkbox"> Li os fundamentos e estou preparado para iniciar.</label>
+      </div>
       <div class="simulator-layout">
         <form id="reserves-form" class="simulation-form">
           <label>Área do reservatório <span>acres</span><input id="area-acres" type="number" min="0.01" step="0.01" value="5000" required></label>
@@ -84,7 +98,7 @@
           <label>Saturação de água <span>fração</span><input id="water-saturation" type="number" min="0" max="0.999" step="0.001" value="0.28" required></label>
           <label>Fator volume de formação <span>Bo</span><input id="formation-volume-factor" type="number" min="0.001" step="0.001" value="1.25" required></label>
           <label>Fator de recuperação <span>fração</span><input id="recovery-factor" type="number" min="0" max="1" step="0.001" value="0.35" required></label>
-          <button class="button primary full-width" type="submit">Executar simulação</button>
+          <button id="reserves-submit" class="button primary full-width" type="submit" disabled>Executar simulação</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
 
@@ -102,7 +116,7 @@
     </section>
   </main>
 
-  <footer><span>© 2026 PetroSim Training Lab</span><span>Engineering simulations for education and training</span></footer>
+  <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Sobre a plataforma</a></footer>
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>

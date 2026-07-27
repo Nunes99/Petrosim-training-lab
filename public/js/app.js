@@ -4,6 +4,12 @@ const apiStatus = document.querySelector("#api-status");
 const form = document.querySelector("#reserves-form");
 const formMessage = document.querySelector("#form-message");
 const resultStatus = document.querySelector("#result-status");
+const theoryCheck = document.querySelector("#reserves-theory-check");
+const submitButton = document.querySelector("#reserves-submit");
+
+theoryCheck.addEventListener("change", () => {
+  submitButton.disabled = !theoryCheck.checked;
+});
 
 function formatNumber(value) {
   return new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 0 }).format(value);

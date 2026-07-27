@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Treinador de decisões HSE PetroSimLab.">
+  <title>HSE Decision Trainer | PetroSimLab</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>HSE Trainer</small></div></a>
+    <nav><a href="/#modules">Laboratórios</a><a href="/dashboard">Meu painel</a></nav>
+  </header>
+  <main>
+    <section class="lab-hero">
+      <span class="eyebrow">Health, safety & environment · 40 min</span>
+      <h1>Decidir com segurança sob pressão.</h1>
+      <p>Pratique identificação de perigos, interrupção segura e resposta inicial em cenários controlados.</p>
+    </section>
+    <section class="section lab-content">
+      <div class="theory-panel">
+        <span class="eyebrow">Leitura obrigatória</span>
+        <h2>Princípios de decisão HSE</h2>
+        <p>Nenhuma meta de produção justifica a exposição não controlada. Quando as condições mudam, a tarefa deve parar até que os perigos e controlos sejam novamente compreendidos.</p>
+        <div class="theory-grid">
+          <article><strong>Parar o trabalho</strong><span>Qualquer pessoa deve interromper uma atividade diante de risco não controlado.</span></article>
+          <article><strong>Hierarquia de controlos</strong><span>Eliminar e isolar são mais eficazes do que depender apenas de comportamento ou EPI.</span></article>
+          <article><strong>Comunicar</strong><span>Alarmes, desvios e incidentes devem seguir os canais do plano de emergência.</span></article>
+        </div>
+        <label class="check-label theory-check"><input id="hse-theory-check" type="checkbox"> Li os princípios e estou preparado para responder aos cenários.</label>
+      </div>
+      <form id="hse-form" class="scenario-form">
+        <div id="scenario-list"></div>
+        <button id="hse-submit" class="button primary" type="submit" disabled>Avaliar decisões</button>
+        <p id="hse-message" class="form-message" role="status"></p>
+      </form>
+      <section id="hse-results" class="panel hidden">
+        <div class="panel-header"><div><span class="eyebrow">Resultado</span><h2 id="hse-score">—</h2></div><span id="hse-level" class="status-pill"></span></div>
+        <div id="hse-feedback" class="feedback-list"></div>
+      </section>
+    </section>
+  </main>
+  <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Documentação</a></footer>
+  <script type="module" src="/js/hse.js"></script>
+</body>
+</html>

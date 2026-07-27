@@ -43,3 +43,36 @@ def test_rejects_invalid_porosity():
         },
     )
     assert response.status_code == 422
+
+
+def test_petroleum_economics_evaluation():
+    response = client.post(
+        "/api/economics/evaluate",
+        json={
+            "initial_investment": 1000000,
+            "annual_cash_flows": [300000, 350000, 400000, 450000],
+            "discount_rate": 0.1,
+        },
+    )
+    assert response.status_code == 200
+    result = response.json()
+    assert result["npv"] > 0
+    assert result["irr_percentage"] > 10
+    assert result["payback_years"] is not None
+    assert result["decision"] == "economically_attractive"
+
+
+def test_hse_decision_evaluation():
+    response = client.post(
+        "/api/hse/evaluate",
+        json={
+            "answers": {
+                "gas_alarm": "evacuate",
+                "permit_change": "pause",
+                "spill_response": "isolate",
+            }
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["percentage"] == 100
+    assert response.json()["level"] == "proficient"

@@ -9,6 +9,10 @@ for petroleum and gas engineering.
 2. Petroleum Economics Lab
 3. HSE Decision Trainer
 
+Each laboratory begins with a required theory section before its interactive
+exercise. The economics lab evaluates NPV, IRR, payback and profitability; the
+HSE trainer evaluates decisions in controlled operational scenarios.
+
 ## Initial technology stack
 
 - HTML5
@@ -51,6 +55,11 @@ where id = (
 
 The administration console is then available at `/admin`. Never expose a
 service-role key in the browser.
+
+## Product
+
+PetroSimLab is a product of LMTWEB, developed by LEMOTE. Platform documentation
+is available at `/about`.
 
 ## GitHub to Vercel
 

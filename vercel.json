@@ -33,6 +33,18 @@
       "dest": "/public/admin.html"
     },
     {
+      "src": "/about",
+      "dest": "/public/about.html"
+    },
+    {
+      "src": "/labs/economics",
+      "dest": "/public/labs/economics.html"
+    },
+    {
+      "src": "/labs/hse",
+      "dest": "/public/labs/hse.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
