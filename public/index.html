@@ -18,12 +18,12 @@
       <a href="/labs/economics">Economia</a>
       <a href="/labs/hse">Segurança</a>
       <a href="/about">Sobre</a>
-      <a href="/login">Entrar</a>
     </nav>
     <nav class="lab-subnav site-section-nav" aria-label="Navegação por blocos">
       <a href="#home">Apresentação</a><a href="#modules">Laboratórios</a>
       <a href="#reserves">Reservas</a>
     </nav>
+    <a class="sidebar-login" href="/login">Entrar</a>
   </header>
 
   <main>
@@ -97,17 +97,17 @@
       <div class="simulator-layout">
         <form id="reserves-form" class="simulation-form">
           <div class="case-brief"><strong id="reservoir-case-name">Selecione um caso</strong><span id="reservoir-case-note">Os parâmetros de treino podem ser editados.</span></div>
-          <label>Caso de campo <span>predefinição ou introdução manual</span><select id="reservoir-case"></select></label>
-          <div class="field-row"><label>Operador <span>contexto</span><select id="reservoir-operator"></select></label><label>Localização <span>Moçambique/África</span><select id="reservoir-location"></select></label></div>
-          <div class="field-row"><label>Tipo de reservatório <span>modelo de fluido</span><select id="reservoir-type"></select></label><label>Fluido <span>cálculo</span><select id="fluid-type"><option value="gas">Gás</option><option value="oil">Óleo</option></select></label></div>
-          <label>Área do reservatório <span>acres</span><input id="area-acres" type="number" min="0.01" step="0.01" value="5000" required></label>
-          <label>Espessura bruta <span>ft</span><input id="gross-thickness" type="number" min="0.01" step="0.01" value="80" required></label>
-          <label>Relação entre espessura útil e bruta <span>fração</span><input id="net-to-gross" type="number" min="0.01" max="1" step="0.01" value="0.78" required></label>
+          <label>Caso de Campo <span>Predefinição ou introdução manual</span><select id="reservoir-case"></select></label>
+          <div class="field-row"><label>Operador <span>Contexto</span><select id="reservoir-operator"></select></label><label>Localização <span>Moçambique/África</span><select id="reservoir-location"></select></label></div>
+          <div class="field-row"><label>Tipo de Reservatório <span>Modelo de fluido</span><select id="reservoir-type"></select></label><label>Fluido <span>Cálculo</span><select id="fluid-type"><option value="gas">Gás</option><option value="oil">Óleo</option></select></label></div>
+          <label>Área do Reservatório <span>Acres</span><input id="area-acres" type="number" min="0.01" step="0.01" value="5000" required></label>
+          <label>Espessura Bruta <span>ft</span><input id="gross-thickness" type="number" min="0.01" step="0.01" value="80" required></label>
+          <label>Relação entre Espessura Útil e Bruta <span>Fração</span><input id="net-to-gross" type="number" min="0.01" max="1" step="0.01" value="0.78" required></label>
           <label>Porosidade <span>fração</span><input id="porosity" type="number" min="0.001" max="1" step="0.001" value="0.22" required></label>
-          <label>Saturação de água <span>fração</span><input id="water-saturation" type="number" min="0" max="0.999" step="0.001" value="0.28" required></label>
-          <label>Fator volume de formação <span id="fvf-unit">Bg · rb/scf</span><input id="formation-volume-factor" type="number" min="0.00001" step="0.0001" value="0.0052" required></label>
-          <label>Fator de recuperação <span>fração</span><input id="recovery-factor" type="number" min="0" max="1" step="0.001" value="0.35" required></label>
-          <label>Incerteza dos dados <span>± percentagem</span><input id="uncertainty" type="range" min="0" max="40" step="1" value="15"><output id="uncertainty-value">15%</output></label>
+          <label>Saturação de Água <span>Fração</span><input id="water-saturation" type="number" min="0" max="0.999" step="0.001" value="0.28" required></label>
+          <label>Fator Volume de Formação <span id="fvf-unit">Bg · rb/scf</span><input id="formation-volume-factor" type="number" min="0.00001" step="0.0001" value="0.0052" required></label>
+          <label>Fator de Recuperação <span>Fração</span><input id="recovery-factor" type="number" min="0" max="1" step="0.001" value="0.35" required></label>
+          <label>Incerteza dos Dados <span>± Percentagem</span><input id="uncertainty" type="range" min="0" max="40" step="1" value="15"><output id="uncertainty-value">15%</output></label>
           <button id="reserves-submit" class="button primary full-width" type="submit" disabled>Executar simulação</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
