@@ -78,6 +78,65 @@ def require_authenticated_user(
     return user
 
 
+def require_lab_access(module_slug: str):
+    """Create a dependency backed by the Supabase laboratory access policy."""
+
+    def dependency(
+        authorization: Annotated[str | None, Header()] = None,
+        user: dict = Depends(require_authenticated_user),
+    ) -> dict:
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_ANON_KEY")
+        if not authorization or not supabase_url or not supabase_key:
+            raise HTTPException(
+                status_code=503,
+                detail="O controlo de acesso aos laboratórios não está configurado.",
+            )
+
+        request = UrlRequest(
+            f"{supabase_url.rstrip('/')}/rest/v1/rpc/can_access_lab",
+            data=json.dumps({"p_module_slug": module_slug}).encode("utf-8"),
+            headers={
+                "Authorization": authorization,
+                "apikey": supabase_key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=8) as response:
+                allowed = json.loads(response.read().decode("utf-8"))
+        except HTTPError as error:
+            if error.code in {401, 403}:
+                raise HTTPException(
+                    status_code=403,
+                    detail="A sua conta não tem acesso a este laboratório.",
+                ) from error
+            raise HTTPException(
+                status_code=503,
+                detail="Não foi possível validar a permissão do laboratório.",
+            ) from error
+        except (URLError, TimeoutError, json.JSONDecodeError) as error:
+            raise HTTPException(
+                status_code=503,
+                detail="Não foi possível validar a permissão do laboratório.",
+            ) from error
+
+        if allowed is not True:
+            raise HTTPException(
+                status_code=403,
+                detail="A sua conta não tem acesso a este laboratório.",
+            )
+        return user
+
+    return dependency
+
+
+RESERVES_ACCESS = require_lab_access("reservoir-reserves")
+ECONOMICS_ACCESS = require_lab_access("petroleum-economics")
+HSE_ACCESS = require_lab_access("hse-decision-trainer")
+
+
 class OilReservesInput(BaseModel):
     area_acres: float = Field(gt=0)
     net_pay_ft: float = Field(gt=0)
@@ -303,7 +362,7 @@ def public_config():
 @app.post("/api/reserves/oil", response_model=OilReservesOutput)
 def calculate_oil_reserves(
     data: OilReservesInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(RESERVES_ACCESS),
 ):
     ooip = (
         7758
@@ -337,7 +396,7 @@ def calculate_oil_reserves(
 @app.post("/api/reserves/field-study", response_model=ReservoirFieldOutput)
 def evaluate_reservoir_field(
     data: ReservoirFieldInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(RESERVES_ACCESS),
 ):
     effective_pay = data.net_pay_ft * data.net_to_gross
     base_ooip = (
@@ -372,7 +431,7 @@ def evaluate_reservoir_field(
 @app.post("/api/reserves/comprehensive")
 def evaluate_comprehensive_reserves(
     data: ComprehensiveReservesInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(RESERVES_ACCESS),
 ):
     net_pay = data.gross_thickness_ft * data.net_to_gross
     constant = 7758 if data.fluid_type == "oil" else 43560
@@ -429,7 +488,7 @@ def calculate_irr(initial: float, flows: list[float]) -> float | None:
 @app.post("/api/economics/evaluate", response_model=EconomicsOutput)
 def evaluate_economics(
     data: EconomicsInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(ECONOMICS_ACCESS),
 ):
     npv = discounted_value(
         data.initial_investment,
@@ -486,7 +545,7 @@ def build_project_cash_flows(data: ProjectEconomicsInput, price: float) -> tuple
 @app.post("/api/economics/project", response_model=ProjectEconomicsOutput)
 def evaluate_project_economics(
     data: ProjectEconomicsInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(ECONOMICS_ACCESS),
 ):
     flows, schedule = build_project_cash_flows(data, data.oil_price)
     npv = discounted_value(data.capex, flows, data.discount_rate)
@@ -629,7 +688,7 @@ def integrated_cash_flows(data: IntegratedProjectInput, price_factor: float = 1.
 @app.post("/api/economics/integrated-project")
 def evaluate_integrated_project(
     data: IntegratedProjectInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(ECONOMICS_ACCESS),
 ):
     initial, flows, schedule = integrated_cash_flows(data)
     npv = discounted_value(initial, flows, data.discount_rate)
@@ -671,7 +730,7 @@ def evaluate_integrated_project(
 
 
 @app.get("/api/hse/scenarios")
-def get_hse_scenarios(_user: dict = Depends(require_authenticated_user)):
+def get_hse_scenarios(_user: dict = Depends(HSE_ACCESS)):
     return [
         {key: value for key, value in scenario.items()
          if key not in {"correct", "explanation", "consequence"}}
@@ -682,7 +741,7 @@ def get_hse_scenarios(_user: dict = Depends(require_authenticated_user)):
 @app.post("/api/hse/evaluate", response_model=HSEOutput)
 def evaluate_hse(
     data: HSEInput,
-    _user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(HSE_ACCESS),
 ):
     feedback = []
     score = 0

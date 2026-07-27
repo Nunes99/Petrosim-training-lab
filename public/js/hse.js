@@ -1,7 +1,7 @@
 import { authenticatedFetch, initializeRestrictedPage } from "./supabase-client.js";
 
 const $ = (selector) => document.querySelector(selector);
-const { supabase, session } = await initializeRestrictedPage();
+const { supabase, session } = await initializeRestrictedPage("hse-decision-trainer");
 let scenarios = [];
 let current = 0;
 let answers = {};
@@ -86,7 +86,10 @@ async function finish() {
       </article>`).join("");
     try {
       if (session?.user) await supabase.from("simulations").insert({
-        user_id: session.user.id, module: "HSE Decision Trainer", inputs: { answers },
+        user_id: session.user.id,
+        module: "HSE Decision Trainer",
+        module_slug: "hse-decision-trainer",
+        inputs: { answers },
         results: { score: data.score, total: data.total, percentage: data.percentage, level: data.level },
       });
     } catch (saveError) { console.warn("Resultado não guardado:", saveError); }

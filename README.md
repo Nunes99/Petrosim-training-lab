@@ -13,13 +13,22 @@ Each laboratory begins with a required theory section before its interactive
 exercise. The economics lab evaluates NPV, IRR, payback and profitability; the
 HSE trainer evaluates decisions in controlled operational scenarios.
 
-## Restricted student area
+## Restricted learning area
 
 Laboratories are available only from the authenticated student dashboard.
 The browser attaches the active Supabase access token to catalogue, scenario,
 reserve and economics requests. The FastAPI service validates that token with
-Supabase Auth before executing any laboratory calculation. Health and
-publishable client-configuration endpoints remain public.
+Supabase Auth and then calls the database access policy for the requested
+laboratory before executing any calculation. Health and publishable
+client-configuration endpoints remain public.
+
+The learning and administration entry points are intentionally separate:
+
+- `/login` and `/register`: students and instructors
+- `/profile`: personal data, account security, and certificates
+- `/admin/login`: administrators only
+- `/admin`: users, roles, account status, laboratory access, certificates,
+  modules, and audit events
 
 ## Initial technology stack
 
@@ -45,10 +54,12 @@ MVP 0.2
 
 ## Supabase
 
-Create a Supabase project and run `database/schema.sql` in its SQL editor.
-The schema enables Row Level Security, student profiles, training modules and
-administrative policies. Re-run the complete script after updates; it is
-designed to preserve existing records.
+Create a Supabase project and run the complete `database/schema.sql` file in
+its SQL editor. The schema enables Row Level Security, professional profiles,
+student and instructor laboratory grants, account suspension, automatic
+certification, administrative audit events, and protected RPC functions.
+Re-run the complete script after updates; it is designed to preserve existing
+records and backfill the new profile and certificate fields.
 
 To assign the first administrator, replace the e-mail and run this separately
 in the Supabase SQL editor:
@@ -61,8 +72,9 @@ where id = (
 );
 ```
 
-The administration console is then available at `/admin`. Never expose a
-service-role key in the browser.
+The administration console is then available through `/admin/login`. Never
+expose a service-role key in the browser. The browser uses only the publishable
+key; authorization is enforced in PostgreSQL RLS and security-definer functions.
 
 ## Product
 

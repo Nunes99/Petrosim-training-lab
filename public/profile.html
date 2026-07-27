@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Perfil, segurança e certificações no PetroSimLab.">
+  <title>Meu Perfil | PetroSimLab</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="app-body learner-body auth-required">
+  <aside class="sidebar learner-sidebar">
+    <a class="brand" href="/dashboard">
+      <span class="brand-mark">PS</span>
+      <div><strong>PetroSimLab</strong><small>Espaço de aprendizagem</small></div>
+    </a>
+    <nav class="side-nav" aria-label="Navegação do perfil">
+      <a href="/dashboard">Visão geral</a>
+      <a href="/labs/reserves">Reservas</a>
+      <a href="/labs/economics">Economia do Petróleo</a>
+      <a href="/labs/hse">Segurança HSE</a>
+      <a class="active" href="/profile">Meu perfil</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span id="profile-sidebar-email" class="user-email">A carregar…</span>
+      <button id="profile-sign-out" class="button ghost full-width" type="button">Terminar sessão</button>
+    </div>
+  </aside>
+
+  <main class="app-main profile-main">
+    <header class="profile-header">
+      <div class="profile-identity">
+        <span id="profile-initials" class="profile-avatar">PS</span>
+        <div>
+          <span class="eyebrow">Perfil de aprendizagem</span>
+          <h1 id="profile-heading-name">A carregar perfil…</h1>
+          <p id="profile-heading-context">Informação pessoal, contexto profissional e segurança.</p>
+        </div>
+      </div>
+      <span id="profile-completion" class="profile-completion">A calcular conclusão…</span>
+    </header>
+
+    <nav class="profile-section-nav" aria-label="Secções do perfil">
+      <a href="#personal-data">Dados pessoais</a>
+      <a href="#professional-data">Contexto profissional</a>
+      <a href="#account-security">Segurança</a>
+      <a href="#certifications">Certificações</a>
+    </nav>
+
+    <form id="profile-form" class="panel profile-panel">
+      <section id="personal-data" class="profile-form-section">
+        <div class="section-index"><span>01</span><div><h2>Dados pessoais</h2><p>Utilizados para identificação e emissão de certificados.</p></div></div>
+        <div class="professional-form-grid">
+          <label>Nome completo<input id="profile-full-name" maxlength="120" autocomplete="name" required></label>
+          <label>E-mail<input id="profile-email" type="email" disabled></label>
+          <label>Telefone<input id="profile-phone" type="tel" autocomplete="tel"></label>
+          <label>País
+            <select id="profile-country">
+              <option value="Moçambique">Moçambique</option>
+              <option value="Angola">Angola</option>
+              <option value="África do Sul">África do Sul</option>
+              <option value="Tanzânia">Tanzânia</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
+          <label>Cidade ou província<input id="profile-city" maxlength="80"></label>
+        </div>
+      </section>
+
+      <section id="professional-data" class="profile-form-section">
+        <div class="section-index"><span>02</span><div><h2>Contexto profissional</h2><p>Mantenha o seu perfil atualizado para uma experiência mais relevante.</p></div></div>
+        <div class="professional-form-grid">
+          <label>Situação atual
+            <select id="profile-professional-status">
+              <option value="student">Estudante</option>
+              <option value="professor">Professor ou docente</option>
+              <option value="researcher">Investigador</option>
+              <option value="employee">Funcionário</option>
+              <option value="technician">Técnico</option>
+              <option value="engineer">Engenheiro</option>
+              <option value="manager">Gestor</option>
+              <option value="consultant">Consultor</option>
+              <option value="job_seeker">À procura de oportunidade</option>
+              <option value="other">Outro</option>
+            </select>
+          </label>
+          <label>Área de formação ou especialidade<input id="profile-education-area" maxlength="120"></label>
+          <label>Instituição ou empresa<input id="profile-institution" maxlength="140"></label>
+          <label>Cargo ou função<input id="profile-job-title" maxlength="100"></label>
+          <label class="form-span-2">Resumo profissional
+            <textarea id="profile-bio" rows="4" maxlength="500" placeholder="Interesses técnicos, objetivos de aprendizagem ou experiência relevante."></textarea>
+          </label>
+        </div>
+        <div class="profile-form-actions">
+          <button id="profile-save" class="button primary" type="submit">Guardar alterações</button>
+          <p id="profile-message" class="form-message" role="status"></p>
+        </div>
+      </section>
+    </form>
+
+    <section id="account-security" class="panel profile-panel security-panel">
+      <div class="section-index"><span>03</span><div><h2>Segurança da conta</h2><p>Proteja o acesso ao seu histórico e às suas certificações.</p></div></div>
+      <div class="security-layout">
+        <form id="password-form" class="security-form">
+          <h3>Alterar palavra-passe</h3>
+          <label>Nova palavra-passe<input id="new-password" type="password" minlength="10" autocomplete="new-password" required></label>
+          <label>Confirmar palavra-passe<input id="confirm-new-password" type="password" minlength="10" autocomplete="new-password" required></label>
+          <button id="password-submit" class="button secondary" type="submit">Atualizar palavra-passe</button>
+          <p id="password-message" class="form-message" role="status"></p>
+        </form>
+        <div class="security-summary">
+          <span class="security-icon">✓</span>
+          <div><strong>Sessão protegida pelo Supabase Auth</strong><p>Nunca partilhe a sua palavra-passe. A administração não precisa dela para gerir o seu acesso.</p></div>
+          <button id="sign-out-others" class="text-button" type="button">Terminar outras sessões</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="certifications" class="panel profile-panel">
+      <div class="section-index"><span>04</span><div><h2>Certificações</h2><p>Certificados emitidos após a conclusão dos laboratórios elegíveis.</p></div></div>
+      <div id="profile-certificates" class="certificate-grid"></div>
+    </section>
+  </main>
+  <script type="module" src="/js/profile.js"></script>
+  <script type="module" src="/js/custom-select.js"></script>
+</body>
+</html>

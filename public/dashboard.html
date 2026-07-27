@@ -18,7 +18,7 @@
       <a href="/labs/reserves">Reservas</a>
       <a href="/labs/economics">Economia do Petróleo</a>
       <a href="/labs/hse">Segurança HSE</a>
-      <a id="admin-link" class="hidden" href="/admin">Administração</a>
+      <a href="/profile">Meu perfil</a>
     </nav>
     <div class="sidebar-footer">
       <span id="user-email" class="user-email">A carregar...</span>
@@ -31,9 +31,9 @@
       <div>
         <span class="eyebrow">Área do aluno</span>
         <h1>Bem-vindo, <span id="student-name">formando</span></h1>
-        <p>Acompanhe o seu progresso e retome os exercícios técnicos.</p>
+        <p>Acompanhe o seu progresso, acessos atribuídos e certificações.</p>
       </div>
-      <a class="button primary" href="/labs/reserves">Iniciar laboratório</a>
+      <a class="button primary" href="#available-labs">Continuar aprendizagem</a>
     </header>
 
     <section class="metric-grid" aria-label="Indicadores de aprendizagem">
@@ -52,9 +52,14 @@
         <strong id="last-activity">—</strong>
         <small>na plataforma</small>
       </article>
+      <article class="metric-card">
+        <span>Certificações</span>
+        <strong id="certificate-count">—</strong>
+        <small>conquistas emitidas</small>
+      </article>
     </section>
 
-    <section class="panel dashboard-labs">
+    <section id="available-labs" class="panel dashboard-labs">
       <div class="panel-header">
         <div>
           <span class="eyebrow">Área restrita</span>
@@ -62,26 +67,7 @@
           <p>Selecione um laboratório para introduzir parâmetros, executar cálculos e guardar os resultados no seu histórico.</p>
         </div>
       </div>
-      <div class="module-grid">
-        <article class="module-card active">
-          <span class="module-number">01 · Engenharia de Reservatórios</span>
-          <h3>Reservas de Reservatório</h3>
-          <p>Estime volumes P90, P50 e P10 para casos de Moçambique e África.</p>
-          <a class="module-status" href="/labs/reserves">Abrir laboratório</a>
-        </article>
-        <article class="module-card">
-          <span class="module-number">02 · Avaliação de Projetos</span>
-          <h3>Economia do Petróleo</h3>
-          <p>Modele fluxo de caixa, valor presente líquido, retorno, payback e sensibilidade.</p>
-          <a class="module-status" href="/labs/economics">Abrir laboratório</a>
-        </article>
-        <article class="module-card">
-          <span class="module-number">03 · Segurança Operacional</span>
-          <h3>Decisões HSE</h3>
-          <p>Responda a cenários operacionais e analise o risco residual das decisões.</p>
-          <a class="module-status" href="/labs/hse">Abrir laboratório</a>
-        </article>
-      </div>
+      <div id="student-module-grid" class="module-grid"></div>
     </section>
 
     <section class="panel">

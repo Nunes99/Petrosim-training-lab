@@ -3,102 +3,202 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Administração da plataforma PetroSimLab.">
-  <title>Administração | PetroSimLab</title>
+  <meta name="description" content="Centro de administração do PetroSimLab.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Centro de Administração | PetroSimLab</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="app-body admin-body auth-required">
-  <aside class="sidebar">
-    <a class="brand" href="/admin">
-      <span class="brand-mark">PS</span>
-      <div><strong>PetroSimLab</strong><small>Painel de administração</small></div>
+<body class="admin-app auth-required">
+  <aside class="admin-sidebar">
+    <a class="brand admin-brand" href="/admin">
+      <span class="brand-mark admin-mark">PS</span>
+      <div><strong>PetroSimLab</strong><small>Administração</small></div>
     </a>
-    <nav class="side-nav" aria-label="Navegação administrativa">
-      <a class="active" href="#admin-overview">Visão Geral</a>
-      <a href="#modules-admin">Laboratórios</a>
-      <a href="#users-admin">Utilizadores</a>
-      <a href="#recent-activity">Atividade</a>
-      <a href="/dashboard">Área do Estudante</a>
+    <div class="admin-workspace-label">Centro de operações</div>
+    <nav class="admin-nav" aria-label="Navegação administrativa">
+      <button class="active" type="button" data-admin-view="overview"><span>01</span>Visão geral</button>
+      <button type="button" data-admin-view="users"><span>02</span>Utilizadores</button>
+      <button type="button" data-admin-view="access"><span>03</span>Permissões</button>
+      <button type="button" data-admin-view="modules"><span>04</span>Laboratórios</button>
+      <button type="button" data-admin-view="certificates"><span>05</span>Certificações</button>
+      <button type="button" data-admin-view="activity"><span>06</span>Auditoria</button>
     </nav>
-    <div class="sidebar-footer">
-      <span id="admin-email" class="user-email">A verificar acesso...</span>
-      <button id="sign-out" class="button ghost full-width" type="button">Terminar Sessão</button>
+    <div class="admin-sidebar-footer">
+      <div class="admin-account">
+        <span id="admin-initials">AD</span>
+        <div><strong id="admin-name">Administrador</strong><small id="admin-email">A validar…</small></div>
+      </div>
+      <button id="sign-out" class="button admin-signout" type="button">Terminar sessão</button>
     </div>
   </aside>
 
-  <main class="app-main">
-    <header id="admin-overview" class="page-header">
+  <main class="admin-main">
+    <header class="admin-topbar">
       <div>
-        <span class="eyebrow">Administração</span>
-        <h1>Centro de Operações</h1>
-        <p>Gerencie utilizadores, laboratórios publicados e atividade técnica da plataforma.</p>
+        <span class="admin-breadcrumb">PetroSimLab / <strong id="current-admin-view">Visão geral</strong></span>
       </div>
-      <div class="admin-header-actions">
-        <button id="refresh-admin" class="button secondary" type="button">Atualizar Dados</button>
-        <span id="admin-status" class="status-pill">A validar permissões...</span>
+      <div class="admin-topbar-actions">
+        <label class="admin-global-search">
+          <span>Pesquisar</span>
+          <input id="global-admin-search" type="search" placeholder="Nome, e-mail, laboratório ou certificado">
+        </label>
+        <button id="refresh-admin" class="button secondary compact" type="button">Atualizar dados</button>
+        <span id="admin-status" class="status-pill">A validar permissões…</span>
       </div>
     </header>
 
-    <section class="metric-grid" aria-label="Indicadores administrativos">
-      <article class="metric-card"><span>Utilizadores</span><strong id="user-count">—</strong><small>perfis registados</small></article>
-      <article class="metric-card"><span>Simulações</span><strong id="admin-simulation-count">—</strong><small>execuções guardadas</small></article>
-      <article class="metric-card"><span>Laboratórios</span><strong id="admin-module-count">—</strong><small>módulos configurados</small></article>
-      <article class="metric-card"><span>Publicados</span><strong id="published-module-count">—</strong><small>disponíveis aos estudantes</small></article>
-    </section>
-
-    <section id="modules-admin" class="admin-grid anchor-section">
-      <form id="module-form" class="panel form-panel">
-        <input id="module-id" type="hidden">
-        <div class="panel-header">
-          <div><span class="eyebrow">Catálogo</span><h2 id="module-form-title">Novo Laboratório</h2></div>
-          <button id="module-cancel" class="button secondary compact hidden" type="button">Cancelar Edição</button>
+    <div class="admin-content">
+      <section class="admin-view active" data-view-panel="overview">
+        <header class="admin-page-heading">
+          <div><span class="eyebrow">Operação da plataforma</span><h1>Visão geral</h1><p>Indicadores de utilização, aprendizagem e controlo de acesso.</p></div>
+          <span id="overview-date" class="admin-date"></span>
+        </header>
+        <div class="admin-metric-grid">
+          <article><span>Utilizadores</span><strong id="user-count">—</strong><small id="active-user-summary">Contas registadas</small></article>
+          <article><span>Estudantes</span><strong id="student-count">—</strong><small>Perfis de aprendizagem</small></article>
+          <article><span>Formadores</span><strong id="instructor-count">—</strong><small>Acessos pedagógicos</small></article>
+          <article><span>Certificações</span><strong id="certificate-total">—</strong><small>Conquistas emitidas</small></article>
+          <article><span>Simulações</span><strong id="admin-simulation-count">—</strong><small>Execuções registadas</small></article>
+          <article><span>Laboratórios</span><strong id="admin-module-count">—</strong><small id="published-module-summary">Módulos configurados</small></article>
         </div>
-        <label>Título<input id="module-title" maxlength="100" required></label>
-        <label>Identificador<input id="module-slug" pattern="[a-z0-9-]+" placeholder="reservoir-reserves" required></label>
-        <label>Descrição<textarea id="module-description" rows="4" minlength="10" maxlength="500" required></textarea></label>
-        <div class="field-row">
-          <label>Categoria<input id="module-category" maxlength="60" value="Engenharia de Reservatórios" required></label>
-          <label>Duração (min)<input id="module-duration" type="number" min="5" max="600" value="45" required></label>
+        <div class="admin-overview-grid">
+          <section class="admin-card">
+            <div class="admin-card-heading"><div><span class="eyebrow">Atividade</span><h2>Execuções recentes</h2></div><button class="text-button" type="button" data-open-view="activity">Ver auditoria</button></div>
+            <div id="overview-activity" class="admin-feed"></div>
+          </section>
+          <section class="admin-card">
+            <div class="admin-card-heading"><div><span class="eyebrow">Acessos</span><h2>Distribuição de perfis</h2></div></div>
+            <div id="role-distribution" class="role-distribution"></div>
+          </section>
         </div>
-        <div class="field-row">
-          <label>Dificuldade<select id="module-difficulty">
-            <option value="foundation">Fundamental</option>
-            <option value="intermediate">Intermédio</option>
-            <option value="advanced">Avançado</option>
-          </select></label>
-          <label>Ordem<input id="module-sort-order" type="number" min="0" max="9999" value="100" required></label>
-        </div>
-        <label class="check-label"><input id="module-published" type="checkbox"> Publicar para os estudantes</label>
-        <button id="module-submit" class="button primary" type="submit">Guardar Laboratório</button>
-        <p id="module-message" class="form-message" role="status"></p>
-      </form>
-
-      <section class="panel">
-        <div class="panel-header">
-          <div><span class="eyebrow">Conteúdos</span><h2>Laboratórios Configurados</h2></div>
-          <span id="module-list-status" class="status-pill">A carregar...</span>
-        </div>
-        <div id="module-admin-list" class="admin-list"></div>
       </section>
-    </section>
 
-    <section id="users-admin" class="panel anchor-section">
-      <div class="panel-header">
-        <div>
-          <span class="eyebrow">Acessos</span>
-          <h2>Utilizadores e Funções</h2>
-          <p>Administradores podem alterar a função de outras contas. A própria conta administrativa fica protegida contra despromoção acidental.</p>
+      <section class="admin-view" data-view-panel="users">
+        <header class="admin-page-heading">
+          <div><span class="eyebrow">Identidades e funções</span><h1>Utilizadores</h1><p>Pesquise perfis, altere funções e suspenda acessos sem eliminar histórico.</p></div>
+        </header>
+        <section class="admin-card">
+          <div class="admin-filterbar">
+            <label class="filter-search">Pesquisar utilizadores<input id="user-search" type="search" placeholder="Nome, e-mail, instituição ou área"></label>
+            <label>Função
+              <select id="user-role-filter">
+                <option value="">Todas</option>
+                <option value="student">Estudante</option>
+                <option value="instructor">Formador</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </label>
+            <label>Estado
+              <select id="user-status-filter">
+                <option value="">Todos</option>
+                <option value="active">Ativo</option>
+                <option value="suspended">Suspenso</option>
+              </select>
+            </label>
+            <span id="user-results-count" class="filter-count">—</span>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Utilizador</th><th>Contexto</th><th>Função</th><th>Estado</th><th>Registo</th><th>Ações</th></tr></thead>
+              <tbody id="user-admin-table"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="admin-view" data-view-panel="access">
+        <header class="admin-page-heading">
+          <div><span class="eyebrow">Autorização por módulo</span><h1>Permissões de laboratórios</h1><p>Atribua ou retire acesso individual para estudantes e formadores.</p></div>
+        </header>
+        <div class="access-management-grid">
+          <section class="admin-card access-user-picker">
+            <div class="admin-card-heading"><div><span class="eyebrow">Utilizador</span><h2>Selecionar perfil</h2></div></div>
+            <label class="filter-search">Pesquisar<input id="access-user-search" type="search" placeholder="Nome ou e-mail"></label>
+            <div id="access-user-list" class="access-user-list"></div>
+          </section>
+          <section class="admin-card access-matrix-card">
+            <div id="access-selection-empty" class="access-empty">
+              <span>03</span><h2>Selecione um utilizador</h2><p>As permissões disponíveis serão apresentadas aqui.</p>
+            </div>
+            <div id="access-selection" class="hidden">
+              <div class="admin-card-heading">
+                <div><span class="eyebrow">Matriz de acesso</span><h2 id="access-selected-name">—</h2><p id="access-selected-context">—</p></div>
+                <span id="access-selected-role" class="status-pill">—</span>
+              </div>
+              <div id="access-module-list" class="access-module-list"></div>
+              <p id="access-message" class="form-message" role="status"></p>
+            </div>
+          </section>
         </div>
-      </div>
-      <div id="user-admin-list" class="admin-list"></div>
-    </section>
+      </section>
 
-    <section id="recent-activity" class="panel anchor-section">
-      <div class="panel-header">
-        <div><span class="eyebrow">Monitorização</span><h2>Atividade Recente</h2></div>
-      </div>
-      <div id="activity-list" class="history-list"></div>
-    </section>
+      <section class="admin-view" data-view-panel="modules">
+        <header class="admin-page-heading">
+          <div><span class="eyebrow">Catálogo pedagógico</span><h1>Laboratórios</h1><p>Controle publicação, acesso padrão e critérios de certificação.</p></div>
+          <button id="new-module-button" class="button primary" type="button">Novo laboratório</button>
+        </header>
+        <div class="module-management-grid">
+          <section class="admin-card">
+            <div class="admin-filterbar compact-filterbar">
+              <label class="filter-search">Pesquisar laboratórios<input id="module-search" type="search" placeholder="Título, categoria ou identificador"></label>
+              <label>Publicação
+                <select id="module-status-filter"><option value="">Todos</option><option value="published">Publicados</option><option value="draft">Rascunhos</option></select>
+              </label>
+            </div>
+            <div id="module-admin-list" class="professional-module-list"></div>
+          </section>
+          <form id="module-form" class="admin-card module-editor">
+            <input id="module-id" type="hidden">
+            <div class="admin-card-heading"><div><span class="eyebrow">Editor</span><h2 id="module-form-title">Novo laboratório</h2></div><button id="module-cancel" class="text-button hidden" type="button">Cancelar</button></div>
+            <label>Título<input id="module-title" maxlength="100" required></label>
+            <label>Identificador<input id="module-slug" pattern="[a-z0-9-]+" placeholder="reservoir-reserves" required></label>
+            <label>Descrição<textarea id="module-description" rows="4" minlength="10" maxlength="500" required></textarea></label>
+            <div class="professional-form-grid">
+              <label>Categoria<input id="module-category" maxlength="60" value="Engenharia de Reservatórios" required></label>
+              <label>Duração (min)<input id="module-duration" type="number" min="5" max="600" value="45" required></label>
+              <label>Dificuldade
+                <select id="module-difficulty"><option value="foundation">Fundamental</option><option value="intermediate">Intermédio</option><option value="advanced">Avançado</option></select>
+              </label>
+              <label>Ordem<input id="module-sort-order" type="number" min="0" max="9999" value="100" required></label>
+              <label>Nota mínima (%)<input id="module-passing-score" type="number" min="0" max="100" value="70" required></label>
+            </div>
+            <div class="module-policy-options">
+              <label class="check-label"><input id="module-published" type="checkbox"> Publicado</label>
+              <label class="check-label"><input id="module-default-access" type="checkbox" checked> Acesso padrão para estudantes</label>
+              <label class="check-label"><input id="module-certificate" type="checkbox" checked> Emitir certificado</label>
+            </div>
+            <button id="module-submit" class="button primary" type="submit">Guardar laboratório</button>
+            <p id="module-message" class="form-message" role="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="admin-view" data-view-panel="certificates">
+        <header class="admin-page-heading">
+          <div><span class="eyebrow">Conquistas verificáveis</span><h1>Certificações</h1><p>Consulte certificados emitidos e o desempenho associado.</p></div>
+        </header>
+        <section class="admin-card">
+          <div class="admin-filterbar">
+            <label class="filter-search">Pesquisar certificados<input id="certificate-search" type="search" placeholder="Código, formando ou laboratório"></label>
+            <label>Laboratório<select id="certificate-module-filter"><option value="">Todos</option></select></label>
+            <span id="certificate-results-count" class="filter-count">—</span>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table"><thead><tr><th>Código</th><th>Formando</th><th>Laboratório</th><th>Resultado</th><th>Emissão</th><th></th></tr></thead><tbody id="certificate-admin-table"></tbody></table>
+          </div>
+        </section>
+      </section>
+
+      <section class="admin-view" data-view-panel="activity">
+        <header class="admin-page-heading">
+          <div><span class="eyebrow">Rastreabilidade</span><h1>Auditoria e atividade</h1><p>Alterações administrativas e execuções técnicas recentes.</p></div>
+        </header>
+        <div class="audit-grid">
+          <section class="admin-card"><div class="admin-card-heading"><div><span class="eyebrow">Administração</span><h2>Registo de alterações</h2></div></div><div id="audit-log-list" class="admin-feed"></div></section>
+          <section class="admin-card"><div class="admin-card-heading"><div><span class="eyebrow">Aprendizagem</span><h2>Simulações recentes</h2></div></div><div id="activity-list" class="admin-feed"></div></section>
+        </div>
+      </section>
+    </div>
   </main>
   <script type="module" src="/js/admin.js"></script>
   <script type="module" src="/js/custom-select.js"></script>

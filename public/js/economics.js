@@ -1,7 +1,7 @@
 import { authenticatedFetch, initializeRestrictedPage } from "./supabase-client.js";
 
 const $ = (selector) => document.querySelector(selector);
-const { supabase, session } = await initializeRestrictedPage();
+const { supabase, session } = await initializeRestrictedPage("petroleum-economics");
 const form = $("#economics-form");
 const numeric = (selector) => Number($(selector).value);
 const integer = (value) => new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 0 }).format(value);
@@ -254,7 +254,11 @@ form.addEventListener("submit", async (event) => {
     $("#economics-decision").classList.toggle("positive", data.decision === "invest_continue");
     try {
       if (session?.user) await supabase.from("simulations").insert({
-        user_id: session.user.id, module: "Petroleum Economics Lab", inputs: payload(), results: data,
+        user_id: session.user.id,
+        module: "Petroleum Economics Lab",
+        module_slug: "petroleum-economics",
+        inputs: payload(),
+        results: data,
       });
     } catch (saveError) { console.warn("Resultado não guardado:", saveError); }
   } catch (error) {

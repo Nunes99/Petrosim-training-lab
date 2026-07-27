@@ -1,7 +1,7 @@
 import { authenticatedFetch, initializeRestrictedPage } from "./supabase-client.js";
 
 const $ = (selector) => document.querySelector(selector);
-const { supabase, session } = await initializeRestrictedPage();
+const { supabase, session } = await initializeRestrictedPage("reservoir-reserves");
 const form = $("#reserves-form");
 const submitButton = $("#reserves-submit");
 let catalog;
@@ -124,7 +124,11 @@ form.addEventListener("submit", async (event) => {
     $("#result-status").textContent = "Simulação concluída";
     try {
       if (session?.user) await supabase.from("simulations").insert({
-        user_id: session.user.id, module: "Reservoir Reserves Lab", inputs: payload, results: data,
+        user_id: session.user.id,
+        module: "Reservoir Reserves Lab",
+        module_slug: "reservoir-reserves",
+        inputs: payload,
+        results: data,
       });
     } catch (saveError) { console.warn("Resultado não guardado:", saveError); }
   } catch (error) {

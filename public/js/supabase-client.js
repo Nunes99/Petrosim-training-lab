@@ -30,6 +30,18 @@ export async function requireSession(redirect = "/login") {
   return { supabase, session };
 }
 
+export async function getCurrentProfile(supabase, userId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id,email,display_name,full_name,phone,country,city,professional_status,education_area,institution,job_title,bio,role,account_status,created_at,updated_at"
+    )
+    .eq("id", userId)
+    .single();
+  if (error) throw new Error(`Não foi possível validar o perfil: ${error.message}`);
+  return data;
+}
+
 export async function authenticatedFetch(resource, options = {}) {
   const { supabase, session } = await requireSession();
   const headers = new Headers(options.headers || {});
@@ -44,8 +56,28 @@ export async function authenticatedFetch(resource, options = {}) {
   return response;
 }
 
-export async function initializeRestrictedPage() {
+export async function initializeRestrictedPage(moduleSlug = null) {
   const auth = await requireSession();
+  const profile = await getCurrentProfile(auth.supabase, auth.session.user.id);
+  if (profile.account_status !== "active") {
+    await auth.supabase.auth.signOut();
+    window.location.replace("/login?status=suspended");
+    throw new Error("Conta suspensa.");
+  }
+  if (moduleSlug) {
+    const { data: allowed, error } = await auth.supabase.rpc("can_access_lab", {
+      p_module_slug: moduleSlug,
+    });
+    if (error) {
+      throw new Error(`Não foi possível validar o acesso ao laboratório: ${error.message}`);
+    }
+    if (!allowed) {
+      document.body.dataset.authError = "Este laboratório não está atribuído à sua conta.";
+      document.body.classList.add("auth-error");
+      window.setTimeout(() => window.location.replace("/dashboard"), 1100);
+      throw new Error("Laboratório não autorizado.");
+    }
+  }
   document.querySelectorAll("[data-user-email]").forEach((node) => {
     node.textContent = auth.session.user.email || "Utilizador autenticado";
   });
@@ -58,7 +90,7 @@ export async function initializeRestrictedPage() {
     });
   }
   document.body.classList.add("auth-ready");
-  return auth;
+  return { ...auth, profile };
 }
 
 export function formatDate(value) {

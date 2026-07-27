@@ -25,8 +25,24 @@
       "dest": "/public/login.html"
     },
     {
+      "src": "/register",
+      "dest": "/public/register.html"
+    },
+    {
       "src": "/dashboard",
       "dest": "/public/dashboard.html"
+    },
+    {
+      "src": "/profile",
+      "dest": "/public/profile.html"
+    },
+    {
+      "src": "/certificate",
+      "dest": "/public/certificate.html"
+    },
+    {
+      "src": "/admin/login",
+      "dest": "/public/admin-login.html"
     },
     {
       "src": "/admin",

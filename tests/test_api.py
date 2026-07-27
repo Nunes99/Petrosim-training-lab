@@ -1,6 +1,12 @@
 from fastapi.testclient import TestClient
 
-from api.index import app, require_authenticated_user
+from api.index import (
+    ECONOMICS_ACCESS,
+    HSE_ACCESS,
+    RESERVES_ACCESS,
+    app,
+    require_authenticated_user,
+)
 
 
 client = TestClient(app)
@@ -8,6 +14,9 @@ app.dependency_overrides[require_authenticated_user] = lambda: {
     "id": "00000000-0000-0000-0000-000000000001",
     "email": "student@example.com",
 }
+app.dependency_overrides[RESERVES_ACCESS] = app.dependency_overrides[require_authenticated_user]
+app.dependency_overrides[ECONOMICS_ACCESS] = app.dependency_overrides[require_authenticated_user]
+app.dependency_overrides[HSE_ACCESS] = app.dependency_overrides[require_authenticated_user]
 
 
 def test_health_check():

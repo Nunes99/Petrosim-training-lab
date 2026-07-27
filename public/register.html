@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Criação de conta de aprendizagem no PetroSimLab.">
+  <title>Criar Conta | PetroSimLab</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="auth-body registration-auth">
+  <header class="auth-topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">PS</span>
+      <div><strong>PetroSimLab</strong><small>Formação técnica aplicada</small></div>
+    </a>
+    <a class="auth-back-link" href="/login">Já tenho uma conta</a>
+  </header>
+
+  <main class="registration-shell">
+    <section class="registration-heading">
+      <span class="eyebrow">Perfil de aprendizagem</span>
+      <h1>Construa o seu percurso profissional.</h1>
+      <p>Estas informações permitem adaptar laboratórios, certificações e conteúdos ao seu contexto académico ou profissional.</p>
+      <div class="privacy-note">
+        <strong>Dados tratados com finalidade formativa</strong>
+        <span>Poderá rever e atualizar os seus dados pessoais no perfil.</span>
+      </div>
+    </section>
+
+    <form id="registration-form" class="registration-card">
+      <div class="form-section-heading">
+        <span>01</span>
+        <div><h2>Identificação</h2><p>Dados usados no seu perfil e nas certificações.</p></div>
+      </div>
+      <div class="professional-form-grid">
+        <label>Nome completo
+          <input id="full-name" autocomplete="name" maxlength="120" required>
+        </label>
+        <label>E-mail
+          <input id="registration-email" type="email" autocomplete="email" required>
+        </label>
+        <label>Telefone
+          <input id="phone" type="tel" autocomplete="tel" placeholder="+258">
+        </label>
+        <label>País
+          <select id="country" required>
+            <option value="Moçambique">Moçambique</option>
+            <option value="Angola">Angola</option>
+            <option value="África do Sul">África do Sul</option>
+            <option value="Tanzânia">Tanzânia</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </label>
+        <label>Cidade ou província
+          <input id="city" autocomplete="address-level2" maxlength="80">
+        </label>
+      </div>
+
+      <div class="form-section-heading">
+        <span>02</span>
+        <div><h2>Contexto profissional</h2><p>Ajuda-nos a organizar conteúdos e níveis de dificuldade.</p></div>
+      </div>
+      <div class="professional-form-grid">
+        <label>Situação atual
+          <select id="professional-status" required>
+            <option value="">Selecione uma opção</option>
+            <option value="student">Estudante</option>
+            <option value="professor">Professor ou docente</option>
+            <option value="researcher">Investigador</option>
+            <option value="employee">Funcionário</option>
+            <option value="technician">Técnico</option>
+            <option value="engineer">Engenheiro</option>
+            <option value="manager">Gestor</option>
+            <option value="consultant">Consultor</option>
+            <option value="job_seeker">À procura de oportunidade</option>
+            <option value="other">Outro</option>
+          </select>
+        </label>
+        <label>Área de formação ou especialidade
+          <select id="education-area" required>
+            <option value="">Selecione uma área</option>
+            <option>Engenharia de Petróleos</option>
+            <option>Engenharia de Gás</option>
+            <option>Geologia e Geociências</option>
+            <option>Economia e Gestão de Energia</option>
+            <option>HSE e Segurança Operacional</option>
+            <option>Engenharia Química</option>
+            <option>Engenharia Mecânica</option>
+            <option>Outra</option>
+          </select>
+        </label>
+        <label>Instituição de ensino ou empresa
+          <input id="institution" maxlength="140" required>
+        </label>
+        <label>Cargo ou função
+          <input id="job-title" maxlength="100" placeholder="Ex.: Estudante finalista">
+        </label>
+      </div>
+
+      <div class="form-section-heading">
+        <span>03</span>
+        <div><h2>Segurança da conta</h2><p>Utilize uma palavra-passe única e difícil de adivinhar.</p></div>
+      </div>
+      <div class="professional-form-grid">
+        <label>Palavra-passe
+          <input id="registration-password" type="password" minlength="10" autocomplete="new-password" required>
+          <span>Mínimo de 10 caracteres.</span>
+        </label>
+        <label>Confirmar palavra-passe
+          <input id="password-confirmation" type="password" minlength="10" autocomplete="new-password" required>
+        </label>
+      </div>
+      <label class="consent-check">
+        <input id="terms" type="checkbox" required>
+        <span>Confirmo que os dados fornecidos são corretos e aceito a sua utilização para gestão da formação e emissão de certificações.</span>
+      </label>
+      <button id="registration-submit" class="button primary" type="submit">Criar conta de aprendizagem</button>
+      <p id="registration-message" class="form-message" role="status"></p>
+    </form>
+  </main>
+  <script type="module" src="/js/register.js"></script>
+  <script type="module" src="/js/custom-select.js"></script>
+</body>
+</html>

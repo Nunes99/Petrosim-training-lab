@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Acesso reservado à administração do PetroSimLab.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Portal de Administração | PetroSimLab</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="auth-body admin-auth">
+  <header class="auth-topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark admin-mark">PS</span>
+      <div><strong>PetroSimLab</strong><small>Controlo institucional</small></div>
+    </a>
+    <a class="auth-back-link" href="/login">Portal de aprendizagem</a>
+  </header>
+
+  <main class="admin-auth-shell">
+    <section class="admin-auth-context">
+      <span class="security-kicker">Área restrita</span>
+      <h1>Administração segura da plataforma.</h1>
+      <p>Este portal é exclusivo para contas administrativas autorizadas. Todas as alterações de funções e acessos ficam registadas.</p>
+      <div class="security-stack">
+        <div><span>01</span><p><strong>Autenticação</strong>Credenciais individuais no Supabase.</p></div>
+        <div><span>02</span><p><strong>Autorização</strong>Função administrativa validada no servidor de dados.</p></div>
+        <div><span>03</span><p><strong>Auditoria</strong>Alterações críticas associadas ao administrador.</p></div>
+      </div>
+    </section>
+
+    <section class="auth-panel admin-login-panel">
+      <div class="auth-panel-heading">
+        <span class="auth-context">Credenciais administrativas</span>
+        <h2>Iniciar sessão</h2>
+        <p>Não é possível criar contas administrativas neste formulário.</p>
+      </div>
+      <form id="admin-auth-form" class="auth-form">
+        <label>E-mail administrativo
+          <input id="admin-login-email" type="email" autocomplete="username" required>
+        </label>
+        <label>Palavra-passe
+          <input id="admin-login-password" type="password" minlength="8" autocomplete="current-password" required>
+        </label>
+        <button id="admin-auth-submit" class="button primary full-width" type="submit">Aceder à administração</button>
+        <p id="admin-auth-message" class="form-message" role="status"></p>
+      </form>
+      <div class="admin-security-notice">
+        <strong>Acesso monitorizado</strong>
+        <span>Contas sem função de Administrador são recusadas mesmo com credenciais válidas.</span>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/js/admin-auth.js"></script>
+</body>
+</html>

@@ -3,36 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Acesso à plataforma de formação PetroSimLab.">
-  <title>Entrar | PetroSim</title>
+  <meta name="description" content="Acesso de estudantes e formadores à plataforma PetroSimLab.">
+  <title>Portal de Aprendizagem | PetroSimLab</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="auth-body">
-  <a class="brand auth-brand" href="/">
-    <span class="brand-mark">PS</span>
-    <div><strong>PetroSimLab</strong><small>Laboratório de formação</small></div>
-  </a>
-  <main class="auth-layout">
-    <section class="auth-intro">
-      <span class="eyebrow">Engenharia aplicada</span>
-      <h1>Treine decisões técnicas com segurança.</h1>
-      <p>Entre no ambiente de simulação para acompanhar resultados, repetir cenários e construir experiência operacional.</p>
-      <div class="trust-list">
-        <span>✓ Simulações orientadas por dados</span>
-        <span>✓ Histórico individual de desempenho</span>
-        <span>✓ Ambiente seguro para aprendizagem</span>
+<body class="auth-body learning-auth">
+  <header class="auth-topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">PS</span>
+      <div><strong>PetroSimLab</strong><small>Formação técnica aplicada</small></div>
+    </a>
+    <a class="auth-back-link" href="/">Voltar ao site</a>
+  </header>
+
+  <main class="auth-shell">
+    <section class="auth-story">
+      <span class="eyebrow">Portal de aprendizagem</span>
+      <h1>Competência técnica construída com prática.</h1>
+      <p>Laboratórios orientados, histórico de desempenho e certificações verificáveis num ambiente dedicado à indústria de energia.</p>
+      <div class="auth-proof-grid">
+        <article><strong>03</strong><span>Laboratórios aplicados</span></article>
+        <article><strong>100%</strong><span>Ambiente controlado</span></article>
+        <article><strong>IM3</strong><span>Decisão estruturada</span></article>
       </div>
     </section>
-    <form id="auth-form" class="auth-card">
-      <span class="eyebrow">Conta PetroSim</span>
-      <h2 id="auth-title">Entrar na plataforma</h2>
-      <p class="muted">Utilize as suas credenciais para continuar.</p>
-      <label>E-mail<input id="email" type="email" autocomplete="email" placeholder="nome@empresa.com" required></label>
-      <label>Senha<input id="password" type="password" minlength="8" autocomplete="current-password" placeholder="Mínimo de 8 caracteres" required></label>
-      <button id="auth-submit" class="button primary full-width" type="submit">Entrar</button>
-      <button id="auth-mode" class="button ghost full-width" type="button">Criar uma conta</button>
-      <p id="auth-message" class="form-message" role="status"></p>
-    </form>
+
+    <section class="auth-panel">
+      <div class="auth-panel-heading">
+        <span class="auth-context">Acesso de estudante e formador</span>
+        <h2>Iniciar sessão</h2>
+        <p>Introduza as credenciais associadas ao seu percurso de formação.</p>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <label for="email">E-mail profissional ou académico
+          <input id="email" type="email" autocomplete="email" placeholder="nome@instituicao.com" required>
+        </label>
+        <label for="password">Palavra-passe
+          <input id="password" type="password" minlength="8" autocomplete="current-password" placeholder="Mínimo de 8 caracteres" required>
+        </label>
+        <div class="auth-form-options">
+          <label class="check-label"><input id="remember-session" type="checkbox"> Manter sessão iniciada</label>
+          <button id="forgot-password" class="text-button" type="button">Recuperar acesso</button>
+        </div>
+        <button id="auth-submit" class="button primary full-width" type="submit">Entrar no painel</button>
+        <p id="auth-message" class="form-message" role="status"></p>
+      </form>
+      <div class="auth-divider"><span>Primeiro acesso?</span></div>
+      <a class="button secondary full-width" href="/register">Criar conta de aprendizagem</a>
+      <p class="auth-admin-link">Responsável pela plataforma? <a href="/admin/login">Acesso administrativo</a></p>
+    </section>
   </main>
   <script type="module" src="/js/auth.js"></script>
 </body>
