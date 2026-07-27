@@ -19,10 +19,35 @@
           <option value="classic">PetroSimLab inicial</option>
         </select>
       </label>
-      <button id="print-certificate" class="button primary" type="button"><span class="material-symbols-outlined" aria-hidden="true">print</span>Imprimir ou guardar em PDF</button>
+      <button id="print-certificate" class="button primary" type="button" disabled><span class="material-symbols-outlined" aria-hidden="true">print</span>Imprimir ou guardar em PDF</button>
     </div>
   </header>
+  <section id="certificate-payment-panel" class="certificate-payment-panel hidden" aria-labelledby="certificate-payment-title">
+    <div class="certificate-payment-heading">
+      <div><span class="eyebrow">Impressão controlada</span><h2 id="certificate-payment-title">Pagamento necessário para imprimir</h2></div>
+      <span id="certificate-payment-status" class="status-pill">Aguardando comprovativo</span>
+    </div>
+    <p id="certificate-payment-description">Efetue o pagamento usando os dados abaixo e carregue o comprovativo para análise administrativa.</p>
+    <div class="certificate-payment-details">
+      <div><span>Valor</span><strong id="certificate-payment-amount">—</strong></div>
+      <div><span>Titular</span><strong id="certificate-payment-account-name">—</strong></div>
+      <div><span>Conta ou carteira</span><strong id="certificate-payment-account-number">—</strong></div>
+    </div>
+    <p id="certificate-payment-instructions"></p>
+    <form id="certificate-payment-form" class="certificate-payment-form">
+      <label>Comprovativo de pagamento
+        <input id="certificate-payment-proof" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" required>
+      </label>
+      <button id="certificate-payment-submit" class="button secondary" type="submit">Enviar comprovativo</button>
+    </form>
+    <p id="certificate-payment-message" class="form-message" role="status"></p>
+  </section>
   <main id="certificate-document" class="certificate-document">
+    <div class="certificate-print-header" aria-hidden="true">
+      <time id="certificate-print-datetime">—</time>
+      <strong>Certificado | PetroSimLab</strong>
+      <span></span>
+    </div>
     <div id="qualification-certificate" class="certificate-frame qualification-certificate">
       <div class="qualification-layout">
         <section class="qualification-identity">

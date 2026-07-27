@@ -8,6 +8,7 @@ const defaultAssets = {
   coordinator_signature_path: "/assets/certificates/default/coordinator-signature.png",
   institutional_seal_path: "/assets/certificates/default/institutional-seal.png",
 };
+let paymentContext = null;
 
 function assetUrl(supabase, path, fallback) {
   const value = path || fallback;
@@ -63,13 +64,142 @@ function applyCertificateModel(requestedModel, syncUrl = false) {
   }
 }
 
+function updatePrintDateTime() {
+  document.querySelector("#certificate-print-datetime").textContent =
+    new Intl.DateTimeFormat("pt-PT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+}
+
+function setPrintAuthorized(authorized) {
+  document.body.classList.toggle("print-authorized", authorized);
+  document.querySelector("#print-certificate").disabled = !authorized;
+}
+
+function renderPaymentRequest(request) {
+  const panel = document.querySelector("#certificate-payment-panel");
+  panel.classList.remove("hidden");
+  const status = document.querySelector("#certificate-payment-status");
+  const form = document.querySelector("#certificate-payment-form");
+  const description = document.querySelector("#certificate-payment-description");
+  const statusCopy = {
+    awaiting_proof: "Aguardando comprovativo",
+    pending: "Comprovativo em análise",
+    rejected: "Comprovativo rejeitado",
+    approved: "Impressão liberada",
+  };
+  status.textContent = statusCopy[request.status] || request.status;
+  status.className = `status-pill ${
+    request.status === "approved" ? "success" : request.status === "rejected" ? "blocked" : ""
+  }`;
+  document.querySelector("#certificate-payment-amount").textContent =
+    `${Number(request.amount).toLocaleString("pt-PT", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} ${request.currency}`;
+  document.querySelector("#certificate-payment-account-name").textContent =
+    request.payment_account_name;
+  document.querySelector("#certificate-payment-account-number").textContent =
+    request.payment_account_number;
+  document.querySelector("#certificate-payment-instructions").textContent =
+    request.payment_instructions || "";
+  form.classList.toggle("hidden", !["awaiting_proof", "rejected"].includes(request.status));
+  if (request.status === "pending") {
+    description.textContent =
+      "O comprovativo foi enviado. A impressão será liberada após a validação administrativa.";
+  } else if (request.status === "rejected") {
+    description.textContent =
+      `O comprovativo foi rejeitado${request.admin_note ? `: ${request.admin_note}` : "."} Envie um novo ficheiro.`;
+  } else if (request.status === "approved") {
+    description.textContent = "Pagamento validado. A impressão oficial está liberada.";
+  }
+  setPrintAuthorized(request.status === "approved");
+}
+
+async function configurePrintAccess(supabase, session, certificate, printPolicy) {
+  setPrintAuthorized(false);
+  if (session.user.id !== certificate.user_id || printPolicy.print_access_mode !== "paid") {
+    document.querySelector("#certificate-payment-panel").classList.add("hidden");
+    setPrintAuthorized(true);
+    return;
+  }
+  const { data: existing, error: requestError } = await supabase
+    .from("certificate_print_requests")
+    .select("*")
+    .eq("certificate_id", certificate.id)
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+  if (requestError) throw requestError;
+  let request = existing;
+  if (!request) {
+    const { data, error } = await supabase.rpc("create_certificate_print_request", {
+      p_certificate_id: certificate.id,
+    });
+    if (error) throw error;
+    request = data;
+  }
+  paymentContext = { supabase, session, certificate, request };
+  renderPaymentRequest(request);
+}
+
+async function submitPaymentProof(event) {
+  event.preventDefault();
+  if (!paymentContext?.request) return;
+  const file = document.querySelector("#certificate-payment-proof").files[0];
+  const message = document.querySelector("#certificate-payment-message");
+  const submit = document.querySelector("#certificate-payment-submit");
+  if (!file) return;
+  if (!["image/png", "image/jpeg", "image/webp", "application/pdf"].includes(file.type)) {
+    message.textContent = "Utilize PNG, JPEG, WebP ou PDF.";
+    message.classList.add("error");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    message.textContent = "O comprovativo não pode ultrapassar 5 MB.";
+    message.classList.add("error");
+    return;
+  }
+  submit.disabled = true;
+  message.classList.remove("error");
+  message.textContent = "A enviar comprovativo…";
+  try {
+    const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "")
+      || (file.type === "application/pdf" ? "pdf" : "png");
+    const path = `${paymentContext.session.user.id}/${paymentContext.request.id}/proof-${
+      Date.now()
+    }.${extension}`;
+    const { error: uploadError } = await paymentContext.supabase.storage
+      .from("certificate-payment-proofs")
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) throw uploadError;
+    const { data, error } = await paymentContext.supabase.rpc(
+      "submit_certificate_payment_proof",
+      { p_request_id: paymentContext.request.id, p_proof_path: path },
+    );
+    if (error) throw error;
+    paymentContext.request = data;
+    renderPaymentRequest(data);
+    message.textContent = "Comprovativo enviado para análise.";
+    document.querySelector("#certificate-payment-proof").value = "";
+  } catch (error) {
+    message.textContent = error.message || "Não foi possível enviar o comprovativo.";
+    message.classList.add("error");
+  } finally {
+    submit.disabled = false;
+  }
+}
+
 async function init() {
   const parameters = new URLSearchParams(window.location.search);
   const certificateId = parameters.get("id");
   const certificateCode = parameters.get("code");
   if (!certificateId && !certificateCode) throw new Error("Certificado não indicado.");
 
-  const { supabase } = await requireSession();
+  const { supabase, session } = await requireSession();
   let certificateQuery = supabase
     .from("certificates")
     .select(
@@ -88,16 +218,13 @@ async function init() {
     || !Object.hasOwn(snapshot, "layout_style");
   const [profileResult, templateResult] = await Promise.all([
     supabase.from("profiles").select("full_name,display_name").eq("id", certificate.user_id).single(),
-    needsLiveTemplate
-      ? supabase.from("certificate_templates").select("*").eq("module_id", certificate.module_id).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
+    supabase.from("certificate_templates").select("*").eq("module_id", certificate.module_id).maybeSingle(),
   ]);
   if (profileResult.error) throw profileResult.error;
   if (templateResult.error) throw templateResult.error;
   const profile = profileResult.data;
-  const template = needsLiveTemplate
-    ? { ...(templateResult.data || {}), ...snapshot }
-    : snapshot;
+  const liveTemplate = templateResult.data || {};
+  const template = needsLiveTemplate ? { ...liveTemplate, ...snapshot } : snapshot;
   const issuedDate = new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit", month: "long", year: "numeric",
   }).format(new Date(certificate.issued_at));
@@ -178,13 +305,21 @@ async function init() {
   const requestedModel = parameters.get("model") || template.layout_style || "qualification";
   applyCertificateModel(requestedModel);
   await loadQrCodes(qrSource);
+  await configurePrintAccess(supabase, session, certificate, liveTemplate);
+  updatePrintDateTime();
   document.body.classList.add("auth-ready");
 }
 
-document.querySelector("#print-certificate").addEventListener("click", () => window.print());
+document.querySelector("#print-certificate").addEventListener("click", () => {
+  if (!document.body.classList.contains("print-authorized")) return;
+  updatePrintDateTime();
+  window.print();
+});
 document.querySelector("#certificate-model-select").addEventListener("change", (event) => {
   applyCertificateModel(event.target.value, true);
 });
+document.querySelector("#certificate-payment-form").addEventListener("submit", submitPaymentProof);
+window.addEventListener("beforeprint", updatePrintDateTime);
 
 init().catch((error) => {
   document.querySelector("#certificate-error").textContent = error.message;

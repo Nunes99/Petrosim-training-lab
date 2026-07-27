@@ -144,6 +144,9 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'id="user-details-delete"' in admin
     assert 'id="template-layout-style"' in admin
     assert 'id="certificate-model-select"' in certificate
+    assert 'id="certificate-payment-panel"' in certificate
+    assert 'id="certificate-payment-proof"' in certificate
+    assert 'id="certificate-print-datetime"' in certificate
     assert 'id="qualification-certificate"' in certificate
     assert 'id="classic-certificate"' in certificate
     assert 'class="brand-mark classic-brandmark"' in certificate
@@ -162,6 +165,13 @@ def test_identity_status_and_admin_user_management_are_available():
     assert "role = 'admin' and public_id ~ '^ADM-[0-9]{5}$'" in schema
     assert "role = 'instructor' and public_id ~ '^REV-[0-9]{5}$'" in schema
     assert "layout_style in ('qualification', 'classic')" in schema
+    assert "create table if not exists public.certificate_print_requests" in schema
+    assert "create_certificate_print_request" in schema
+    assert "submit_certificate_payment_proof" in schema
+    assert "admin_review_certificate_print_request" in schema
+    assert "'certificate-payment-proofs'" in schema
+    assert 'id="template-print-access"' in admin
+    assert 'id="print-request-admin-table"' in admin
     assert product_credit in login
     assert product_credit in admin_login
     assert ".status-pill," in stylesheet
@@ -174,5 +184,7 @@ def test_identity_status_and_admin_user_management_are_available():
     assert ".certificate-frame.classic-certificate" in stylesheet
     assert ".section-sidebar-page > footer" in stylesheet
     assert "flex: 1 0 auto" in stylesheet
+    assert "body.certificate-page:not(.print-authorized)" in stylesheet
+    assert "grid-template-rows: 8mm 200mm" in stylesheet
     assert 'html[data-theme="dark"] .formula-box code' in stylesheet
     assert "color: #ffe0a3 !important" in stylesheet

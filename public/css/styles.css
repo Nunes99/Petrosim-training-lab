@@ -4922,3 +4922,183 @@ html[data-theme="dark"] .formula-box p {
     padding: 1.2mm;
   }
 }
+
+/* Pagamento e autorização da impressão oficial */
+.certificate-payment-panel {
+  width: min(1280px,calc(100% - 24px));
+  margin: 0 auto 16px;
+  padding: 22px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brand-gold);
+  border-radius: var(--button-radius);
+  box-shadow: 0 12px 32px rgba(0,30,50,.1);
+}
+
+.certificate-payment-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.certificate-payment-heading h2 {
+  margin: 3px 0 0;
+  color: var(--brand-navy);
+  font-size: 1.35rem;
+}
+
+.certificate-payment-details {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.certificate-payment-details div {
+  padding: 13px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--button-radius);
+}
+
+.certificate-payment-details span,
+.certificate-payment-details strong {
+  display: block;
+}
+
+.certificate-payment-details span {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.certificate-payment-details strong {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.certificate-payment-form {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.certificate-payment-form label {
+  flex: 1;
+}
+
+.certificate-payment-policy {
+  padding: 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--button-radius);
+}
+
+.certificate-payment-policy.is-paid {
+  border-color: var(--brand-gold);
+}
+
+.certificate-print-header {
+  display: none;
+}
+
+html[data-theme="dark"] .certificate-payment-panel,
+html[data-theme="dark"] .certificate-payment-policy,
+html[data-theme="dark"] .certificate-payment-details div {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .certificate-payment-heading h2 {
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .certificate-payment-heading,
+  .certificate-payment-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .certificate-payment-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Uma única folha A4 horizontal, com cabeçalho próprio e sem URL automática. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html,
+  body.certificate-page {
+    width: 297mm;
+    height: 210mm;
+    min-height: 210mm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .certificate-toolbar,
+  .certificate-payment-panel,
+  .certificate-error,
+  .theme-toggle {
+    display: none !important;
+  }
+
+  body.certificate-page:not(.print-authorized) .certificate-document {
+    display: none !important;
+  }
+
+  body.certificate-page:not(.print-authorized)::after {
+    display: grid;
+    width: 297mm;
+    height: 210mm;
+    place-items: center;
+    color: #00365b;
+    content: "Impressão não autorizada. Aguarde a validação do pagamento.";
+    font: 700 15pt "PT Sans", sans-serif;
+  }
+
+  .certificate-document {
+    display: grid;
+    width: 297mm;
+    height: 210mm;
+    grid-template-rows: 8mm 200mm;
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .certificate-print-header {
+    display: grid;
+    width: 287mm;
+    height: 8mm;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    margin: 0 auto;
+    color: #273f4d;
+    font-size: 7.5pt;
+  }
+
+  .certificate-print-header strong {
+    color: #00365b;
+    font-size: 8pt;
+    text-align: center;
+  }
+
+  .certificate-frame.qualification-certificate,
+  .certificate-frame.classic-certificate {
+    width: 287mm;
+    height: 200mm;
+    min-height: 200mm;
+    margin: 0 auto;
+  }
+}

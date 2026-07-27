@@ -194,6 +194,20 @@
           </div>
         </section>
 
+        <section class="admin-card">
+          <div class="admin-card-heading">
+            <div><span class="eyebrow">Pagamentos e liberações</span><h2>Solicitações de impressão</h2><p>Analise comprovativos e libere ou rejeite a impressão oficial.</p></div>
+            <span id="print-request-results-count" class="filter-count">—</span>
+          </div>
+          <div class="admin-filterbar">
+            <label class="filter-search">Pesquisar solicitações<input id="print-request-search" type="search" placeholder="Formando, certificado ou laboratório"></label>
+            <label>Estado<select id="print-request-status-filter"><option value="">Todos</option><option value="pending">Em análise</option><option value="approved">Liberado</option><option value="rejected">Rejeitado</option><option value="awaiting_proof">Sem comprovativo</option></select></label>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table"><thead><tr><th>Formando</th><th>Certificado</th><th>Valor</th><th>Estado</th><th>Comprovativo</th><th>Ações</th></tr></thead><tbody id="print-request-admin-table"></tbody></table>
+          </div>
+        </section>
+
         <section class="admin-card certificate-branding-manager">
           <div class="admin-card-heading">
             <div>
@@ -230,6 +244,20 @@
                 <label class="form-span-2">Conteúdos certificados
                   <textarea id="template-topics" rows="5" placeholder="Um conteúdo por linha" required></textarea>
                 </label>
+                <div class="form-span-2 certificate-payment-policy">
+                  <div class="form-section-heading">
+                    <span class="material-symbols-outlined" aria-hidden="true">policy</span>
+                    <div><h3>Política de impressão</h3><p>Defina se a impressão é livre ou depende de pagamento e aprovação.</p></div>
+                  </div>
+                  <div class="professional-form-grid">
+                    <label>Acesso à impressão<select id="template-print-access"><option value="free">Impressão livre</option><option value="paid">Pagamento obrigatório</option></select></label>
+                    <label>Valor<input id="template-print-fee" type="number" min="0" step="0.01" value="0"></label>
+                    <label>Moeda<select id="template-print-currency"><option value="MZN">MZN — Metical</option><option value="USD">USD — Dólar</option></select></label>
+                    <label>Titular da conta<input id="template-payment-account-name" maxlength="140"></label>
+                    <label class="form-span-2">Número da conta ou carteira móvel<input id="template-payment-account-number" maxlength="160"></label>
+                    <label class="form-span-2">Instruções de pagamento<textarea id="template-payment-instructions" rows="3" maxlength="600" placeholder="Banco, número de conta, referência ou instruções adicionais"></textarea></label>
+                  </div>
+                </div>
               </div>
 
               <div class="certificate-assets-heading">

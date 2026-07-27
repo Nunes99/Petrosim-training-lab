@@ -1272,6 +1272,12 @@ create table if not exists public.certificate_templates (
 
 alter table public.certificate_templates
   add column if not exists layout_style text not null default 'qualification',
+  add column if not exists print_access_mode text not null default 'free',
+  add column if not exists print_fee numeric(12,2) not null default 0,
+  add column if not exists print_currency text not null default 'MZN',
+  add column if not exists payment_account_name text,
+  add column if not exists payment_account_number text,
+  add column if not exists payment_instructions text,
   add column if not exists product_credit_text text not null
     default 'PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.',
   add column if not exists product_logo_path text;
@@ -1286,6 +1292,27 @@ begin
     alter table public.certificate_templates
       add constraint certificate_templates_layout_style_check
       check (layout_style in ('qualification', 'classic'));
+  end if;
+end
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'certificate_templates_print_access_check'
+  ) then
+    alter table public.certificate_templates
+      add constraint certificate_templates_print_access_check
+      check (
+        (print_access_mode = 'free' and print_fee >= 0)
+        or (
+          print_access_mode = 'paid'
+          and print_fee > 0
+          and nullif(trim(payment_account_name), '') is not null
+          and nullif(trim(payment_account_number), '') is not null
+        )
+      );
   end if;
 end
 $$;
@@ -1378,6 +1405,230 @@ drop policy if exists "Admins can delete certificate templates" on public.certif
 create policy "Admins can delete certificate templates"
   on public.certificate_templates for delete to authenticated
   using ((select public.is_admin()));
+
+create table if not exists public.certificate_print_requests (
+  id uuid primary key default gen_random_uuid(),
+  certificate_id uuid not null references public.certificates(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  module_id uuid not null references public.training_modules(id) on delete cascade,
+  status text not null default 'awaiting_proof'
+    check (status in ('awaiting_proof', 'pending', 'approved', 'rejected')),
+  amount numeric(12,2) not null check (amount > 0),
+  currency text not null default 'MZN',
+  payment_account_name text not null,
+  payment_account_number text not null,
+  payment_instructions text,
+  proof_path text,
+  admin_note text,
+  submitted_at timestamptz,
+  reviewed_at timestamptz,
+  reviewed_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (certificate_id, user_id)
+);
+
+create index if not exists certificate_print_requests_status_idx
+  on public.certificate_print_requests (status, created_at desc);
+
+alter table public.certificate_print_requests enable row level security;
+grant select on table public.certificate_print_requests to authenticated;
+
+drop policy if exists "Users can read own print requests" on public.certificate_print_requests;
+create policy "Users can read own print requests"
+  on public.certificate_print_requests for select to authenticated
+  using ((select auth.uid()) = user_id and (select public.is_active_user()));
+
+drop policy if exists "Admins can read print requests" on public.certificate_print_requests;
+create policy "Admins can read print requests"
+  on public.certificate_print_requests for select to authenticated
+  using ((select public.is_admin()));
+
+create or replace function public.create_certificate_print_request(p_certificate_id uuid)
+returns public.certificate_print_requests
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_certificate public.certificates%rowtype;
+  selected_template public.certificate_templates%rowtype;
+  selected_request public.certificate_print_requests%rowtype;
+begin
+  select * into selected_certificate
+  from public.certificates
+  where id = p_certificate_id
+    and user_id = (select auth.uid());
+
+  if selected_certificate.id is null then
+    raise exception 'Certificado inexistente ou sem autorização';
+  end if;
+
+  select * into selected_template
+  from public.certificate_templates
+  where module_id = selected_certificate.module_id;
+
+  if selected_template.print_access_mode <> 'paid' then
+    raise exception 'A impressão deste certificado não requer pagamento';
+  end if;
+
+  insert into public.certificate_print_requests (
+    certificate_id, user_id, module_id, amount, currency,
+    payment_account_name, payment_account_number, payment_instructions
+  )
+  values (
+    selected_certificate.id, selected_certificate.user_id, selected_certificate.module_id,
+    selected_template.print_fee, selected_template.print_currency,
+    selected_template.payment_account_name, selected_template.payment_account_number,
+    selected_template.payment_instructions
+  )
+  on conflict (certificate_id, user_id) do nothing;
+
+  select * into selected_request
+  from public.certificate_print_requests
+  where certificate_id = selected_certificate.id
+    and user_id = selected_certificate.user_id;
+
+  return selected_request;
+end;
+$$;
+
+create or replace function public.submit_certificate_payment_proof(
+  p_request_id uuid,
+  p_proof_path text
+)
+returns public.certificate_print_requests
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_request public.certificate_print_requests%rowtype;
+  expected_prefix text;
+begin
+  expected_prefix := (select auth.uid())::text || '/' || p_request_id::text || '/';
+  if p_proof_path is null or left(p_proof_path, length(expected_prefix)) <> expected_prefix then
+    raise exception 'Caminho do comprovativo inválido';
+  end if;
+
+  update public.certificate_print_requests
+  set proof_path = p_proof_path,
+      status = 'pending',
+      submitted_at = now(),
+      reviewed_at = null,
+      reviewed_by = null,
+      admin_note = null,
+      updated_at = now()
+  where id = p_request_id
+    and user_id = (select auth.uid())
+    and status in ('awaiting_proof', 'rejected')
+  returning * into selected_request;
+
+  if selected_request.id is null then
+    raise exception 'Solicitação inexistente ou não permite novo comprovativo';
+  end if;
+  return selected_request;
+end;
+$$;
+
+create or replace function public.admin_review_certificate_print_request(
+  p_request_id uuid,
+  p_status text,
+  p_admin_note text default null
+)
+returns public.certificate_print_requests
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_request public.certificate_print_requests%rowtype;
+begin
+  if not public.is_admin() then
+    raise exception 'Acesso administrativo necessário';
+  end if;
+  if p_status not in ('approved', 'rejected') then
+    raise exception 'Decisão administrativa inválida';
+  end if;
+
+  update public.certificate_print_requests
+  set status = p_status,
+      admin_note = nullif(trim(p_admin_note), ''),
+      reviewed_at = now(),
+      reviewed_by = (select auth.uid()),
+      updated_at = now()
+  where id = p_request_id
+    and status = 'pending'
+    and proof_path is not null
+  returning * into selected_request;
+
+  if selected_request.id is null then
+    raise exception 'Solicitação pendente não encontrada';
+  end if;
+
+  insert into public.audit_logs (
+    actor_id, action, target_user_id, module_id, metadata
+  )
+  values (
+    (select auth.uid()),
+    case when p_status = 'approved'
+      then 'certificate.print_approved'
+      else 'certificate.print_rejected'
+    end,
+    selected_request.user_id,
+    selected_request.module_id,
+    jsonb_build_object(
+      'request_id', selected_request.id,
+      'certificate_id', selected_request.certificate_id,
+      'amount', selected_request.amount,
+      'currency', selected_request.currency
+    )
+  );
+
+  return selected_request;
+end;
+$$;
+
+revoke all on function public.create_certificate_print_request(uuid) from public, anon;
+revoke all on function public.submit_certificate_payment_proof(uuid, text) from public, anon;
+revoke all on function public.admin_review_certificate_print_request(uuid, text, text) from public, anon;
+grant execute on function public.create_certificate_print_request(uuid) to authenticated;
+grant execute on function public.submit_certificate_payment_proof(uuid, text) to authenticated;
+grant execute on function public.admin_review_certificate_print_request(uuid, text, text) to authenticated;
+
+insert into storage.buckets (
+  id, name, public, file_size_limit, allowed_mime_types
+)
+values (
+  'certificate-payment-proofs',
+  'certificate-payment-proofs',
+  false,
+  5242880,
+  array['image/png', 'image/jpeg', 'image/webp', 'application/pdf']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Users can upload own certificate payment proofs" on storage.objects;
+create policy "Users can upload own certificate payment proofs"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'certificate-payment-proofs'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can read own certificate payment proofs" on storage.objects;
+create policy "Users can read own certificate payment proofs"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'certificate-payment-proofs'
+    and (
+      (storage.foldername(name))[1] = (select auth.uid())::text
+      or (select public.is_admin())
+    )
+  );
 
 insert into storage.buckets (
   id, name, public, file_size_limit, allowed_mime_types

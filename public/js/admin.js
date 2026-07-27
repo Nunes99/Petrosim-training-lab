@@ -11,11 +11,18 @@ let certificates = [];
 let accessGrants = [];
 let auditLogs = [];
 let certificateTemplates = [];
+let printRequests = [];
 let selectedAccessUserId = null;
 let selectedDetailUserId = null;
 
 const roleLabels = { student: "Estudante", instructor: "Formador", admin: "Administrador" };
 const statusLabels = { active: "Ativo", suspended: "Suspenso" };
+const printRequestStatusLabels = {
+  awaiting_proof: "Sem comprovativo",
+  pending: "Em análise",
+  approved: "Liberado",
+  rejected: "Rejeitado",
+};
 const difficultyLabels = { foundation: "Fundamental", intermediate: "Intermédio", advanced: "Avançado" };
 const moduleLabels = {
   "Reservoir Reserves Lab": "Laboratório de Reservas",
@@ -36,6 +43,8 @@ const auditLabels = {
   "user.profile_updated": "Perfil de utilizador atualizado",
   "user.account_deleted": "Conta de utilizador eliminada",
   "lab.access_changed": "Permissão de laboratório alterada",
+  "certificate.print_approved": "Impressão de certificado liberada",
+  "certificate.print_rejected": "Comprovativo de pagamento rejeitado",
 };
 const defaultCertificateAssets = {
   logo_path: "/assets/certificates/default/lmtwebnairs-logo.png",
@@ -793,6 +802,106 @@ function renderCertificates() {
   body.replaceChildren(...(rows.length ? rows : [emptyTableRow(6, "Nenhum certificado corresponde aos filtros.")]));
 }
 
+function printRequestSearchText(request) {
+  const profile = profileById(request.user_id);
+  const certificate = certificates.find((item) => item.id === request.certificate_id);
+  const module = moduleById(request.module_id);
+  return normalize(`${profile?.full_name} ${profile?.email} ${profile?.public_id} ${
+    certificate?.certificate_code
+  } ${module?.title}`);
+}
+
+async function openPaymentProof(request) {
+  if (!request.proof_path) return;
+  const { data, error } = await supabase.storage
+    .from("certificate-payment-proofs")
+    .createSignedUrl(request.proof_path, 300);
+  if (error) throw error;
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+}
+
+async function reviewPrintRequest(request, status) {
+  const approved = status === "approved";
+  if (!window.confirm(
+    approved
+      ? "Liberar a impressão deste certificado?"
+      : "Rejeitar este comprovativo e permitir um novo envio?"
+  )) return;
+  const note = approved ? "" : window.prompt("Motivo da rejeição:", "") ?? "";
+  if (!approved && !note.trim()) return;
+  const { error } = await supabase.rpc("admin_review_certificate_print_request", {
+    p_request_id: request.id,
+    p_status: status,
+    p_admin_note: note.trim() || null,
+  });
+  if (error) throw error;
+  await loadAdminData({ preserveView: true });
+}
+
+function renderPrintRequests() {
+  const query = normalize(document.querySelector("#print-request-search").value);
+  const status = document.querySelector("#print-request-status-filter").value;
+  const filtered = printRequests.filter((request) => (
+    (!query || printRequestSearchText(request).includes(query))
+    && (!status || request.status === status)
+  ));
+  document.querySelector("#print-request-results-count").textContent =
+    `${filtered.length} ${filtered.length === 1 ? "solicitação" : "solicitações"}`;
+  const body = document.querySelector("#print-request-admin-table");
+  const rows = filtered.map((request) => {
+    const row = document.createElement("tr");
+    const profile = profileById(request.user_id);
+    const certificate = certificates.find((item) => item.id === request.certificate_id);
+    const module = moduleById(request.module_id);
+    const values = [
+      profile?.full_name || profile?.display_name || "Utilizador",
+      `${certificate?.certificate_code || "—"} · ${module?.title || "Laboratório"}`,
+      `${Number(request.amount).toLocaleString("pt-PT")} ${request.currency}`,
+    ];
+    values.forEach((value) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    });
+    const statusCell = document.createElement("td");
+    const marker = document.createElement("span");
+    marker.className = `status-pill ${request.status === "approved" ? "success" : request.status === "rejected" ? "blocked" : ""}`;
+    marker.textContent = printRequestStatusLabels[request.status] || request.status;
+    statusCell.append(marker);
+    row.append(statusCell);
+
+    const proofCell = document.createElement("td");
+    if (request.proof_path) {
+      const proofButton = document.createElement("button");
+      proofButton.className = "button secondary compact";
+      proofButton.type = "button";
+      proofButton.textContent = "Abrir";
+      proofButton.addEventListener("click", () => openPaymentProof(request).catch(handleError));
+      proofCell.append(proofButton);
+    } else proofCell.textContent = "Não enviado";
+    row.append(proofCell);
+
+    const actionCell = document.createElement("td");
+    actionCell.className = "table-actions";
+    if (request.status === "pending") {
+      const approve = document.createElement("button");
+      approve.className = "button secondary compact";
+      approve.type = "button";
+      approve.textContent = "Liberar";
+      approve.addEventListener("click", () => reviewPrintRequest(request, "approved").catch(handleError));
+      const reject = document.createElement("button");
+      reject.className = "button danger compact";
+      reject.type = "button";
+      reject.textContent = "Rejeitar";
+      reject.addEventListener("click", () => reviewPrintRequest(request, "rejected").catch(handleError));
+      actionCell.append(approve, reject);
+    } else actionCell.textContent = request.admin_note || "—";
+    row.append(actionCell);
+    return row;
+  });
+  body.replaceChildren(...(rows.length ? rows : [emptyTableRow(6, "Nenhuma solicitação corresponde aos filtros.")]));
+}
+
 function renderSimulationFeed(container, items) {
   container.innerHTML = "";
   if (!items.length) {
@@ -886,6 +995,12 @@ function defaultCertificateTemplate(moduleId) {
   return {
     module_id: moduleId,
     layout_style: "qualification",
+    print_access_mode: "free",
+    print_fee: 0,
+    print_currency: "MZN",
+    payment_account_name: "",
+    payment_account_number: "",
+    payment_instructions: "",
     issuer_name: "LMTWEBNAIRS",
     certificate_title: "Certificado de Qualificação",
     qualification_label: "Qualificação profissional",
@@ -933,11 +1048,33 @@ function updateCertificateTemplatePreview() {
     || "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.";
 }
 
+function updatePrintPolicyFields() {
+  const paid = document.querySelector("#template-print-access").value === "paid";
+  [
+    "#template-print-fee",
+    "#template-payment-account-name",
+    "#template-payment-account-number",
+  ].forEach((selector) => {
+    document.querySelector(selector).required = paid;
+  });
+  document.querySelector(".certificate-payment-policy").classList.toggle("is-paid", paid);
+}
+
 function fillCertificateTemplateForm(moduleId) {
   const template = certificateTemplates.find((item) => item.module_id === moduleId)
     || defaultCertificateTemplate(moduleId);
   document.querySelector("#template-layout-style").value =
     template.layout_style === "classic" ? "classic" : "qualification";
+  document.querySelector("#template-print-access").value =
+    template.print_access_mode === "paid" ? "paid" : "free";
+  document.querySelector("#template-print-fee").value = template.print_fee ?? 0;
+  document.querySelector("#template-print-currency").value = template.print_currency || "MZN";
+  document.querySelector("#template-payment-account-name").value =
+    template.payment_account_name || "";
+  document.querySelector("#template-payment-account-number").value =
+    template.payment_account_number || "";
+  document.querySelector("#template-payment-instructions").value =
+    template.payment_instructions || "";
   document.querySelector("#template-issuer").value = template.issuer_name || "";
   document.querySelector("#template-title").value = template.certificate_title || "";
   document.querySelector("#template-qualification").value = template.qualification_label || "";
@@ -955,6 +1092,7 @@ function fillCertificateTemplateForm(moduleId) {
     setCertificateAssetPreview(field, template[field.column] || defaultCertificateAssets[field.column]);
   });
   updateCertificateTemplatePreview();
+  updatePrintPolicyFields();
   setMessage("#template-message", template.id
     ? "Configuração carregada."
     : "Este laboratório utilizará a identidade institucional padrão.");
@@ -1004,9 +1142,28 @@ async function saveCertificateTemplate(event) {
     return;
   }
   const existing = certificateTemplates.find((template) => template.module_id === moduleId);
+  const paidPrinting = document.querySelector("#template-print-access").value === "paid";
+  const printFee = Number(document.querySelector("#template-print-fee").value || 0);
+  const accountName = document.querySelector("#template-payment-account-name").value.trim();
+  const accountNumber = document.querySelector("#template-payment-account-number").value.trim();
+  if (paidPrinting && (printFee <= 0 || !accountName || !accountNumber)) {
+    setMessage(
+      "#template-message",
+      "Para exigir pagamento, indique um valor, o titular e o número da conta.",
+      true,
+    );
+    return;
+  }
   const payload = {
     module_id: moduleId,
     layout_style: document.querySelector("#template-layout-style").value,
+    print_access_mode: paidPrinting ? "paid" : "free",
+    print_fee: paidPrinting ? printFee : 0,
+    print_currency: document.querySelector("#template-print-currency").value,
+    payment_account_name: accountName || null,
+    payment_account_number: accountNumber || null,
+    payment_instructions:
+      document.querySelector("#template-payment-instructions").value.trim() || null,
     issuer_name: document.querySelector("#template-issuer").value.trim(),
     certificate_title: document.querySelector("#template-title").value.trim(),
     qualification_label: document.querySelector("#template-qualification").value.trim(),
@@ -1056,6 +1213,7 @@ function renderAll() {
   renderModules();
   populateCertificateModuleFilter();
   renderCertificates();
+  renderPrintRequests();
   populateCertificateTemplateModules();
   renderActivity();
 }
@@ -1064,7 +1222,7 @@ async function loadAdminData({ preserveView = false } = {}) {
   setStatus("A atualizar…");
   const [
     profilesResult, simulationsResult, modulesResult, certificatesResult,
-    grantsResult, auditResult, templatesResult,
+    grantsResult, auditResult, templatesResult, printRequestsResult,
   ] =
     await Promise.all([
       supabase.from("profiles")
@@ -1079,10 +1237,11 @@ async function loadAdminData({ preserveView = false } = {}) {
       supabase.from("lab_access_grants").select("*"),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("certificate_templates").select("*").order("created_at"),
+      supabase.from("certificate_print_requests").select("*").order("created_at", { ascending: false }),
     ]);
   const error = [
     profilesResult, simulationsResult, modulesResult, certificatesResult,
-    grantsResult, auditResult, templatesResult,
+    grantsResult, auditResult, templatesResult, printRequestsResult,
   ].find((result) => result.error)?.error;
   if (error) {
     throw new Error(`${error.message}. Confirme que executou a versão atualizada de database/schema.sql no Supabase.`);
@@ -1095,6 +1254,7 @@ async function loadAdminData({ preserveView = false } = {}) {
   accessGrants = grantsResult.data || [];
   auditLogs = auditResult.data || [];
   certificateTemplates = templatesResult.data || [];
+  printRequests = printRequestsResult.data || [];
   const refreshedAdmin = profileById(session.user.id);
   if (refreshedAdmin) {
     currentProfile = refreshedAdmin;
@@ -1134,6 +1294,9 @@ function bindEvents() {
   ["#certificate-search", "#certificate-module-filter"].forEach((selector) => {
     document.querySelector(selector).addEventListener("input", renderCertificates);
   });
+  ["#print-request-search", "#print-request-status-filter"].forEach((selector) => {
+    document.querySelector(selector).addEventListener("input", renderPrintRequests);
+  });
   document.querySelector("#global-admin-search").addEventListener("input", (event) => {
     document.querySelector("#user-search").value = event.target.value;
     setView("users");
@@ -1165,6 +1328,10 @@ function bindEvents() {
   document.querySelector("#template-layout-style").addEventListener(
     "change",
     updateCertificateTemplatePreview,
+  );
+  document.querySelector("#template-print-access").addEventListener(
+    "change",
+    updatePrintPolicyFields,
   );
   ["#template-title", "#template-issuer", "#template-product-credit"].forEach((selector) => {
     document.querySelector(selector).addEventListener("input", updateCertificateTemplatePreview);
