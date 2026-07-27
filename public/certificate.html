@@ -14,27 +14,73 @@
     <button id="print-certificate" class="button primary" type="button"><span class="material-symbols-outlined" aria-hidden="true">print</span>Imprimir ou guardar em PDF</button>
   </header>
   <main id="certificate-document" class="certificate-document">
-    <div class="certificate-frame">
-      <header class="certificate-brand">
-        <div class="certificate-brandmark">PS</div>
-        <div><strong>PetroSimLab</strong><span>Formação técnica aplicada</span></div>
-      </header>
-      <section class="certificate-copy">
-        <span class="certificate-kicker">Certificado de conclusão</span>
-        <p>Certificamos que</p>
-        <h1 id="certificate-student">—</h1>
-        <p>concluiu com aproveitamento o laboratório</p>
-        <h2 id="certificate-module">—</h2>
-        <p id="certificate-description">Programa de simulação técnica e tomada de decisão aplicado à indústria de energia.</p>
-      </section>
-      <section class="certificate-details">
-        <div><span>Resultado final</span><strong id="certificate-score">—</strong></div>
-        <div><span>Data de emissão</span><strong id="certificate-date">—</strong></div>
-        <div><span>Carga de referência</span><strong id="certificate-duration">—</strong></div>
-      </section>
-      <footer class="certificate-footer">
-        <div><span>Código de verificação</span><strong id="certificate-code">—</strong></div>
-        <div class="certificate-signature"><strong>PetroSimLab</strong><span>Produto LMTWEB · Desenvolvido pela LEMOTE</span></div>
+    <div class="certificate-frame qualification-certificate">
+      <div class="certificate-ornament top-left"></div>
+      <div class="certificate-ornament top-right"></div>
+      <div class="certificate-ornament bottom-left"></div>
+      <div class="certificate-ornament bottom-right"></div>
+
+      <div class="qualification-layout">
+        <section class="qualification-identity">
+          <header class="qualification-brand">
+            <img id="certificate-logo" src="/assets/certificates/default/lmtwebnairs-logo.png" alt="Logótipo da entidade emissora">
+            <strong id="certificate-issuer">LMTWEBNAIRS</strong>
+            <span>Formação técnica aplicada</span>
+          </header>
+          <div class="qualification-heading">
+            <h1 id="certificate-title">Certificado de Qualificação</h1>
+            <p id="certificate-qualification">Qualificação profissional</p>
+          </div>
+          <div class="qualification-record">
+            <strong id="certificate-code">—</strong>
+            <span>Documento de qualificação</span>
+            <small>Número de registo</small>
+            <b id="certificate-register">—</b>
+          </div>
+          <div class="qualification-place">
+            <strong id="certificate-location">Cidade de Maputo, Moçambique</strong>
+            <span id="certificate-date">—</span>
+          </div>
+          <div class="qualification-signatory">
+            <div class="signature-assets">
+              <img id="certificate-left-signature" class="signature-image" alt="Assinatura do responsável académico">
+              <img id="certificate-left-stamp" class="stamp-image" alt="Carimbo académico">
+            </div>
+            <span class="signature-line"></span>
+            <strong id="certificate-director-name">Direção Académica</strong>
+            <small id="certificate-director-title">Diretor Académico</small>
+          </div>
+        </section>
+
+        <section class="qualification-content">
+          <p class="qualification-intro">O presente documento certifica que</p>
+          <h2 id="certificate-student">—</h2>
+          <p>concluiu com sucesso e aproveitamento satisfatório o laboratório</p>
+          <h3 id="certificate-module">—</h3>
+          <p id="certificate-description">Programa de simulação técnica e tomada de decisão aplicado à indústria de energia.</p>
+          <div class="qualification-topics">
+            <span>O programa abordou:</span>
+            <ul id="certificate-topics"></ul>
+          </div>
+          <div class="qualification-results">
+            <strong>Carga horária: <span id="certificate-duration">—</span></strong>
+            <strong>Resultado final: <span id="certificate-score">—</span></strong>
+          </div>
+          <div class="qualification-signatory right">
+            <div class="signature-assets">
+              <img id="certificate-right-signature" class="signature-image" alt="Assinatura da coordenação">
+              <img id="certificate-right-stamp" class="stamp-image seal" alt="Selo institucional">
+            </div>
+            <span class="signature-line"></span>
+            <strong id="certificate-coordinator-name">Coordenação do Programa</strong>
+            <small id="certificate-coordinator-title">Coordenador do Programa</small>
+          </div>
+        </section>
+      </div>
+
+      <footer class="qualification-verification">
+        <span class="material-symbols-outlined" aria-hidden="true">qr_code_2</span>
+        <div><strong>Verifique este certificado</strong><span id="certificate-verification-url">—</span></div>
       </footer>
     </div>
   </main>

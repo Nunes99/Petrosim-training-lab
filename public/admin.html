@@ -188,6 +188,90 @@
             <table class="admin-table"><thead><tr><th>Código</th><th>Formando</th><th>Laboratório</th><th>Resultado</th><th>Emissão</th><th></th></tr></thead><tbody id="certificate-admin-table"></tbody></table>
           </div>
         </section>
+
+        <section class="admin-card certificate-branding-manager">
+          <div class="admin-card-heading">
+            <div>
+              <span class="eyebrow">Modelo institucional</span>
+              <h2>Identidade do certificado por laboratório</h2>
+              <p>O desenho permanece único. Apenas os dados institucionais, logótipo, assinaturas e carimbos podem variar.</p>
+            </div>
+            <span class="status-pill">Modelo protegido</span>
+          </div>
+          <div class="certificate-branding-layout">
+            <form id="certificate-template-form" class="certificate-template-form">
+              <label>Laboratório
+                <select id="template-module" required></select>
+              </label>
+              <div class="professional-form-grid">
+                <label>Entidade emissora<input id="template-issuer" maxlength="120" required></label>
+                <label>Título do certificado<input id="template-title" maxlength="120" required></label>
+                <label>Tipo de qualificação<input id="template-qualification" maxlength="120" required></label>
+                <label>Local de emissão<input id="template-location" maxlength="140" required></label>
+                <label class="form-span-2">Endereço de verificação<input id="template-verification-url" type="url" maxlength="300" required></label>
+                <label>Nome do responsável académico<input id="template-director-name" maxlength="120" required></label>
+                <label>Cargo do responsável académico<input id="template-director-title" maxlength="120" required></label>
+                <label>Nome do coordenador<input id="template-coordinator-name" maxlength="120" required></label>
+                <label>Cargo do coordenador<input id="template-coordinator-title" maxlength="120" required></label>
+                <label class="form-span-2">Conteúdos certificados
+                  <textarea id="template-topics" rows="5" placeholder="Um conteúdo por linha" required></textarea>
+                </label>
+              </div>
+
+              <div class="certificate-assets-heading">
+                <span class="material-symbols-outlined" aria-hidden="true">image</span>
+                <div><strong>Elementos gráficos</strong><small>PNG, JPEG ou WebP, até 3 MB por ficheiro.</small></div>
+              </div>
+              <div class="certificate-asset-grid">
+                <label class="asset-upload-card">
+                  <span>Logótipo principal</span>
+                  <img id="preview-logo" alt="Pré-visualização do logótipo">
+                  <input id="asset-logo" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <label class="asset-upload-card">
+                  <span>Assinatura académica</span>
+                  <img id="preview-director-signature" alt="Pré-visualização da assinatura académica">
+                  <input id="asset-director-signature" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <label class="asset-upload-card">
+                  <span>Carimbo académico</span>
+                  <img id="preview-academic-stamp" alt="Pré-visualização do carimbo académico">
+                  <input id="asset-academic-stamp" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <label class="asset-upload-card">
+                  <span>Assinatura da coordenação</span>
+                  <img id="preview-coordinator-signature" alt="Pré-visualização da assinatura da coordenação">
+                  <input id="asset-coordinator-signature" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <label class="asset-upload-card">
+                  <span>Selo institucional</span>
+                  <img id="preview-institutional-seal" alt="Pré-visualização do selo institucional">
+                  <input id="asset-institutional-seal" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+              </div>
+              <button id="template-submit" class="button primary" type="submit"><span class="material-symbols-outlined" aria-hidden="true">save</span>Guardar identidade do laboratório</button>
+              <p id="template-message" class="form-message" role="status"></p>
+            </form>
+
+            <aside class="certificate-template-preview" aria-label="Pré-visualização do modelo de certificado">
+              <div class="template-preview-frame">
+                <img id="template-preview-logo" alt="">
+                <span id="template-preview-title">Certificado de Qualificação</span>
+                <strong>Nome do Formando</strong>
+                <p id="template-preview-module">Laboratório PetroSimLab</p>
+                <div class="template-preview-signatures">
+                  <img id="template-preview-left-signature" alt="">
+                  <img id="template-preview-right-signature" alt="">
+                </div>
+                <div class="template-preview-stamps">
+                  <img id="template-preview-left-stamp" alt="">
+                  <img id="template-preview-right-stamp" alt="">
+                </div>
+              </div>
+              <p>A pré-visualização confirma a posição dos elementos. O certificado final utiliza o mesmo desenho horizontal para todos os laboratórios.</p>
+            </aside>
+          </div>
+        </section>
       </section>
 
       <section class="admin-view" data-view-panel="activity">

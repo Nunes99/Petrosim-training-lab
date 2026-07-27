@@ -10,6 +10,7 @@ let modules = [];
 let certificates = [];
 let accessGrants = [];
 let auditLogs = [];
+let certificateTemplates = [];
 let selectedAccessUserId = null;
 
 const roleLabels = { student: "Estudante", instructor: "Formador", admin: "Administrador" };
@@ -33,6 +34,35 @@ const auditLabels = {
   "user.status_changed": "Estado de conta alterado",
   "lab.access_changed": "Permissão de laboratório alterada",
 };
+const defaultCertificateAssets = {
+  logo_path: "/assets/certificates/default/lmtwebnairs-logo.png",
+  director_signature_path: "/assets/certificates/default/director-signature.png",
+  academic_stamp_path: "/assets/certificates/default/academic-stamp.png",
+  coordinator_signature_path: "/assets/certificates/default/coordinator-signature.png",
+  institutional_seal_path: "/assets/certificates/default/institutional-seal.png",
+};
+const certificateAssetFields = [
+  {
+    column: "logo_path", input: "#asset-logo", preview: "#preview-logo",
+    livePreview: "#template-preview-logo",
+  },
+  {
+    column: "director_signature_path", input: "#asset-director-signature",
+    preview: "#preview-director-signature", livePreview: "#template-preview-left-signature",
+  },
+  {
+    column: "academic_stamp_path", input: "#asset-academic-stamp",
+    preview: "#preview-academic-stamp", livePreview: "#template-preview-left-stamp",
+  },
+  {
+    column: "coordinator_signature_path", input: "#asset-coordinator-signature",
+    preview: "#preview-coordinator-signature", livePreview: "#template-preview-right-signature",
+  },
+  {
+    column: "institutional_seal_path", input: "#asset-institutional-seal",
+    preview: "#preview-institutional-seal", livePreview: "#template-preview-right-stamp",
+  },
+];
 const buttonIcons = {
   Guardar: "save",
   Acessos: "key",
@@ -654,6 +684,161 @@ function populateCertificateModuleFilter() {
   select.value = current;
 }
 
+function certificateAssetUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("/") || /^https?:\/\//i.test(path)) return path;
+  return supabase.storage.from("certificate-assets").getPublicUrl(path).data.publicUrl;
+}
+
+function defaultCertificateTemplate(moduleId) {
+  return {
+    module_id: moduleId,
+    issuer_name: "LMTWEBNAIRS",
+    certificate_title: "Certificado de Qualificação",
+    qualification_label: "Qualificação profissional",
+    location_text: "Cidade de Maputo, Moçambique",
+    verification_base_url: `${window.location.origin}/certificate`,
+    director_name: "Direção Académica",
+    director_title: "Diretor Académico",
+    coordinator_name: "Coordenação do Programa",
+    coordinator_title: "Coordenador do Programa",
+    program_topics: ["Conteúdo técnico aplicado", "Simulação e interpretação de resultados"],
+    ...defaultCertificateAssets,
+  };
+}
+
+function selectedCertificateTemplate() {
+  const moduleId = document.querySelector("#template-module").value;
+  return certificateTemplates.find((template) => template.module_id === moduleId)
+    || defaultCertificateTemplate(moduleId);
+}
+
+function setCertificateAssetPreview(field, path) {
+  const url = certificateAssetUrl(path);
+  [field.preview, field.livePreview].forEach((selector) => {
+    const image = document.querySelector(selector);
+    image.src = url;
+    image.classList.toggle("empty", !url);
+  });
+}
+
+function updateCertificateTemplatePreview() {
+  document.querySelector("#template-preview-title").textContent =
+    document.querySelector("#template-title").value || "Certificado de Qualificação";
+  const module = moduleById(document.querySelector("#template-module").value);
+  document.querySelector("#template-preview-module").textContent =
+    module?.title || "Laboratório PetroSimLab";
+}
+
+function fillCertificateTemplateForm(moduleId) {
+  const template = certificateTemplates.find((item) => item.module_id === moduleId)
+    || defaultCertificateTemplate(moduleId);
+  document.querySelector("#template-issuer").value = template.issuer_name || "";
+  document.querySelector("#template-title").value = template.certificate_title || "";
+  document.querySelector("#template-qualification").value = template.qualification_label || "";
+  document.querySelector("#template-location").value = template.location_text || "";
+  document.querySelector("#template-verification-url").value = template.verification_base_url || "";
+  document.querySelector("#template-director-name").value = template.director_name || "";
+  document.querySelector("#template-director-title").value = template.director_title || "";
+  document.querySelector("#template-coordinator-name").value = template.coordinator_name || "";
+  document.querySelector("#template-coordinator-title").value = template.coordinator_title || "";
+  document.querySelector("#template-topics").value = (template.program_topics || []).join("\n");
+  certificateAssetFields.forEach((field) => {
+    document.querySelector(field.input).value = "";
+    setCertificateAssetPreview(field, template[field.column] || defaultCertificateAssets[field.column]);
+  });
+  updateCertificateTemplatePreview();
+  setMessage("#template-message", template.id
+    ? "Configuração carregada."
+    : "Este laboratório utilizará a identidade institucional padrão.");
+}
+
+function populateCertificateTemplateModules() {
+  const select = document.querySelector("#template-module");
+  const current = select.value;
+  select.replaceChildren();
+  modules.forEach((module) => {
+    const option = document.createElement("option");
+    option.value = module.id;
+    option.textContent = module.title;
+    select.append(option);
+  });
+  select.value = modules.some((module) => module.id === current)
+    ? current
+    : modules[0]?.id || "";
+  if (select.value) fillCertificateTemplateForm(select.value);
+}
+
+async function uploadCertificateAsset(file, module, column) {
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    throw new Error(`Formato inválido em ${file.name}. Utilize PNG, JPEG ou WebP.`);
+  }
+  if (file.size > 3 * 1024 * 1024) {
+    throw new Error(`${file.name} ultrapassa o limite de 3 MB.`);
+  }
+  const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `${module.slug}/${column}-${Date.now()}.${extension}`;
+  const { error } = await supabase.storage.from("certificate-assets").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type,
+  });
+  if (error) throw error;
+  return path;
+}
+
+async function saveCertificateTemplate(event) {
+  event.preventDefault();
+  const submit = document.querySelector("#template-submit");
+  const moduleId = document.querySelector("#template-module").value;
+  const module = moduleById(moduleId);
+  if (!module) {
+    setMessage("#template-message", "Selecione um laboratório.", true);
+    return;
+  }
+  const existing = certificateTemplates.find((template) => template.module_id === moduleId);
+  const payload = {
+    module_id: moduleId,
+    issuer_name: document.querySelector("#template-issuer").value.trim(),
+    certificate_title: document.querySelector("#template-title").value.trim(),
+    qualification_label: document.querySelector("#template-qualification").value.trim(),
+    location_text: document.querySelector("#template-location").value.trim(),
+    verification_base_url: document.querySelector("#template-verification-url").value.trim(),
+    director_name: document.querySelector("#template-director-name").value.trim(),
+    director_title: document.querySelector("#template-director-title").value.trim(),
+    coordinator_name: document.querySelector("#template-coordinator-name").value.trim(),
+    coordinator_title: document.querySelector("#template-coordinator-title").value.trim(),
+    program_topics: document.querySelector("#template-topics").value.split(/\r?\n/)
+      .map((topic) => topic.trim()).filter(Boolean),
+    updated_by: session.user.id,
+  };
+  certificateAssetFields.forEach((field) => {
+    payload[field.column] = existing?.[field.column] || defaultCertificateAssets[field.column];
+  });
+
+  submit.disabled = true;
+  setMessage("#template-message", "A enviar elementos e guardar a configuração…");
+  try {
+    for (const field of certificateAssetFields) {
+      const file = document.querySelector(field.input).files[0];
+      if (file) payload[field.column] = await uploadCertificateAsset(file, module, field.column);
+    }
+    const query = existing
+      ? supabase.from("certificate_templates").update(payload).eq("id", existing.id)
+      : supabase.from("certificate_templates").insert(payload);
+    const { error } = await query;
+    if (error) throw error;
+    await loadAdminData({ preserveView: true });
+    document.querySelector("#template-module").value = moduleId;
+    fillCertificateTemplateForm(moduleId);
+    setMessage("#template-message", "Identidade do certificado guardada com sucesso.");
+  } catch (error) {
+    setMessage("#template-message", error.message || "Não foi possível guardar o modelo.", true);
+  } finally {
+    submit.disabled = false;
+  }
+}
+
 function renderAll() {
   renderOverview();
   renderUsers();
@@ -662,12 +847,16 @@ function renderAll() {
   renderModules();
   populateCertificateModuleFilter();
   renderCertificates();
+  populateCertificateTemplateModules();
   renderActivity();
 }
 
 async function loadAdminData({ preserveView = false } = {}) {
   setStatus("A atualizar…");
-  const [profilesResult, simulationsResult, modulesResult, certificatesResult, grantsResult, auditResult] =
+  const [
+    profilesResult, simulationsResult, modulesResult, certificatesResult,
+    grantsResult, auditResult, templatesResult,
+  ] =
     await Promise.all([
       supabase.from("profiles")
         .select("id,email,display_name,full_name,phone,country,city,professional_status,education_area,institution,job_title,role,account_status,created_at,updated_at")
@@ -680,9 +869,11 @@ async function loadAdminData({ preserveView = false } = {}) {
         .order("issued_at", { ascending: false }),
       supabase.from("lab_access_grants").select("*"),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("certificate_templates").select("*").order("created_at"),
     ]);
   const error = [
-    profilesResult, simulationsResult, modulesResult, certificatesResult, grantsResult, auditResult,
+    profilesResult, simulationsResult, modulesResult, certificatesResult,
+    grantsResult, auditResult, templatesResult,
   ].find((result) => result.error)?.error;
   if (error) {
     throw new Error(`${error.message}. Confirme que executou a versão atualizada de database/schema.sql no Supabase.`);
@@ -694,6 +885,7 @@ async function loadAdminData({ preserveView = false } = {}) {
   certificates = certificatesResult.data || [];
   accessGrants = grantsResult.data || [];
   auditLogs = auditResult.data || [];
+  certificateTemplates = templatesResult.data || [];
   renderAll();
   setStatus("Acesso autorizado", true);
   if (!preserveView) setView("overview");
@@ -727,6 +919,26 @@ function bindEvents() {
     renderUsers();
   });
   document.querySelector("#module-form").addEventListener("submit", saveModule);
+  document.querySelector("#certificate-template-form").addEventListener("submit", saveCertificateTemplate);
+  document.querySelector("#template-module").addEventListener("change", (event) => {
+    fillCertificateTemplateForm(event.target.value);
+  });
+  ["#template-title", "#template-issuer"].forEach((selector) => {
+    document.querySelector(selector).addEventListener("input", updateCertificateTemplatePreview);
+  });
+  certificateAssetFields.forEach((field) => {
+    document.querySelector(field.input).addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file) {
+        setCertificateAssetPreview(field, selectedCertificateTemplate()[field.column]);
+        return;
+      }
+      const objectUrl = URL.createObjectURL(file);
+      [field.preview, field.livePreview].forEach((selector) => {
+        document.querySelector(selector).src = objectUrl;
+      });
+    });
+  });
   document.querySelector("#module-cancel").addEventListener("click", resetModuleForm);
   document.querySelector("#new-module-button").addEventListener("click", () => {
     resetModuleForm();

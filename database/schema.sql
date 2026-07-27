@@ -935,3 +935,221 @@ drop policy if exists "Admins can read audit logs" on public.audit_logs;
 create policy "Admins can read audit logs"
   on public.audit_logs for select to authenticated
   using ((select public.is_admin()));
+
+-- Modelo único de certificado com identidade configurável por laboratório.
+create table if not exists public.certificate_templates (
+  id uuid primary key default gen_random_uuid(),
+  module_id uuid not null unique references public.training_modules(id) on delete cascade,
+  issuer_name text not null default 'LMTWEBNAIRS',
+  certificate_title text not null default 'Certificado de Qualificação',
+  qualification_label text not null default 'Qualificação profissional',
+  location_text text not null default 'Cidade de Maputo, Moçambique',
+  verification_base_url text not null default 'https://petrosim-training-lab.vercel.app/certificate',
+  director_name text not null default 'Direção Académica',
+  director_title text not null default 'Diretor Académico',
+  coordinator_name text not null default 'Coordenação do Programa',
+  coordinator_title text not null default 'Coordenador do Programa',
+  program_topics text[] not null default array[]::text[],
+  logo_path text,
+  director_signature_path text,
+  academic_stamp_path text,
+  coordinator_signature_path text,
+  institutional_seal_path text,
+  updated_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.certificates
+  add column if not exists template_snapshot jsonb not null default '{}'::jsonb;
+
+insert into public.certificate_templates (
+  module_id, program_topics, logo_path, director_signature_path,
+  academic_stamp_path, coordinator_signature_path, institutional_seal_path
+)
+select
+  module.id,
+  case module.slug
+    when 'reservoir-reserves' then array[
+      'Volumetria de hidrocarbonetos in situ',
+      'Estimativas probabilísticas P90, P50 e P10',
+      'Fator de recuperação e incerteza',
+      'Interpretação técnica de reservas'
+    ]
+    when 'petroleum-economics' then array[
+      'Fluxo de caixa descontado',
+      'Valor presente líquido e taxa interna de retorno',
+      'Prazo de recuperação e sensibilidade',
+      'Decisão económica por estágios'
+    ]
+    when 'hse-decision-trainer' then array[
+      'Identificação de perigos',
+      'Autoridade para interromper o trabalho',
+      'Barreiras críticas e hierarquia de controlos',
+      'Decisão operacional e análise de consequências'
+    ]
+    else array['Conteúdo técnico aplicado', 'Simulação e interpretação de resultados']
+  end,
+  '/assets/certificates/default/lmtwebnairs-logo.png',
+  '/assets/certificates/default/director-signature.png',
+  '/assets/certificates/default/academic-stamp.png',
+  '/assets/certificates/default/coordinator-signature.png',
+  '/assets/certificates/default/institutional-seal.png'
+from public.training_modules as module
+where module.slug in (
+  'reservoir-reserves', 'petroleum-economics', 'hse-decision-trainer'
+)
+on conflict (module_id) do nothing;
+
+update public.certificates as certificate
+set template_snapshot = (
+  select to_jsonb(template) - 'id' - 'module_id' - 'updated_by' - 'created_at' - 'updated_at'
+  from public.certificate_templates as template
+  where template.module_id = certificate.module_id
+)
+where certificate.template_snapshot = '{}'::jsonb
+  and exists (
+    select 1 from public.certificate_templates
+    where module_id = certificate.module_id
+  );
+
+drop trigger if exists certificate_templates_updated_at on public.certificate_templates;
+create trigger certificate_templates_updated_at
+  before update on public.certificate_templates
+  for each row execute procedure public.set_training_module_updated_at();
+
+alter table public.certificate_templates enable row level security;
+grant select, insert, update, delete on table public.certificate_templates to authenticated;
+
+drop policy if exists "Active users can read certificate templates" on public.certificate_templates;
+create policy "Active users can read certificate templates"
+  on public.certificate_templates for select to authenticated
+  using ((select public.is_active_user()));
+
+drop policy if exists "Admins can create certificate templates" on public.certificate_templates;
+create policy "Admins can create certificate templates"
+  on public.certificate_templates for insert to authenticated
+  with check ((select public.is_admin()));
+
+drop policy if exists "Admins can update certificate templates" on public.certificate_templates;
+create policy "Admins can update certificate templates"
+  on public.certificate_templates for update to authenticated
+  using ((select public.is_admin()))
+  with check ((select public.is_admin()));
+
+drop policy if exists "Admins can delete certificate templates" on public.certificate_templates;
+create policy "Admins can delete certificate templates"
+  on public.certificate_templates for delete to authenticated
+  using ((select public.is_admin()));
+
+insert into storage.buckets (
+  id, name, public, file_size_limit, allowed_mime_types
+)
+values (
+  'certificate-assets',
+  'certificate-assets',
+  true,
+  3145728,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Admins can upload certificate assets" on storage.objects;
+create policy "Admins can upload certificate assets"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'certificate-assets'
+    and (select public.is_admin())
+  );
+
+drop policy if exists "Admins can update certificate assets" on storage.objects;
+create policy "Admins can update certificate assets"
+  on storage.objects for update to authenticated
+  using (
+    bucket_id = 'certificate-assets'
+    and (select public.is_admin())
+  )
+  with check (
+    bucket_id = 'certificate-assets'
+    and (select public.is_admin())
+  );
+
+drop policy if exists "Admins can delete certificate assets" on storage.objects;
+create policy "Admins can delete certificate assets"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'certificate-assets'
+    and (select public.is_admin())
+  );
+
+create or replace function public.issue_certificate_from_simulation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_module public.training_modules%rowtype;
+  achieved_score numeric;
+  selected_template jsonb;
+begin
+  select * into selected_module
+  from public.training_modules
+  where slug = coalesce(
+    new.module_slug,
+    case new.module
+      when 'Reservoir Reserves Lab' then 'reservoir-reserves'
+      when 'Petroleum Economics Lab' then 'petroleum-economics'
+      when 'HSE Decision Trainer' then 'hse-decision-trainer'
+      else null
+    end
+  );
+
+  if selected_module.id is null or not selected_module.certificate_enabled then
+    return new;
+  end if;
+
+  achieved_score := case
+    when selected_module.slug = 'hse-decision-trainer'
+      then coalesce((new.results ->> 'percentage')::numeric, 0)
+    else 100
+  end;
+
+  if achieved_score < selected_module.passing_score then
+    return new;
+  end if;
+
+  select to_jsonb(template) - 'id' - 'module_id' - 'updated_by' - 'created_at' - 'updated_at'
+  into selected_template
+  from public.certificate_templates as template
+  where template.module_id = selected_module.id;
+
+  insert into public.certificates (
+    user_id, module_id, simulation_id, final_score, metadata, template_snapshot
+  )
+  values (
+    new.user_id,
+    selected_module.id,
+    new.id,
+    achieved_score,
+    jsonb_build_object('module_slug', selected_module.slug),
+    coalesce(selected_template, '{}'::jsonb)
+  )
+  on conflict (user_id, module_id)
+  do update set
+    simulation_id = case
+      when excluded.final_score >= public.certificates.final_score
+        then excluded.simulation_id
+      else public.certificates.simulation_id
+    end,
+    final_score = greatest(public.certificates.final_score, excluded.final_score),
+    metadata = public.certificates.metadata || excluded.metadata;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.issue_certificate_from_simulation() from public, anon, authenticated;
