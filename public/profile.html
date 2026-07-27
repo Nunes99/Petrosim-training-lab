@@ -30,11 +30,23 @@
   <main class="app-main profile-main">
     <header class="profile-header">
       <div class="profile-identity">
-        <span id="profile-initials" class="profile-avatar">PS</span>
+        <div class="profile-avatar-editor">
+          <div class="profile-avatar">
+            <img id="profile-avatar-image" class="hidden" alt="Fotografia de perfil">
+            <span id="profile-initials">PS</span>
+          </div>
+          <label class="profile-photo-upload" title="Carregar fotografia de perfil">
+            <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span>
+            <span class="sr-only">Carregar fotografia de perfil</span>
+            <input id="profile-photo-input" type="file" accept="image/png,image/jpeg,image/webp"
+              aria-describedby="profile-photo-message">
+          </label>
+        </div>
         <div>
           <span class="eyebrow">Perfil de aprendizagem</span>
           <h1 id="profile-heading-name">A carregar perfil…</h1>
           <p id="profile-heading-context">Informação pessoal, contexto profissional e segurança.</p>
+          <span id="profile-photo-message" class="profile-photo-message" role="status"></span>
         </div>
       </div>
       <span id="profile-completion" class="profile-completion">A calcular conclusão…</span>

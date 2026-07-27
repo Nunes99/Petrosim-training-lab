@@ -285,6 +285,7 @@ alter table public.profiles
   add column if not exists institution text,
   add column if not exists job_title text,
   add column if not exists bio text,
+  add column if not exists avatar_path text,
   add column if not exists account_status text not null default 'active',
   add column if not exists updated_at timestamptz not null default now();
 
@@ -305,6 +306,16 @@ begin
   ) then
     alter table public.profiles add constraint profiles_account_status_check
       check (account_status in ('active', 'suspended'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'profiles_avatar_path_check'
+  ) then
+    alter table public.profiles add constraint profiles_avatar_path_check
+      check (
+        avatar_path is null
+        or split_part(avatar_path, '/', 1) = id::text
+      );
   end if;
 end
 $$;
@@ -861,7 +872,7 @@ revoke all on function public.set_training_module_updated_at() from public, anon
 revoke update on table public.profiles from authenticated;
 grant update (
   display_name, full_name, phone, country, city, professional_status,
-  education_area, institution, job_title, bio, updated_at
+  education_area, institution, job_title, bio, avatar_path, updated_at
 ) on table public.profiles to authenticated;
 
 drop policy if exists "Users can update own profile" on public.profiles;
@@ -1090,6 +1101,58 @@ create policy "Admins can delete certificate assets"
   using (
     bucket_id = 'certificate-assets'
     and (select public.is_admin())
+  );
+
+-- Fotografias de perfil privadas e isoladas pelo identificador do utilizador.
+insert into storage.buckets (
+  id, name, public, file_size_limit, allowed_mime_types
+)
+values (
+  'profile-avatars',
+  'profile-avatars',
+  false,
+  2097152,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Users can read own profile avatar" on storage.objects;
+create policy "Users can read own profile avatar"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'profile-avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can upload own profile avatar" on storage.objects;
+create policy "Users can upload own profile avatar"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'profile-avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can update own profile avatar" on storage.objects;
+create policy "Users can update own profile avatar"
+  on storage.objects for update to authenticated
+  using (
+    bucket_id = 'profile-avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  )
+  with check (
+    bucket_id = 'profile-avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can delete own profile avatar" on storage.objects;
+create policy "Users can delete own profile avatar"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'profile-avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
   );
 
 create or replace function public.issue_certificate_from_simulation()

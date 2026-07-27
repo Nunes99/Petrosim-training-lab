@@ -17,6 +17,12 @@ let supabase;
 let session;
 let profile;
 
+const avatarMimeTypes = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+
 function initials(name) {
   return (name || "PetroSim")
     .split(/\s+/)
@@ -31,6 +37,31 @@ function setFormMessage(selector, text, error = false) {
   const element = document.querySelector(selector);
   element.textContent = text;
   element.classList.toggle("error", error);
+}
+
+function showInitialsAvatar() {
+  const image = document.querySelector("#profile-avatar-image");
+  image.removeAttribute("src");
+  image.classList.add("hidden");
+  document.querySelector("#profile-initials").classList.remove("hidden");
+}
+
+async function renderProfileAvatar(path) {
+  if (!path) {
+    showInitialsAvatar();
+    return;
+  }
+  const { data, error } = await supabase.storage
+    .from("profile-avatars")
+    .createSignedUrl(path, 3600);
+  if (error || !data?.signedUrl) {
+    showInitialsAvatar();
+    return;
+  }
+  const image = document.querySelector("#profile-avatar-image");
+  image.src = data.signedUrl;
+  image.classList.remove("hidden");
+  document.querySelector("#profile-initials").classList.add("hidden");
 }
 
 function fillProfile(data) {
@@ -48,6 +79,8 @@ function fillProfile(data) {
   document.querySelector("#profile-heading-context").textContent =
     `${statusLabels[data.professional_status] || "Formando"} · ${data.institution || "Instituição não indicada"}`;
   document.querySelector("#profile-initials").textContent = initials(data.full_name || data.display_name);
+  document.querySelector("#profile-avatar-image").alt =
+    `Fotografia de ${data.full_name || data.display_name || "perfil"}`;
   ["#profile-country", "#profile-professional-status"].forEach((selector) => {
     document.querySelector(selector).dispatchEvent(new Event("change", { bubbles: true }));
   });
@@ -59,6 +92,72 @@ function fillProfile(data) {
   const percentage = Math.round(completionFields.filter(Boolean).length / completionFields.length * 100);
   document.querySelector("#profile-completion").textContent = `Perfil ${percentage}% completo`;
 }
+
+document.querySelector("#profile-photo-input").addEventListener("change", async (event) => {
+  const input = event.currentTarget;
+  const file = input.files[0];
+  if (!file) return;
+  const extension = avatarMimeTypes[file.type];
+  if (!extension) {
+    setFormMessage("#profile-photo-message", "Utilize PNG, JPEG ou WebP.", true);
+    input.value = "";
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    setFormMessage("#profile-photo-message", "A fotografia deve ter no máximo 2 MB.", true);
+    input.value = "";
+    return;
+  }
+
+  const image = document.querySelector("#profile-avatar-image");
+  const initialsNode = document.querySelector("#profile-initials");
+  const localPreview = URL.createObjectURL(file);
+  image.src = localPreview;
+  image.classList.remove("hidden");
+  initialsNode.classList.add("hidden");
+  input.disabled = true;
+  setFormMessage("#profile-photo-message", "A guardar fotografia…");
+
+  const previousPath = profile.avatar_path || "";
+  const nextPath = `${session.user.id}/avatar-${Date.now()}.${extension}`;
+  try {
+    const { error: uploadError } = await supabase.storage
+      .from("profile-avatars")
+      .upload(nextPath, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+    if (uploadError) throw uploadError;
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ avatar_path: nextPath, updated_at: new Date().toISOString() })
+      .eq("id", session.user.id);
+    if (profileError) {
+      await supabase.storage.from("profile-avatars").remove([nextPath]);
+      throw profileError;
+    }
+
+    profile = { ...profile, avatar_path: nextPath };
+    await renderProfileAvatar(nextPath);
+    if (previousPath && previousPath !== nextPath) {
+      await supabase.storage.from("profile-avatars").remove([previousPath]);
+    }
+    setFormMessage("#profile-photo-message", "Fotografia atualizada.");
+  } catch (error) {
+    await renderProfileAvatar(previousPath);
+    setFormMessage(
+      "#profile-photo-message",
+      error.message || "Não foi possível guardar a fotografia.",
+      true,
+    );
+  } finally {
+    URL.revokeObjectURL(localPreview);
+    input.disabled = false;
+    input.value = "";
+  }
+});
 
 function renderCertificates(certificates) {
   const container = document.querySelector("#profile-certificates");
@@ -179,6 +278,13 @@ async function init() {
     supabase = auth.supabase;
     session = auth.session;
     profile = await getCurrentProfile(supabase, session.user.id);
+    const { data: avatarProfile, error: avatarError } = await supabase
+      .from("profiles")
+      .select("avatar_path")
+      .eq("id", session.user.id)
+      .single();
+    if (avatarError) throw avatarError;
+    profile = { ...profile, ...avatarProfile };
     if (profile.role === "admin") {
       window.location.replace("/admin");
       return;
@@ -190,6 +296,7 @@ async function init() {
     }
     document.querySelector("#profile-sidebar-email").textContent = session.user.email;
     fillProfile(profile);
+    await renderProfileAvatar(profile.avatar_path);
     await loadCertificates();
     document.body.classList.add("auth-ready");
     document.querySelector("#profile-sign-out").addEventListener("click", async () => {

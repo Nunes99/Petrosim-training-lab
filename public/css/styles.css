@@ -1,5 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=account_balance,account_tree,admin_panel_settings,badge,block,co_present,dark_mode,delete,edit,group,health_and_safety,history,home,image,info,key,light_mode,lock,login,logout,monitoring,passkey,person,person_add,play_arrow,policy,print,publish,refresh,save,schedule,school,science,search,shield,space_dashboard,work,workspace_premium&display=block");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=account_balance,account_tree,admin_panel_settings,badge,block,co_present,dark_mode,delete,edit,group,health_and_safety,history,home,image,info,key,light_mode,lock,login,logout,monitoring,passkey,person,person_add,photo_camera,play_arrow,policy,print,publish,refresh,save,schedule,school,science,search,shield,space_dashboard,work,workspace_premium&display=block");
 
 :root {
   --ink: #071522;
@@ -1547,20 +1547,80 @@ input, textarea, select { border-radius: 5px; background-color: #fff; }
   border-radius: 12px;
 }
 .profile-identity { display: flex; align-items: center; gap: 20px; }
-.profile-avatar {
-  display: grid;
+.profile-avatar-editor {
+  position: relative;
   width: 72px;
   height: 72px;
   flex: 0 0 72px;
+}
+.profile-avatar {
+  position: relative;
+  display: grid;
+  width: 72px;
+  height: 72px;
   place-items: center;
+  overflow: hidden;
   color: #102733;
   background: #e9a64e;
   border-radius: 50%;
   font-size: 1.35rem;
   font-weight: 800;
 }
-.profile-header h1 { margin: 5px 0 1px; font-size: 2rem; letter-spacing: -.04em; }
+.profile-avatar > img,
+.profile-avatar > span {
+  width: 100%;
+  height: 100%;
+}
+.profile-avatar > img { display: block; object-fit: cover; }
+.profile-avatar > span { display: grid; place-items: center; }
+.profile-photo-upload {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  padding: 0;
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  border: 2px solid var(--brand-navy);
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0,25,42,.24);
+  cursor: pointer;
+}
+.profile-photo-upload:hover { background: #f3d79f; }
+.profile-photo-upload:focus-within {
+  outline: 3px solid rgba(255,255,255,.9);
+  outline-offset: 2px;
+}
+.profile-photo-upload > .material-symbols-outlined { font-size: 16px; }
+.profile-photo-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+.profile-header h1 {
+  margin: 5px 0 1px;
+  color: #fff;
+  font-size: 2rem;
+  letter-spacing: -.04em;
+  text-shadow: 0 1px 2px rgba(0,23,40,.28);
+}
 .profile-header p { margin: 0; color: #bdd0d8; }
+.profile-photo-message {
+  display: block;
+  min-height: 16px;
+  margin-top: 3px;
+  color: #d8eee5;
+  font-size: .68rem;
+}
+.profile-photo-message.error { color: #ffd1d1; }
 .profile-completion {
   padding: 7px 12px;
   color: #bde5d8;
@@ -3414,6 +3474,21 @@ select:focus,
 .certificate-template-preview > p { color: #405968; }
 .auth-story h1 { color: #fff; }
 
+/* Indicadores do painel numa linha contínua em ecrãs de secretária */
+.app-body .metric-grid {
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 14px;
+}
+.app-body .metric-card {
+  min-width: 0;
+  min-height: 140px;
+  padding: 18px 20px;
+}
+.app-body .metric-card strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.55rem,2.1vw,2rem);
+}
+
 /* Alternância diurna/noturna */
 .theme-toggle {
   position: fixed;
@@ -3641,6 +3716,9 @@ html[data-theme="dark"] .theme-toggle {
   .certificate-branding-layout { grid-template-columns: 1fr; }
   .certificate-template-preview { position: static; width: min(620px,100%); margin: 0 auto; }
 }
+@media (max-width: 1100px) {
+  .app-body .metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
 @media (max-width: 1020px) {
   .auth-story,
   .admin-auth-context {
@@ -3653,8 +3731,9 @@ html[data-theme="dark"] .theme-toggle {
 @media (max-width: 760px) {
   .certificate-asset-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .certificate-asset-grid { grid-template-columns: 1fr; }
+  .app-body .metric-grid { grid-template-columns: 1fr; }
 }
 
 @media print {

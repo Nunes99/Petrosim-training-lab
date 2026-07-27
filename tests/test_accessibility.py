@@ -73,3 +73,30 @@ def test_theme_toggle_is_available_on_every_page():
     pages = list(PUBLIC_PATH.rglob("*.html"))
     assert pages
     assert all('/js/theme.js' in page.read_text(encoding="utf-8") for page in pages)
+
+
+def test_dashboard_metrics_and_profile_photo_controls_are_present():
+    stylesheet = CSS_PATH.read_text(encoding="utf-8")
+    dashboard = (PUBLIC_PATH / "dashboard.html").read_text(encoding="utf-8")
+    profile = (PUBLIC_PATH / "profile.html").read_text(encoding="utf-8")
+    profile_script = (PUBLIC_PATH / "js" / "profile.js").read_text(encoding="utf-8")
+    schema = (
+        Path(__file__).resolve().parents[1] / "database" / "schema.sql"
+    ).read_text(encoding="utf-8")
+
+    assert dashboard.count('class="metric-card"') == 4
+    assert re.search(
+        r"\.app-body \.metric-grid\s*\{[^}]*repeat\(4,minmax\(0,1fr\)\)",
+        stylesheet,
+        re.DOTALL,
+    )
+    assert re.search(
+        r"\.profile-header h1\s*\{[^}]*color:\s*#fff",
+        stylesheet,
+        re.DOTALL,
+    )
+    assert 'id="profile-photo-input"' in profile
+    assert 'accept="image/png,image/jpeg,image/webp"' in profile
+    assert '.from("profile-avatars")' in profile_script
+    assert "avatar_path text" in schema
+    assert "'profile-avatars'" in schema

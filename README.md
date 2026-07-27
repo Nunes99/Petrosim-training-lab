@@ -58,8 +58,10 @@ Create a Supabase project and run the complete `database/schema.sql` file in
 its SQL editor. The schema enables Row Level Security, professional profiles,
 student and instructor laboratory grants, account suspension, automatic
 certification, administrative audit events, protected RPC functions, and the
-`certificate-assets` Storage bucket. Only administrators can upload or replace
-certificate identity assets.
+`certificate-assets` and private `profile-avatars` Storage buckets. Only
+administrators can upload or replace certificate identity assets. Each active
+user can upload, view, replace, and delete files only inside their own avatar
+folder.
 Re-run the complete script after updates; it is designed to preserve existing
 records and backfill the new profile and certificate fields.
 
