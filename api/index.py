@@ -34,7 +34,7 @@ class PublicConfig(BaseModel):
     configured: bool
 
 
-@app.get("/")
+@app.get("/api")
 def root():
     return {
         "status": "healthy",
@@ -43,7 +43,7 @@ def root():
     }
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
@@ -52,7 +52,7 @@ def health_check():
     }
 
 
-@app.get("/config", response_model=PublicConfig)
+@app.get("/api/config", response_model=PublicConfig)
 def public_config():
     """Expose only the publishable Supabase values needed by the browser."""
     url = os.getenv("SUPABASE_URL")
@@ -64,7 +64,7 @@ def public_config():
     )
 
 
-@app.post("/reserves/oil", response_model=OilReservesOutput)
+@app.post("/api/reserves/oil", response_model=OilReservesOutput)
 def calculate_oil_reserves(data: OilReservesInput):
     ooip = (
         7758

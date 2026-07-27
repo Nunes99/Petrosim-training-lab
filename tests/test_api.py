@@ -7,14 +7,14 @@ client = TestClient(app)
 
 
 def test_health_check():
-    response = client.get("/health")
+    response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
 
 
 def test_oil_reserves_calculation():
     response = client.post(
-        "/reserves/oil",
+        "/api/reserves/oil",
         json={
             "area_acres": 5000,
             "net_pay_ft": 40,
@@ -32,7 +32,7 @@ def test_oil_reserves_calculation():
 
 def test_rejects_invalid_porosity():
     response = client.post(
-        "/reserves/oil",
+        "/api/reserves/oil",
         json={
             "area_acres": 5000,
             "net_pay_ft": 40,
