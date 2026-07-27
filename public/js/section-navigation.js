@@ -17,14 +17,22 @@ if (navigation) {
 
   localLinks.forEach((link) => link.addEventListener("click", () => setActive(link)));
 
-  const observer = new IntersectionObserver((observed) => {
-    const visible = observed
-      .filter((item) => item.isIntersecting)
-      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    const entry = entries.find((item) => item.section === visible?.target);
-    if (entry) setActive(entry.link);
-  }, { rootMargin: "-18% 0px -58% 0px", threshold: [0, .15, .35, .6] });
-
-  entries.forEach(({ section }) => observer.observe(section));
-  if (entries[0]) setActive(entries[0].link);
+  let scheduled = false;
+  function updateFromScroll() {
+    scheduled = false;
+    const marker = 170;
+    const visible = entries
+      .filter(({ section }) => !section.classList.contains("hidden"))
+      .filter(({ section }) => section.getBoundingClientRect().top <= marker)
+      .at(-1) || entries.find(({ section }) => !section.classList.contains("hidden"));
+    if (visible) setActive(visible.link);
+  }
+  window.addEventListener("scroll", () => {
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(updateFromScroll);
+    }
+  }, { passive: true });
+  window.addEventListener("hashchange", updateFromScroll);
+  requestAnimationFrame(updateFromScroll);
 }
