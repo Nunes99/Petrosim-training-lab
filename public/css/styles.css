@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=account_balance,account_tree,admin_panel_settings,badge,block,co_present,delete,edit,group,health_and_safety,history,home,info,key,lock,login,logout,monitoring,passkey,person,person_add,play_arrow,policy,print,publish,refresh,save,schedule,school,science,search,shield,space_dashboard,work,workspace_premium&display=block");
 
 :root {
   --ink: #071522;
@@ -2427,5 +2428,367 @@ input, textarea, select { border-radius: 5px; background-color: #fff; }
   }
   .im3-select-options {
     max-height: min(56vh,420px);
+  }
+}
+
+/* Identidade LMTWEB / LEMOTE: azul institucional, dourado e ícones lineares */
+:root {
+  --brand-navy: #00365b;
+  --brand-gold-soft: #eac78b;
+  --brand-gold: #c9a55b;
+  --brand-cream: #fff8e4;
+  --ink: #002b49;
+  --navy: #00365b;
+  --navy-2: #0a4b72;
+  --paper: #f6f4ed;
+  --line: #e1d8c4;
+  --accent: #c9a55b;
+  --accent-dark: #977637;
+  --workspace-blue: #00365b;
+  --workspace-blue-2: #0a4b72;
+  --workspace-yellow: #eac78b;
+  --workspace-bg: #f6f4ed;
+  --workspace-soft: #fff8e4;
+  --workspace-border: #dfd5be;
+}
+
+.material-symbols-outlined {
+  display: inline-block;
+  flex: 0 0 auto;
+  font-family: "Material Symbols Outlined";
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  letter-spacing: normal;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+body,
+.app-body,
+.admin-app { background-color: var(--paper); }
+.brand-mark,
+.admin-mark {
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  box-shadow: inset 0 0 0 1px rgba(0,54,91,.12);
+}
+.eyebrow,
+.module-number { color: var(--brand-gold); }
+.button {
+  gap: 7px;
+}
+.button .material-symbols-outlined,
+.sidebar-login .material-symbols-outlined { font-size: 18px; }
+.button.primary {
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  border-color: var(--brand-gold);
+  box-shadow: 0 5px 14px rgba(201,165,91,.18);
+}
+.button.primary:hover {
+  color: #fff;
+  background: var(--brand-navy);
+  border-color: var(--brand-navy);
+}
+.button.secondary {
+  color: var(--brand-navy);
+  background: rgba(255,248,228,.62);
+  border-color: #d9c89f;
+}
+.button.secondary:hover {
+  background: var(--brand-cream);
+  border-color: var(--brand-gold);
+}
+
+.topbar,
+.sidebar,
+.admin-sidebar,
+.section-sidebar-page .workspace-sidebar {
+  background: var(--brand-navy);
+}
+.hero {
+  background:
+    radial-gradient(circle at 82% 18%,rgba(234,199,139,.2),transparent 32%),
+    linear-gradient(108deg,#002b49,#00365b 68%,#0a4b72);
+}
+.section-sidebar-page .hero,
+.section-sidebar-page .lab-hero {
+  border-top-color: var(--brand-gold);
+}
+.side-nav a,
+.workspace-primary a,
+.topbar nav a,
+.profile-section-nav a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.side-nav a .material-symbols-outlined,
+.workspace-primary a .material-symbols-outlined {
+  color: var(--brand-gold-soft);
+  font-size: 19px;
+}
+.side-nav a.active,
+.side-nav a:hover,
+.workspace-sidebar .workspace-primary a.active,
+.section-sidebar-page .workspace-sidebar .site-section-nav a.active {
+  color: #fff;
+  background: rgba(255,248,228,.1);
+}
+.workspace-sidebar .sidebar-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  border-color: var(--brand-gold);
+}
+.workspace-sidebar .sidebar-login:hover {
+  color: #fff;
+  background: #0a4b72;
+}
+
+.module-card,
+.metric-card,
+.panel,
+.simulation-form,
+.results-panel,
+.auth-card,
+.admin-card {
+  border-color: var(--line);
+}
+.module-card,
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+.module-card.active {
+  border-top-color: var(--brand-gold);
+}
+.module-outline-icon,
+.metric-outline-icon {
+  color: var(--brand-gold) !important;
+  background: transparent !important;
+  font-size: 27px !important;
+}
+.module-outline-icon {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+}
+.metric-outline-icon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+}
+.module-status {
+  color: var(--brand-navy);
+  background: var(--brand-cream);
+  border: 1px solid #eadbb8;
+}
+.module-card a.module-status:hover {
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  border-color: var(--brand-gold);
+}
+
+.auth-topbar { background: rgba(0,43,73,.9); }
+.auth-shell {
+  background:
+    radial-gradient(circle at 18% 28%,rgba(234,199,139,.16),transparent 30%),
+    linear-gradient(135deg,#002b49 0%,#00365b 56%,#f6f4ed 56%,#f6f4ed 100%);
+}
+.admin-auth-shell {
+  background:
+    radial-gradient(circle at 15% 26%,rgba(234,199,139,.14),transparent 30%),
+    linear-gradient(135deg,#00253f 0%,#00365b 58%,#f6f4ed 58%,#f6f4ed 100%);
+}
+.auth-story .eyebrow,
+.admin-auth-context .security-kicker { color: var(--brand-gold-soft); }
+.auth-proof-grid { background: rgba(234,199,139,.18); border-color: rgba(234,199,139,.22); }
+.auth-proof-grid article { position: relative; background: rgba(0,43,73,.82); }
+.auth-proof-grid article > .material-symbols-outlined {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: var(--brand-gold-soft);
+  font-size: 25px;
+}
+.auth-proof-grid strong { color: var(--brand-gold-soft); }
+.auth-panel,
+.registration-card { border-color: #dfd5be; }
+.auth-context,
+.text-button,
+.auth-admin-link a { color: var(--brand-navy); }
+.security-stack > div { background: #00314f; }
+.security-stack > div > .material-symbols-outlined {
+  color: var(--brand-gold-soft);
+  font-size: 22px;
+}
+.admin-security-notice,
+.privacy-note {
+  background: var(--brand-cream);
+  border-left-color: var(--brand-gold);
+}
+.form-section-heading > .material-symbols-outlined,
+.section-index > .material-symbols-outlined {
+  color: var(--brand-gold);
+  font-size: 23px;
+}
+.form-section-heading h2,
+.section-index h2,
+.registration-heading h1 { color: var(--brand-navy); }
+
+.profile-header {
+  background:
+    radial-gradient(circle at 90% 10%,rgba(234,199,139,.18),transparent 34%),
+    linear-gradient(112deg,#002b49,#00365b);
+  border-bottom: 3px solid var(--brand-gold);
+}
+.profile-avatar {
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+}
+.profile-section-nav {
+  background: rgba(255,248,228,.92);
+  border-color: #ded0ae;
+}
+.profile-section-nav a .material-symbols-outlined {
+  color: var(--brand-gold);
+  font-size: 18px;
+}
+.security-summary { background: var(--brand-cream); border-color: #eadbb8; }
+.certificate-card {
+  background: linear-gradient(110deg,#fff,var(--brand-cream));
+  border-color: #e4d4af;
+}
+.certificate-seal {
+  color: var(--brand-navy);
+  background: transparent;
+  border-color: var(--brand-gold);
+  box-shadow: 0 0 0 1px var(--brand-gold);
+  font-size: 30px;
+}
+
+.admin-sidebar {
+  background:
+    linear-gradient(180deg,#002b49,var(--brand-navy));
+  border-right-color: rgba(234,199,139,.14);
+}
+.admin-nav button {
+  grid-template-columns: 30px 1fr;
+}
+.admin-nav button > .material-symbols-outlined {
+  color: #b9c9d2;
+  font-size: 20px;
+}
+.admin-nav button.active {
+  color: #fff;
+  background: rgba(255,248,228,.1);
+  box-shadow: inset 3px 0 var(--brand-gold);
+}
+.admin-nav button.active > .material-symbols-outlined {
+  color: var(--brand-gold-soft);
+}
+.admin-workspace-label,
+.admin-breadcrumb strong,
+.admin-page-heading h1,
+.admin-card-heading h2,
+.admin-metric-grid strong { color: var(--brand-navy); }
+.admin-topbar {
+  background: rgba(255,252,242,.96);
+  border-bottom-color: #ded4bc;
+}
+.admin-main { background: var(--paper); }
+.admin-global-search::before { display: none; }
+.admin-global-search .search-icon {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  left: 11px;
+  display: inline-block;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  color: var(--brand-gold);
+  font-size: 20px;
+}
+.admin-metric-grid article {
+  position: relative;
+  overflow: hidden;
+  border-color: #dfd5be;
+}
+.admin-metric-grid .metric-outline-icon {
+  display: inline-block;
+  color: var(--brand-gold) !important;
+}
+.role-distribution-row i { background: var(--brand-navy); }
+.role-distribution-row i.instructor { background: var(--brand-gold); }
+.role-distribution-row i.admin { background: #0a4b72; }
+.access-empty > .material-symbols-outlined {
+  color: var(--brand-gold);
+  font-size: 38px;
+}
+.feed-marker {
+  color: var(--brand-navy);
+  background: var(--brand-cream);
+  border: 1px solid #eadbb8;
+  font-size: 17px;
+}
+.feed-marker.audit { color: #8c692c; background: var(--brand-cream); }
+.permission-toggle,
+.module-policy-options { background: var(--brand-cream); }
+.access-user-option.active {
+  background: var(--brand-cream);
+  border-color: #dfcfa8;
+}
+.access-user-option > span { background: var(--brand-navy); }
+.module-publish-marker.published {
+  color: var(--brand-navy);
+  background: var(--brand-cream);
+  border: 1px solid #eadbb8;
+}
+
+.certificate-page { background: #eee9dc; }
+.certificate-frame {
+  background:
+    linear-gradient(135deg,rgba(234,199,139,.16),transparent 22%),
+    linear-gradient(-45deg,rgba(0,54,91,.08),transparent 25%),
+    #fffdf7;
+  border-color: var(--brand-navy);
+  outline-color: var(--brand-gold);
+}
+.certificate-brandmark {
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+}
+.certificate-kicker,
+.certificate-copy h2 { color: #a88137; }
+
+@media (max-width: 1020px) {
+  .auth-shell,
+  .admin-auth-shell {
+    background:
+      radial-gradient(circle at 15% 18%,rgba(234,199,139,.15),transparent 30%),
+      var(--brand-navy);
   }
 }

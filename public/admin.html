@@ -16,19 +16,19 @@
     </a>
     <div class="admin-workspace-label">Centro de operações</div>
     <nav class="admin-nav" aria-label="Navegação administrativa">
-      <button class="active" type="button" data-admin-view="overview"><span>01</span>Visão geral</button>
-      <button type="button" data-admin-view="users"><span>02</span>Utilizadores</button>
-      <button type="button" data-admin-view="access"><span>03</span>Permissões</button>
-      <button type="button" data-admin-view="modules"><span>04</span>Laboratórios</button>
-      <button type="button" data-admin-view="certificates"><span>05</span>Certificações</button>
-      <button type="button" data-admin-view="activity"><span>06</span>Auditoria</button>
+      <button class="active" type="button" data-admin-view="overview"><span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>Visão geral</button>
+      <button type="button" data-admin-view="users"><span class="material-symbols-outlined" aria-hidden="true">group</span>Utilizadores</button>
+      <button type="button" data-admin-view="access"><span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>Permissões</button>
+      <button type="button" data-admin-view="modules"><span class="material-symbols-outlined" aria-hidden="true">science</span>Laboratórios</button>
+      <button type="button" data-admin-view="certificates"><span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>Certificações</button>
+      <button type="button" data-admin-view="activity"><span class="material-symbols-outlined" aria-hidden="true">history</span>Auditoria</button>
     </nav>
     <div class="admin-sidebar-footer">
       <div class="admin-account">
         <span id="admin-initials">AD</span>
         <div><strong id="admin-name">Administrador</strong><small id="admin-email">A validar…</small></div>
       </div>
-      <button id="sign-out" class="button admin-signout" type="button">Terminar sessão</button>
+      <button id="sign-out" class="button admin-signout" type="button"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Terminar sessão</button>
     </div>
   </aside>
 
@@ -39,10 +39,11 @@
       </div>
       <div class="admin-topbar-actions">
         <label class="admin-global-search">
-          <span>Pesquisar</span>
+          <span class="sr-only">Pesquisar</span>
+          <span class="material-symbols-outlined search-icon" aria-hidden="true">search</span>
           <input id="global-admin-search" type="search" placeholder="Nome, e-mail, laboratório ou certificado">
         </label>
-        <button id="refresh-admin" class="button secondary compact" type="button">Atualizar dados</button>
+        <button id="refresh-admin" class="button secondary compact" type="button"><span class="material-symbols-outlined" aria-hidden="true">refresh</span>Atualizar dados</button>
         <span id="admin-status" class="status-pill">A validar permissões…</span>
       </div>
     </header>
@@ -54,12 +55,12 @@
           <span id="overview-date" class="admin-date"></span>
         </header>
         <div class="admin-metric-grid">
-          <article><span>Utilizadores</span><strong id="user-count">—</strong><small id="active-user-summary">Contas registadas</small></article>
-          <article><span>Estudantes</span><strong id="student-count">—</strong><small>Perfis de aprendizagem</small></article>
-          <article><span>Formadores</span><strong id="instructor-count">—</strong><small>Acessos pedagógicos</small></article>
-          <article><span>Certificações</span><strong id="certificate-total">—</strong><small>Conquistas emitidas</small></article>
-          <article><span>Simulações</span><strong id="admin-simulation-count">—</strong><small>Execuções registadas</small></article>
-          <article><span>Laboratórios</span><strong id="admin-module-count">—</strong><small id="published-module-summary">Módulos configurados</small></article>
+          <article><span class="metric-outline-icon material-symbols-outlined" aria-hidden="true">group</span><span>Utilizadores</span><strong id="user-count">—</strong><small id="active-user-summary">Contas registadas</small></article>
+          <article><span class="metric-outline-icon material-symbols-outlined" aria-hidden="true">school</span><span>Estudantes</span><strong id="student-count">—</strong><small>Perfis de aprendizagem</small></article>
+          <article><span class="metric-outline-icon material-symbols-outlined" aria-hidden="true">co_present</span><span>Formadores</span><strong id="instructor-count">—</strong><small>Acessos pedagógicos</small></article>
+          <article><span class="metric-outline-icon material-symbols-outlined" aria-hidden="true">workspace_premium</span><span>Certificações</span><strong id="certificate-total">—</strong><small>Conquistas emitidas</small></article>
+          <article><span class="metric-outline-icon material-symbols-outlined" aria-hidden="true">monitoring</span><span>Simulações</span><strong id="admin-simulation-count">—</strong><small>Execuções registadas</small></article>
+          <article><span class="metric-outline-icon material-symbols-outlined" aria-hidden="true">science</span><span>Laboratórios</span><strong id="admin-module-count">—</strong><small id="published-module-summary">Módulos configurados</small></article>
         </div>
         <div class="admin-overview-grid">
           <section class="admin-card">
@@ -118,7 +119,7 @@
           </section>
           <section class="admin-card access-matrix-card">
             <div id="access-selection-empty" class="access-empty">
-              <span>03</span><h2>Selecione um utilizador</h2><p>As permissões disponíveis serão apresentadas aqui.</p>
+              <span class="material-symbols-outlined" aria-hidden="true">key</span><h2>Selecione um utilizador</h2><p>As permissões disponíveis serão apresentadas aqui.</p>
             </div>
             <div id="access-selection" class="hidden">
               <div class="admin-card-heading">
@@ -135,7 +136,7 @@
       <section class="admin-view" data-view-panel="modules">
         <header class="admin-page-heading">
           <div><span class="eyebrow">Catálogo pedagógico</span><h1>Laboratórios</h1><p>Controle publicação, acesso padrão e critérios de certificação.</p></div>
-          <button id="new-module-button" class="button primary" type="button">Novo laboratório</button>
+          <button id="new-module-button" class="button primary" type="button"><span class="material-symbols-outlined" aria-hidden="true">science</span>Novo laboratório</button>
         </header>
         <div class="module-management-grid">
           <section class="admin-card">

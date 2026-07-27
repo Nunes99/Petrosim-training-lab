@@ -33,6 +33,17 @@ const auditLabels = {
   "user.status_changed": "Estado de conta alterado",
   "lab.access_changed": "Permissão de laboratório alterada",
 };
+const buttonIcons = {
+  Guardar: "save",
+  Acessos: "key",
+  Suspender: "block",
+  Reativar: "refresh",
+  Retirar: "publish",
+  Publicar: "publish",
+  Editar: "edit",
+  Eliminar: "delete",
+  Visualizar: "workspace_premium",
+};
 
 const normalize = (value) => String(value || "").normalize("NFD")
   .replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -58,7 +69,15 @@ function button(label, className, handler) {
   const element = document.createElement("button");
   element.type = "button";
   element.className = className;
-  element.textContent = label;
+  const iconName = buttonIcons[label];
+  if (iconName) {
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-outlined";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = iconName;
+    element.append(icon);
+  }
+  element.append(document.createTextNode(label));
   element.addEventListener("click", handler);
   return element;
 }
@@ -544,7 +563,11 @@ function renderCertificates() {
     const link = document.createElement("a");
     link.className = "button secondary compact";
     link.href = `/certificate?id=${encodeURIComponent(certificate.id)}`;
-    link.textContent = "Visualizar";
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-outlined";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "workspace_premium";
+    link.append(icon, document.createTextNode("Visualizar"));
     actionCell.append(link);
     row.append(actionCell);
     return row;
@@ -565,8 +588,9 @@ function renderSimulationFeed(container, items) {
     const item = document.createElement("article");
     item.className = "feed-item";
     const marker = document.createElement("span");
-    marker.className = "feed-marker simulation";
-    marker.textContent = "S";
+    marker.className = "feed-marker simulation material-symbols-outlined";
+    marker.setAttribute("aria-hidden", "true");
+    marker.textContent = "science";
     const copy = document.createElement("div");
     const title = document.createElement("strong");
     title.textContent = moduleLabels[simulation.module] || simulation.module;
@@ -594,8 +618,9 @@ function renderActivity() {
     const item = document.createElement("article");
     item.className = "feed-item";
     const marker = document.createElement("span");
-    marker.className = "feed-marker audit";
-    marker.textContent = "A";
+    marker.className = "feed-marker audit material-symbols-outlined";
+    marker.setAttribute("aria-hidden", "true");
+    marker.textContent = "history";
     const copy = document.createElement("div");
     const title = document.createElement("strong");
     title.textContent = auditLabels[log.action] || log.action;

@@ -23,9 +23,9 @@
       <h1>Administração segura da plataforma.</h1>
       <p>Este portal é exclusivo para contas administrativas autorizadas. Todas as alterações de funções e acessos ficam registadas.</p>
       <div class="security-stack">
-        <div><span>01</span><p><strong>Autenticação</strong>Credenciais individuais no Supabase.</p></div>
-        <div><span>02</span><p><strong>Autorização</strong>Função administrativa validada no servidor de dados.</p></div>
-        <div><span>03</span><p><strong>Auditoria</strong>Alterações críticas associadas ao administrador.</p></div>
+        <div><span class="material-symbols-outlined" aria-hidden="true">passkey</span><p><strong>Autenticação</strong>Credenciais individuais no Supabase.</p></div>
+        <div><span class="material-symbols-outlined" aria-hidden="true">policy</span><p><strong>Autorização</strong>Função administrativa validada no servidor de dados.</p></div>
+        <div><span class="material-symbols-outlined" aria-hidden="true">history</span><p><strong>Auditoria</strong>Alterações críticas associadas ao administrador.</p></div>
       </div>
     </section>
 
@@ -42,7 +42,7 @@
         <label>Palavra-passe
           <input id="admin-login-password" type="password" minlength="8" autocomplete="current-password" required>
         </label>
-        <button id="admin-auth-submit" class="button primary full-width" type="submit">Aceder à administração</button>
+        <button id="admin-auth-submit" class="button primary full-width" type="submit"><span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>Aceder à administração</button>
         <p id="admin-auth-message" class="form-message" role="status"></p>
       </form>
       <div class="admin-security-notice">

@@ -14,15 +14,15 @@
       <div><strong>PetroSimLab</strong><small>Espaço de aprendizagem</small></div>
     </a>
     <nav class="side-nav" aria-label="Navegação do perfil">
-      <a href="/dashboard">Visão geral</a>
-      <a href="/labs/reserves">Reservas</a>
-      <a href="/labs/economics">Economia do Petróleo</a>
-      <a href="/labs/hse">Segurança HSE</a>
-      <a class="active" href="/profile">Meu perfil</a>
+      <a href="/dashboard"><span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>Visão geral</a>
+      <a href="/labs/reserves"><span class="material-symbols-outlined" aria-hidden="true">science</span>Reservas</a>
+      <a href="/labs/economics"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Economia do Petróleo</a>
+      <a href="/labs/hse"><span class="material-symbols-outlined" aria-hidden="true">health_and_safety</span>Segurança HSE</a>
+      <a class="active" href="/profile"><span class="material-symbols-outlined" aria-hidden="true">person</span>Meu perfil</a>
     </nav>
     <div class="sidebar-footer">
       <span id="profile-sidebar-email" class="user-email">A carregar…</span>
-      <button id="profile-sign-out" class="button ghost full-width" type="button">Terminar sessão</button>
+      <button id="profile-sign-out" class="button ghost full-width" type="button"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Terminar sessão</button>
     </div>
   </aside>
 
@@ -40,15 +40,15 @@
     </header>
 
     <nav class="profile-section-nav" aria-label="Secções do perfil">
-      <a href="#personal-data">Dados pessoais</a>
-      <a href="#professional-data">Contexto profissional</a>
-      <a href="#account-security">Segurança</a>
-      <a href="#certifications">Certificações</a>
+      <a href="#personal-data"><span class="material-symbols-outlined" aria-hidden="true">badge</span>Dados pessoais</a>
+      <a href="#professional-data"><span class="material-symbols-outlined" aria-hidden="true">work</span>Contexto profissional</a>
+      <a href="#account-security"><span class="material-symbols-outlined" aria-hidden="true">lock</span>Segurança</a>
+      <a href="#certifications"><span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>Certificações</a>
     </nav>
 
     <form id="profile-form" class="panel profile-panel">
       <section id="personal-data" class="profile-form-section">
-        <div class="section-index"><span>01</span><div><h2>Dados pessoais</h2><p>Utilizados para identificação e emissão de certificados.</p></div></div>
+        <div class="section-index"><span class="material-symbols-outlined" aria-hidden="true">badge</span><div><h2>Dados pessoais</h2><p>Utilizados para identificação e emissão de certificados.</p></div></div>
         <div class="professional-form-grid">
           <label>Nome completo<input id="profile-full-name" maxlength="120" autocomplete="name" required></label>
           <label>E-mail<input id="profile-email" type="email" disabled></label>
@@ -67,7 +67,7 @@
       </section>
 
       <section id="professional-data" class="profile-form-section">
-        <div class="section-index"><span>02</span><div><h2>Contexto profissional</h2><p>Mantenha o seu perfil atualizado para uma experiência mais relevante.</p></div></div>
+        <div class="section-index"><span class="material-symbols-outlined" aria-hidden="true">work</span><div><h2>Contexto profissional</h2><p>Mantenha o seu perfil atualizado para uma experiência mais relevante.</p></div></div>
         <div class="professional-form-grid">
           <label>Situação atual
             <select id="profile-professional-status">
@@ -91,20 +91,20 @@
           </label>
         </div>
         <div class="profile-form-actions">
-          <button id="profile-save" class="button primary" type="submit">Guardar alterações</button>
+          <button id="profile-save" class="button primary" type="submit"><span class="material-symbols-outlined" aria-hidden="true">save</span>Guardar alterações</button>
           <p id="profile-message" class="form-message" role="status"></p>
         </div>
       </section>
     </form>
 
     <section id="account-security" class="panel profile-panel security-panel">
-      <div class="section-index"><span>03</span><div><h2>Segurança da conta</h2><p>Proteja o acesso ao seu histórico e às suas certificações.</p></div></div>
+      <div class="section-index"><span class="material-symbols-outlined" aria-hidden="true">lock</span><div><h2>Segurança da conta</h2><p>Proteja o acesso ao seu histórico e às suas certificações.</p></div></div>
       <div class="security-layout">
         <form id="password-form" class="security-form">
           <h3>Alterar palavra-passe</h3>
           <label>Nova palavra-passe<input id="new-password" type="password" minlength="10" autocomplete="new-password" required></label>
           <label>Confirmar palavra-passe<input id="confirm-new-password" type="password" minlength="10" autocomplete="new-password" required></label>
-          <button id="password-submit" class="button secondary" type="submit">Atualizar palavra-passe</button>
+          <button id="password-submit" class="button secondary" type="submit"><span class="material-symbols-outlined" aria-hidden="true">passkey</span>Atualizar palavra-passe</button>
           <p id="password-message" class="form-message" role="status"></p>
         </form>
         <div class="security-summary">
@@ -116,7 +116,7 @@
     </section>
 
     <section id="certifications" class="panel profile-panel">
-      <div class="section-index"><span>04</span><div><h2>Certificações</h2><p>Certificados emitidos após a conclusão dos laboratórios elegíveis.</p></div></div>
+      <div class="section-index"><span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span><div><h2>Certificações</h2><p>Certificados emitidos após a conclusão dos laboratórios elegíveis.</p></div></div>
       <div id="profile-certificates" class="certificate-grid"></div>
     </section>
   </main>

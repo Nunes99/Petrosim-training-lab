@@ -12,6 +12,11 @@ const moduleRoutes = {
   "petroleum-economics": "/labs/economics",
   "hse-decision-trainer": "/labs/hse",
 };
+const moduleIcons = {
+  "reservoir-reserves": "science",
+  "petroleum-economics": "account_balance",
+  "hse-decision-trainer": "health_and_safety",
+};
 const difficultyLabels = {
   foundation: "Fundamental",
   intermediate: "Intermédio",
@@ -67,6 +72,10 @@ function renderModules(modules) {
   modules.forEach((module, index) => {
     const card = document.createElement("article");
     card.className = `module-card ${index === 0 ? "active" : ""}`;
+    const icon = document.createElement("span");
+    icon.className = "module-outline-icon material-symbols-outlined";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = moduleIcons[module.slug] || "science";
     const number = document.createElement("span");
     number.className = "module-number";
     number.textContent = `${String(index + 1).padStart(2, "0")} · ${module.category}`;
@@ -81,7 +90,7 @@ function renderModules(modules) {
     link.className = "module-status";
     link.href = moduleRoutes[module.slug] || "/dashboard";
     link.textContent = moduleRoutes[module.slug] ? "Abrir laboratório" : "Conteúdo em preparação";
-    card.append(number, title, description, metadata, link);
+    card.append(icon, number, title, description, metadata, link);
     grid.append(card);
   });
 }

@@ -74,8 +74,9 @@ function renderCertificates(certificates) {
     const card = document.createElement("article");
     card.className = "certificate-card";
     const seal = document.createElement("span");
-    seal.className = "certificate-seal";
-    seal.textContent = "PS";
+    seal.className = "certificate-seal material-symbols-outlined";
+    seal.setAttribute("aria-hidden", "true");
+    seal.textContent = "workspace_premium";
     const content = document.createElement("div");
     const eyebrow = document.createElement("span");
     eyebrow.className = "eyebrow";
@@ -89,7 +90,11 @@ function renderCertificates(certificates) {
     const link = document.createElement("a");
     link.className = "button secondary compact";
     link.href = `/certificate?id=${encodeURIComponent(certificate.id)}`;
-    link.textContent = "Ver certificado";
+    const linkIcon = document.createElement("span");
+    linkIcon.className = "material-symbols-outlined";
+    linkIcon.setAttribute("aria-hidden", "true");
+    linkIcon.textContent = "workspace_premium";
+    link.append(linkIcon, document.createTextNode("Ver certificado"));
     content.append(eyebrow, title, meta, code, link);
     card.append(seal, content);
     container.append(card);
