@@ -86,7 +86,13 @@ form.addEventListener("submit", async (event) => {
       title.textContent = `${item.correct ? "Correto" : "Rever"} · Cenário ${index + 1}`;
       const explanation = document.createElement("p");
       explanation.textContent = item.explanation;
-      card.append(title, explanation);
+      const consequence = document.createElement("p");
+      consequence.className = "consequence";
+      consequence.textContent = `Consequência operacional: ${item.consequence}`;
+      const risk = document.createElement("span");
+      risk.className = `risk-badge ${item.residual_risk <= 2 ? "low" : "high"}`;
+      risk.textContent = item.residual_risk <= 2 ? "Risco residual baixo" : "Risco residual elevado";
+      card.append(title, explanation, consequence, risk);
       feedback.append(card);
     });
 

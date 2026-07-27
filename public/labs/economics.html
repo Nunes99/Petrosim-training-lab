@@ -33,9 +33,15 @@
       </div>
       <div class="simulator-layout">
         <form id="economics-form" class="simulation-form">
-          <label>Investimento inicial <span>USD</span><input id="initial-investment" type="number" min="1" value="1000000" required></label>
-          <label>Fluxos de caixa anuais <span>separados por vírgula</span><textarea id="cash-flows" rows="4" required>300000, 350000, 400000, 450000</textarea></label>
+          <div class="case-brief"><strong>Caso Atlântico Sul A-17</strong><span>Desenvolvimento offshore em fase de concept select. Prepare uma recomendação de investimento.</span></div>
+          <label>CAPEX inicial <span>USD</span><input id="initial-investment" type="number" min="1" value="85000000" required></label>
+          <label>Preço do petróleo <span>USD/bbl</span><input id="oil-price" type="number" min="1" value="72" required></label>
+          <label>Produção inicial <span>bopd</span><input id="initial-production" type="number" min="1" value="8500" required></label>
+          <label>Declínio anual <span>%</span><input id="decline-rate" type="number" min="0" max="99" step="0.1" value="14" required></label>
+          <label>OPEX unitário <span>USD/bbl</span><input id="opex" type="number" min="0" value="18" required></label>
+          <div class="field-row"><label>Royalty <span>%</span><input id="royalty-rate" type="number" min="0" max="99" value="10" required></label><label>Imposto <span>%</span><input id="tax-rate" type="number" min="0" max="99" value="30" required></label></div>
           <label>Taxa de desconto <span>% ao ano</span><input id="discount-rate" type="number" min="0" max="99.99" step="0.01" value="10" required></label>
+          <div class="field-row"><label>Vida do projeto <span>anos</span><input id="project-years" type="number" min="2" max="30" value="8" required></label><label>Abandono <span>USD</span><input id="abandonment-cost" type="number" min="0" value="12000000" required></label></div>
           <button id="economics-submit" class="button primary full-width" type="submit" disabled>Avaliar projeto</button>
           <p id="economics-message" class="form-message" role="status"></p>
         </form>
@@ -45,11 +51,19 @@
             <article><span>NPV / VAL</span><strong id="npv-result">—</strong><small>USD</small></article>
             <article><span>IRR / TIR</span><strong id="irr-result">—</strong><small>percentagem</small></article>
             <article><span>Payback</span><strong id="payback-result">—</strong><small>anos</small></article>
-            <article><span>Índice de rentabilidade</span><strong id="pi-result">—</strong><small>valor presente / investimento</small></article>
+            <article><span>Breakeven</span><strong id="pi-result">—</strong><small>USD/bbl</small></article>
           </div>
           <div id="economics-decision" class="decision-box">Complete a leitura e execute a avaliação.</div>
+          <div class="chart-panel">
+            <strong>Sensibilidade do NPV</strong>
+            <div id="sensitivity-chart" class="bar-chart" aria-label="Comparação de NPV por cenário"></div>
+          </div>
         </section>
       </div>
+      <section class="panel">
+        <div class="panel-header"><div><span class="eyebrow">Modelo anual</span><h2>Fluxo de caixa do projeto</h2></div></div>
+        <div class="table-responsive"><table class="data-table"><thead><tr><th>Ano</th><th>Produção (STB)</th><th>Receita</th><th>OPEX</th><th>Imposto</th><th>Fluxo livre</th></tr></thead><tbody id="cashflow-table"><tr><td colspan="6">Execute a avaliação para gerar o perfil anual.</td></tr></tbody></table></div>
+      </section>
     </section>
   </main>
   <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Documentação</a></footer>

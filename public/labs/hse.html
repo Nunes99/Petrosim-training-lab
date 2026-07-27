@@ -31,6 +31,12 @@
         <label class="check-label theory-check"><input id="hse-theory-check" type="checkbox"> Li os princípios e estou preparado para responder aos cenários.</label>
       </div>
       <form id="hse-form" class="scenario-form">
+        <div class="operations-brief">
+          <div><span>Instalação</span><strong>FPSO Horizonte</strong></div>
+          <div><span>Turno</span><strong>06:00–18:00</strong></div>
+          <div><span>Condição</span><strong>Produção estável</strong></div>
+          <div><span>Seu papel</span><strong>Supervisor de área</strong></div>
+        </div>
         <div id="scenario-list"></div>
         <button id="hse-submit" class="button primary" type="submit" disabled>Avaliar decisões</button>
         <p id="hse-message" class="form-message" role="status"></p>
@@ -38,6 +44,7 @@
       <section id="hse-results" class="panel hidden">
         <div class="panel-header"><div><span class="eyebrow">Resultado</span><h2 id="hse-score">—</h2></div><span id="hse-level" class="status-pill"></span></div>
         <div id="hse-feedback" class="feedback-list"></div>
+        <div class="risk-legend"><span><i class="risk-low"></i> Risco controlado</span><span><i class="risk-high"></i> Risco elevado</span></div>
       </section>
     </section>
   </main>
