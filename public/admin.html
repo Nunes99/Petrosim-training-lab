@@ -3,76 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Administração da plataforma PetroSim.">
-  <title>Administração | PetroSim</title>
+  <meta name="description" content="Administração da plataforma PetroSimLab.">
+  <title>Administração | PetroSimLab</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="app-body">
+<body class="app-body admin-body auth-required">
   <aside class="sidebar">
-    <a class="brand" href="/">
+    <a class="brand" href="/admin">
       <span class="brand-mark">PS</span>
       <div><strong>PetroSimLab</strong><small>Painel de administração</small></div>
     </a>
     <nav class="side-nav" aria-label="Navegação administrativa">
-      <a class="active" href="/admin">Visão geral</a>
+      <a class="active" href="#admin-overview">Visão Geral</a>
       <a href="#modules-admin">Laboratórios</a>
+      <a href="#users-admin">Utilizadores</a>
       <a href="#recent-activity">Atividade</a>
-      <a href="/dashboard">Área do aluno</a>
+      <a href="/dashboard">Área do Estudante</a>
     </nav>
     <div class="sidebar-footer">
       <span id="admin-email" class="user-email">A verificar acesso...</span>
-      <button id="sign-out" class="button ghost full-width" type="button">Terminar sessão</button>
+      <button id="sign-out" class="button ghost full-width" type="button">Terminar Sessão</button>
     </div>
   </aside>
 
   <main class="app-main">
-    <header class="page-header">
+    <header id="admin-overview" class="page-header">
       <div>
         <span class="eyebrow">Administração</span>
-        <h1>Centro de operações</h1>
-        <p>Visibilidade sobre utilizadores, conteúdos e atividade técnica.</p>
+        <h1>Centro de Operações</h1>
+        <p>Gerencie utilizadores, laboratórios publicados e atividade técnica da plataforma.</p>
       </div>
-      <span id="admin-status" class="status-pill">A validar permissões...</span>
+      <div class="admin-header-actions">
+        <button id="refresh-admin" class="button secondary" type="button">Atualizar Dados</button>
+        <span id="admin-status" class="status-pill">A validar permissões...</span>
+      </div>
     </header>
 
-    <section class="metric-grid">
+    <section class="metric-grid" aria-label="Indicadores administrativos">
       <article class="metric-card"><span>Utilizadores</span><strong id="user-count">—</strong><small>perfis registados</small></article>
       <article class="metric-card"><span>Simulações</span><strong id="admin-simulation-count">—</strong><small>execuções guardadas</small></article>
       <article class="metric-card"><span>Laboratórios</span><strong id="admin-module-count">—</strong><small>módulos configurados</small></article>
+      <article class="metric-card"><span>Publicados</span><strong id="published-module-count">—</strong><small>disponíveis aos estudantes</small></article>
     </section>
 
-    <section id="modules-admin" class="admin-grid">
+    <section id="modules-admin" class="admin-grid anchor-section">
       <form id="module-form" class="panel form-panel">
+        <input id="module-id" type="hidden">
         <div class="panel-header">
-          <div><span class="eyebrow">Catálogo</span><h2>Novo laboratório</h2></div>
+          <div><span class="eyebrow">Catálogo</span><h2 id="module-form-title">Novo Laboratório</h2></div>
+          <button id="module-cancel" class="button secondary compact hidden" type="button">Cancelar Edição</button>
         </div>
         <label>Título<input id="module-title" maxlength="100" required></label>
         <label>Identificador<input id="module-slug" pattern="[a-z0-9-]+" placeholder="reservoir-reserves" required></label>
-        <label>Descrição<textarea id="module-description" rows="4" maxlength="500" required></textarea></label>
+        <label>Descrição<textarea id="module-description" rows="4" minlength="10" maxlength="500" required></textarea></label>
         <div class="field-row">
-          <label>Categoria<input id="module-category" maxlength="60" value="Engenharia de reservatórios" required></label>
+          <label>Categoria<input id="module-category" maxlength="60" value="Engenharia de Reservatórios" required></label>
           <label>Duração (min)<input id="module-duration" type="number" min="5" max="600" value="45" required></label>
         </div>
-        <label class="check-label"><input id="module-published" type="checkbox"> Publicar imediatamente</label>
-        <button class="button primary" type="submit">Guardar laboratório</button>
+        <div class="field-row">
+          <label>Dificuldade<select id="module-difficulty">
+            <option value="foundation">Fundamental</option>
+            <option value="intermediate">Intermédio</option>
+            <option value="advanced">Avançado</option>
+          </select></label>
+          <label>Ordem<input id="module-sort-order" type="number" min="0" max="9999" value="100" required></label>
+        </div>
+        <label class="check-label"><input id="module-published" type="checkbox"> Publicar para os estudantes</label>
+        <button id="module-submit" class="button primary" type="submit">Guardar Laboratório</button>
         <p id="module-message" class="form-message" role="status"></p>
       </form>
 
       <section class="panel">
         <div class="panel-header">
-          <div><span class="eyebrow">Conteúdos</span><h2>Laboratórios</h2></div>
+          <div><span class="eyebrow">Conteúdos</span><h2>Laboratórios Configurados</h2></div>
+          <span id="module-list-status" class="status-pill">A carregar...</span>
         </div>
         <div id="module-admin-list" class="admin-list"></div>
       </section>
     </section>
 
-    <section id="recent-activity" class="panel">
+    <section id="users-admin" class="panel anchor-section">
       <div class="panel-header">
-        <div><span class="eyebrow">Monitorização</span><h2>Atividade recente</h2></div>
+        <div>
+          <span class="eyebrow">Acessos</span>
+          <h2>Utilizadores e Funções</h2>
+          <p>Administradores podem alterar a função de outras contas. A própria conta administrativa fica protegida contra despromoção acidental.</p>
+        </div>
+      </div>
+      <div id="user-admin-list" class="admin-list"></div>
+    </section>
+
+    <section id="recent-activity" class="panel anchor-section">
+      <div class="panel-header">
+        <div><span class="eyebrow">Monitorização</span><h2>Atividade Recente</h2></div>
       </div>
       <div id="activity-list" class="history-list"></div>
     </section>
   </main>
   <script type="module" src="/js/admin.js"></script>
+  <script type="module" src="/js/custom-select.js"></script>
 </body>
 </html>

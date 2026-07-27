@@ -115,6 +115,45 @@ $$;
 revoke all on function public.is_admin() from public;
 grant execute on function public.is_admin() to anon, authenticated;
 
+create or replace function public.admin_set_user_role(
+  target_user_id uuid,
+  new_role text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Acesso reservado aos administradores'
+      using errcode = '42501';
+  end if;
+
+  if new_role not in ('student', 'instructor', 'admin') then
+    raise exception 'Função inválida'
+      using errcode = '22023';
+  end if;
+
+  if target_user_id = (select auth.uid()) and new_role <> 'admin' then
+    raise exception 'Não pode remover a sua própria função administrativa'
+      using errcode = '42501';
+  end if;
+
+  update public.profiles
+  set role = new_role
+  where id = target_user_id;
+
+  if not found then
+    raise exception 'Utilizador não encontrado'
+      using errcode = 'P0002';
+  end if;
+end;
+$$;
+
+revoke all on function public.admin_set_user_role(uuid, text) from public;
+grant execute on function public.admin_set_user_role(uuid, text) to authenticated;
+
 revoke update on table public.profiles from authenticated;
 grant update (display_name) on table public.profiles to authenticated;
 
@@ -179,6 +218,22 @@ drop policy if exists "Admins can delete modules" on public.training_modules;
 create policy "Admins can delete modules"
   on public.training_modules for delete to authenticated
   using ((select public.is_admin()));
+
+create or replace function public.set_training_module_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists training_modules_updated_at on public.training_modules;
+create trigger training_modules_updated_at
+  before update on public.training_modules
+  for each row execute procedure public.set_training_module_updated_at();
 
 create or replace function public.handle_new_user()
 returns trigger
