@@ -14,6 +14,7 @@ let certificateTemplates = [];
 let printRequests = [];
 let selectedAccessUserId = null;
 let selectedDetailUserId = null;
+let selectedCertificatePolicyId = null;
 
 const roleLabels = { student: "Estudante", instructor: "Formador", admin: "Administrador" };
 const statusLabels = { active: "Ativo", suspended: "Suspenso" };
@@ -22,6 +23,12 @@ const printRequestStatusLabels = {
   pending: "Em análise",
   approved: "Liberado",
   rejected: "Rejeitado",
+};
+const certificatePrintAccessLabels = {
+  inherit: "Herdar",
+  free: "Livre",
+  paid: "Pagamento",
+  blocked: "Bloqueado",
 };
 const difficultyLabels = { foundation: "Fundamental", intermediate: "Intermédio", advanced: "Avançado" };
 const moduleLabels = {
@@ -45,6 +52,7 @@ const auditLabels = {
   "lab.access_changed": "Permissão de laboratório alterada",
   "certificate.print_approved": "Impressão de certificado liberada",
   "certificate.print_rejected": "Comprovativo de pagamento rejeitado",
+  "certificate.print_policy_changed": "Política de impressão do certificado alterada",
 };
 const defaultCertificateAssets = {
   logo_path: "/assets/certificates/default/lmtwebnairs-logo.png",
@@ -786,7 +794,16 @@ function renderCertificates() {
         } else cell.textContent = value;
         row.append(cell);
       });
+    const usageCell = document.createElement("td");
+    const usage = document.createElement("span");
+    usage.className = "status-pill";
+    usage.textContent = `${certificate.pdf_generation_count || 0} / ${
+      certificate.pdf_generation_limit ?? "∞"
+    } · ${certificatePrintAccessLabels[certificate.print_access_override] || "Herdar"}`;
+    usageCell.append(usage);
+    row.append(usageCell);
     const actionCell = document.createElement("td");
+    actionCell.className = "table-actions";
     const link = document.createElement("a");
     link.className = "button secondary compact";
     link.href = `/certificate?id=${encodeURIComponent(certificate.id)}`;
@@ -795,11 +812,57 @@ function renderCertificates() {
     icon.setAttribute("aria-hidden", "true");
     icon.textContent = "workspace_premium";
     link.append(icon, document.createTextNode("Visualizar"));
-    actionCell.append(link);
+    const manage = document.createElement("button");
+    manage.className = "button secondary compact";
+    manage.type = "button";
+    manage.textContent = "Gerir impressão";
+    manage.addEventListener("click", () => openCertificatePrintPolicy(certificate));
+    actionCell.append(link, manage);
     row.append(actionCell);
     return row;
   });
-  body.replaceChildren(...(rows.length ? rows : [emptyTableRow(6, "Nenhum certificado corresponde aos filtros.")]));
+  body.replaceChildren(...(rows.length ? rows : [emptyTableRow(7, "Nenhum certificado corresponde aos filtros.")]));
+}
+
+function openCertificatePrintPolicy(certificate) {
+  selectedCertificatePolicyId = certificate.id;
+  document.querySelector("#certificate-policy-code").textContent =
+    `${certificate.certificate_code} · ${
+      certificate.training_modules?.title || moduleById(certificate.module_id)?.title || "Laboratório"
+    }`;
+  document.querySelector("#certificate-policy-access").value =
+    certificate.print_access_override || "inherit";
+  document.querySelector("#certificate-policy-limit").value =
+    certificate.pdf_generation_limit ?? "";
+  document.querySelector("#certificate-policy-count").textContent =
+    certificate.pdf_generation_count || 0;
+  document.querySelector("#certificate-policy-last-generation").textContent =
+    certificate.last_pdf_generated_at
+      ? `Última geração: ${formatDate(certificate.last_pdf_generated_at)}`
+      : "Nunca gerado";
+  document.querySelector("#certificate-policy-reset-count").checked = false;
+  document.querySelector("#certificate-policy-new-payment").checked = false;
+  setMessage("#certificate-policy-message", "");
+  document.querySelector("#certificate-print-policy-dialog").showModal();
+}
+
+async function saveCertificatePrintPolicy(event) {
+  event.preventDefault();
+  if (!selectedCertificatePolicyId) return;
+  const limitValue = document.querySelector("#certificate-policy-limit").value;
+  const { error } = await supabase.rpc("admin_update_certificate_print_policy", {
+    p_certificate_id: selectedCertificatePolicyId,
+    p_access_mode: document.querySelector("#certificate-policy-access").value,
+    p_generation_limit: limitValue ? Number(limitValue) : null,
+    p_reset_count: document.querySelector("#certificate-policy-reset-count").checked,
+    p_require_new_payment: document.querySelector("#certificate-policy-new-payment").checked,
+  });
+  if (error) {
+    setMessage("#certificate-policy-message", error.message, true);
+    return;
+  }
+  document.querySelector("#certificate-print-policy-dialog").close();
+  await loadAdminData({ preserveView: true });
 }
 
 function printRequestSearchText(request) {
@@ -1232,7 +1295,7 @@ async function loadAdminData({ preserveView = false } = {}) {
         .order("created_at", { ascending: false }).limit(50),
       supabase.from("training_modules").select("*").order("sort_order").order("created_at"),
       supabase.from("certificates")
-        .select("id,user_id,module_id,certificate_code,final_score,issued_at,training_modules(title,slug)")
+        .select("id,user_id,module_id,certificate_code,final_score,issued_at,print_access_override,pdf_generation_limit,pdf_generation_count,last_pdf_generated_at,print_policy_updated_at,training_modules(title,slug)")
         .order("issued_at", { ascending: false }),
       supabase.from("lab_access_grants").select("*"),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(50),
@@ -1311,6 +1374,20 @@ function bindEvents() {
   });
   document.querySelector("#user-details-delete").addEventListener("click", () => {
     deleteUserAccount().catch(handleError);
+  });
+  document.querySelector("#certificate-print-policy-form").addEventListener(
+    "submit",
+    saveCertificatePrintPolicy,
+  );
+  ["#certificate-policy-close", "#certificate-policy-cancel"].forEach((selector) => {
+    document.querySelector(selector).addEventListener("click", () => {
+      document.querySelector("#certificate-print-policy-dialog").close();
+    });
+  });
+  document.querySelector("#certificate-policy-access").addEventListener("change", (event) => {
+    if (event.target.value === "paid") {
+      document.querySelector("#certificate-policy-new-payment").checked = true;
+    }
   });
   document.querySelector("#user-details-manage-access").addEventListener("click", () => {
     const profile = profileById(selectedDetailUserId);

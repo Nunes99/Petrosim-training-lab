@@ -5000,6 +5000,42 @@ html[data-theme="dark"] .formula-box p {
   border-color: var(--brand-gold);
 }
 
+.certificate-policy-dialog {
+  width: min(720px,calc(100% - 32px));
+}
+
+.certificate-policy-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 16px;
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--button-radius);
+}
+
+.certificate-policy-summary span,
+.certificate-policy-summary small {
+  color: var(--muted);
+}
+
+.certificate-policy-summary strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  color: var(--brand-navy);
+  font-size: 1.65rem;
+}
+
+html[data-theme="dark"] .certificate-policy-summary {
+  background: var(--surface);
+}
+
+html[data-theme="dark"] .certificate-policy-summary strong {
+  color: #fff;
+}
+
 html[data-theme="dark"] .certificate-payment-panel,
 html[data-theme="dark"] .certificate-payment-policy,
 html[data-theme="dark"] .certificate-payment-details div {

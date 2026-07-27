@@ -10,6 +10,7 @@ const defaultAssets = {
 };
 let paymentContext = null;
 let loadedCertificate = null;
+let loadedPrintPolicy = null;
 
 function assetUrl(supabase, path, fallback) {
   const value = path || fallback;
@@ -76,6 +77,8 @@ function renderPaymentRequest(request) {
   const status = document.querySelector("#certificate-payment-status");
   const form = document.querySelector("#certificate-payment-form");
   const description = document.querySelector("#certificate-payment-description");
+  document.querySelector(".certificate-payment-details").classList.remove("hidden");
+  document.querySelector("#certificate-payment-instructions").classList.remove("hidden");
   const statusCopy = {
     awaiting_proof: "Aguardando comprovativo",
     pending: "Comprovativo em análise",
@@ -110,9 +113,52 @@ function renderPaymentRequest(request) {
   setPrintAuthorized(request.status === "approved");
 }
 
+function renderPrintRestriction(title, description, statusText) {
+  const panel = document.querySelector("#certificate-payment-panel");
+  panel.classList.remove("hidden");
+  document.querySelector("#certificate-payment-title").textContent = title;
+  document.querySelector("#certificate-payment-description").textContent = description;
+  const status = document.querySelector("#certificate-payment-status");
+  status.className = "status-pill blocked";
+  status.textContent = statusText;
+  document.querySelector(".certificate-payment-details").classList.add("hidden");
+  document.querySelector("#certificate-payment-instructions").classList.add("hidden");
+  document.querySelector("#certificate-payment-form").classList.add("hidden");
+  setPrintAuthorized(false);
+}
+
 async function configurePrintAccess(supabase, session, certificate, printPolicy) {
   setPrintAuthorized(false);
-  if (session.user.id !== certificate.user_id || printPolicy.print_access_mode !== "paid") {
+  const accessMode = certificate.print_access_override !== "inherit"
+    ? certificate.print_access_override
+    : printPolicy.print_access_mode || "free";
+  const limitReached = certificate.pdf_generation_limit !== null
+    && certificate.pdf_generation_limit !== undefined
+    && Number(certificate.pdf_generation_count || 0) >= Number(certificate.pdf_generation_limit);
+  if (session.user.id !== certificate.user_id) {
+    document.querySelector("#certificate-payment-panel").classList.add("hidden");
+    setPrintAuthorized(true);
+    return;
+  }
+  if (accessMode === "blocked") {
+    renderPrintRestriction(
+      "Geração PDF bloqueada",
+      "A administração bloqueou temporariamente a impressão deste certificado.",
+      "Bloqueado",
+    );
+    return;
+  }
+  if (limitReached) {
+    renderPrintRestriction(
+      "Limite de impressões atingido",
+      `Foram utilizadas ${certificate.pdf_generation_count} de ${
+        certificate.pdf_generation_limit
+      } gerações PDF autorizadas. Contacte a administração para solicitar novas impressões.`,
+      "Limite atingido",
+    );
+    return;
+  }
+  if (accessMode !== "paid") {
     document.querySelector("#certificate-payment-panel").classList.add("hidden");
     setPrintAuthorized(true);
     return;
@@ -193,7 +239,7 @@ async function init() {
   let certificateQuery = supabase
     .from("certificates")
     .select(
-      "id,user_id,module_id,certificate_code,final_score,issued_at,template_snapshot,training_modules(title,description,duration_minutes)"
+      "id,user_id,module_id,certificate_code,final_score,issued_at,template_snapshot,print_access_override,pdf_generation_limit,pdf_generation_count,last_pdf_generated_at,training_modules(title,description,duration_minutes)"
     );
   certificateQuery = certificateId
     ? certificateQuery.eq("id", certificateId)
@@ -215,6 +261,7 @@ async function init() {
   if (templateResult.error) throw templateResult.error;
   const profile = profileResult.data;
   const liveTemplate = templateResult.data || {};
+  loadedPrintPolicy = { supabase, session, policy: liveTemplate };
   const template = needsLiveTemplate ? { ...liveTemplate, ...snapshot } : snapshot;
   const issuedDate = new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit", month: "long", year: "numeric",
@@ -326,6 +373,21 @@ document.querySelector("#print-certificate").addEventListener("click", async () 
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    if (loadedCertificate.user_id === loadedPrintPolicy?.session.user.id) {
+      loadedCertificate.pdf_generation_count =
+        Number(loadedCertificate.pdf_generation_count || 0) + 1;
+      const limit = loadedCertificate.pdf_generation_limit;
+      if (limit !== null && limit !== undefined
+        && loadedCertificate.pdf_generation_count >= Number(limit)) {
+        renderPrintRestriction(
+          "Limite de impressões atingido",
+          `Foram utilizadas ${loadedCertificate.pdf_generation_count} de ${
+            limit
+          } gerações PDF autorizadas. Contacte a administração para solicitar novas impressões.`,
+          "Limite atingido",
+        );
+      }
+    }
   } catch (error) {
     document.querySelector("#certificate-error").textContent =
       error.message || "Não foi possível gerar o PDF.";

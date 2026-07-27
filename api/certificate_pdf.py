@@ -91,11 +91,11 @@ def _draw_asset(
 
 def _draw_qr(pdf: canvas.Canvas, target: str, x: float, y: float, size: float) -> None:
     widget = qr.QrCodeWidget(target, barLevel="H")
-    widget.barFillColor = NAVY
+    widget.barFillColor = colors.black
     bounds = widget.getBounds()
     source_width = bounds[2] - bounds[0]
     source_height = bounds[3] - bounds[1]
-    quiet = size * 0.07
+    quiet = size * 0.11
     drawing = Drawing(
         size,
         size,
@@ -190,13 +190,13 @@ def _draw_classic(
         pdf.setFont("Helvetica-Bold", 9)
         pdf.drawCentredString(x + cell_width / 2, details_y + 20, value)
 
-    _draw_qr(pdf, data["verification_url"], left, 40, 62)
+    _draw_qr(pdf, data["verification_url"], left, 34, 82)
     pdf.setFillColor(MUTED)
     pdf.setFont("Helvetica", 7)
-    pdf.drawString(left + 76, 72, "CÓDIGO DE VERIFICAÇÃO")
+    pdf.drawString(left + 96, 72, "CÓDIGO DE VERIFICAÇÃO")
     pdf.setFillColor(NAVY)
     pdf.setFont("Helvetica-Bold", 8.5)
-    pdf.drawString(left + 76, 56, data["certificate_code"])
+    pdf.drawString(left + 96, 56, data["certificate_code"])
     pdf.setFont("Helvetica-Bold", 9)
     pdf.drawRightString(width - left, 70, "PetroSimLab")
     pdf.setFillColor(MUTED)
@@ -312,7 +312,7 @@ def _draw_qualification(
     pdf.setFont("Helvetica-Bold", 8)
     pdf.drawString(split_x + 48, 151, f"Carga horária: {data['duration_minutes']} minutos")
     pdf.drawString(split_x + 225, 151, f"Resultado final: {data['final_score']}%")
-    _draw_qr(pdf, data["verification_url"], split_x + 48, 54, 68)
+    _draw_qr(pdf, data["verification_url"], split_x + 42, 50, 84)
     _draw_asset(
         pdf, template.get("coordinator_signature_path"), split_x + 184, 82, 135, 48,
         asset_loader,
@@ -352,4 +352,3 @@ def build_certificate_pdf(
     pdf.showPage()
     pdf.save()
     return buffer.getvalue()
-

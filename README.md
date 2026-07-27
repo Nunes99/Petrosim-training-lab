@@ -90,6 +90,11 @@ private `certificate-payment-proofs` bucket. PDF generation is released only
 after an administrator approves the request. The protected API generates one
 clean A4 landscape PDF containing only the certificate, instead of printing the
 browser page, so browser titles, URLs, dates and other page chrome are excluded.
+Each issued certificate also has an independent, retroactive print policy.
+Administrators can inherit the laboratory rule, allow free generation, require
+payment, block generation, set a finite PDF-generation allowance, reset usage,
+or demand a new proof. The protected API consumes the allowance atomically on
+every student PDF generation, while administrative previews do not consume it.
 
 Every page supports light and dark themes. The icon-only theme control stores
 only the visual preference on the current device and follows the system theme

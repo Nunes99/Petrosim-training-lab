@@ -172,6 +172,13 @@ def test_identity_status_and_admin_user_management_are_available():
     assert "'certificate-payment-proofs'" in schema
     assert 'id="template-print-access"' in admin
     assert 'id="print-request-admin-table"' in admin
+    assert 'id="certificate-print-policy-dialog"' in admin
+    assert 'id="certificate-policy-limit"' in admin
+    assert "admin_update_certificate_print_policy" in admin_script
+    assert "create or replace function public.admin_update_certificate_print_policy" in schema
+    assert "consume_certificate_pdf_generation" in schema
+    assert "pdf_generation_count" in schema
+    assert "print_access_override" in schema
     assert product_credit in login
     assert product_credit in admin_login
     assert ".status-pill," in stylesheet

@@ -60,6 +60,47 @@ def supabase_rest_rows(
     return payload if isinstance(payload, list) else []
 
 
+def supabase_rest_rpc(
+    function_name: str,
+    payload: dict,
+    authorization: str,
+) -> dict:
+    """Execute an RLS-aware Supabase RPC with the caller's identity."""
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_ANON_KEY")
+    if not supabase_url or not supabase_key:
+        raise HTTPException(status_code=503, detail="Supabase não configurado.")
+    request = UrlRequest(
+        f"{supabase_url.rstrip('/')}/rest/v1/rpc/{function_name}",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": authorization,
+            "apikey": supabase_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=10) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        try:
+            body = json.loads(error.read().decode("utf-8"))
+            detail = body.get("message") or body.get("details")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            detail = None
+        if error.code in {400, 401, 403, 404}:
+            raise HTTPException(
+                status_code=403,
+                detail=detail or "Geração do PDF não autorizada.",
+            ) from error
+        raise HTTPException(status_code=503, detail="Não foi possível autorizar o PDF.") from error
+    except (URLError, TimeoutError, json.JSONDecodeError) as error:
+        raise HTTPException(status_code=503, detail="Não foi possível autorizar o PDF.") from error
+    return result if isinstance(result, dict) else {}
+
+
 def require_authenticated_user(
     authorization: Annotated[str | None, Header()] = None,
 ) -> dict:
@@ -475,12 +516,12 @@ def certificate_qr(
 ):
     """Render a self-contained, printable QR code without a third-party service."""
     widget = qr.QrCodeWidget(target, barLevel="H")
-    widget.barFillColor = colors.HexColor("#00365B")
+    widget.barFillColor = colors.black
     bounds = widget.getBounds()
     source_width = bounds[2] - bounds[0]
     source_height = bounds[3] - bounds[1]
-    code_size = 256
-    quiet_zone = 16
+    code_size = 512
+    quiet_zone = 32
     drawing = Drawing(
         code_size + quiet_zone * 2,
         code_size + quiet_zone * 2,
@@ -510,7 +551,7 @@ def certificate_pdf(
     certificate_id: UUID,
     model: Annotated[str, Query(pattern=r"^(qualification|classic)$")] = "qualification",
     authorization: Annotated[str | None, Header()] = None,
-    user: dict = Depends(require_authenticated_user),
+    _user: dict = Depends(require_authenticated_user),
 ):
     """Generate the authorized certificate as a clean, single-page PDF."""
     if not authorization:
@@ -549,22 +590,6 @@ def certificate_pdf(
     module = module_rows[0]
     profile = profile_rows[0]
     live_template = template_rows[0] if template_rows else {}
-
-    if live_template.get("print_access_mode") == "paid" and user["id"] == owner_id:
-        request_rows = supabase_rest_rows(
-            "certificate_print_requests",
-            (
-                "select=status"
-                f"&certificate_id=eq.{quote(str(certificate_id))}"
-                f"&user_id=eq.{quote(owner_id)}&limit=1"
-            ),
-            authorization,
-        )
-        if not request_rows or request_rows[0].get("status") != "approved":
-            raise HTTPException(
-                status_code=403,
-                detail="O pagamento ainda não foi aprovado para este certificado.",
-            )
 
     snapshot = certificate.get("template_snapshot") or {}
     template = {**live_template, **snapshot}
@@ -619,6 +644,11 @@ def certificate_pdf(
         },
         model=model,
         asset_loader=load_asset,
+    )
+    supabase_rest_rpc(
+        "consume_certificate_pdf_generation",
+        {"p_certificate_id": str(certificate_id)},
+        authorization,
     )
     filename = f"certificado-{certificate['certificate_code']}.pdf"
     return Response(

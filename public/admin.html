@@ -190,7 +190,7 @@
             <span id="certificate-results-count" class="filter-count">—</span>
           </div>
           <div class="admin-table-wrap">
-            <table class="admin-table"><thead><tr><th>Código</th><th>Formando</th><th>Laboratório</th><th>Resultado</th><th>Emissão</th><th></th></tr></thead><tbody id="certificate-admin-table"></tbody></table>
+            <table class="admin-table"><thead><tr><th>Código</th><th>Formando</th><th>Laboratório</th><th>Resultado</th><th>Emissão</th><th>Gerações PDF</th><th></th></tr></thead><tbody id="certificate-admin-table"></tbody></table>
           </div>
         </section>
 
@@ -431,6 +431,41 @@
         </div>
       </footer>
       <p id="user-details-message" class="form-message" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="certificate-print-policy-dialog" class="admin-user-dialog certificate-policy-dialog" aria-labelledby="certificate-policy-title">
+    <form id="certificate-print-policy-form" class="admin-user-details">
+      <header class="user-details-header">
+        <div><span class="eyebrow">Gestão retroativa</span><h2 id="certificate-policy-title">Impressão do certificado</h2><p id="certificate-policy-code">—</p></div>
+        <button id="certificate-policy-close" class="dialog-close-button" type="button" aria-label="Fechar">×</button>
+      </header>
+      <div class="user-details-fields professional-form-grid">
+        <label>Política de acesso
+          <select id="certificate-policy-access">
+            <option value="inherit">Herdar configuração do laboratório</option>
+            <option value="free">Impressão livre</option>
+            <option value="paid">Exigir pagamento</option>
+            <option value="blocked">Impressão bloqueada</option>
+          </select>
+        </label>
+        <label>Limite de gerações PDF
+          <input id="certificate-policy-limit" type="number" min="1" step="1" placeholder="Vazio = ilimitado">
+        </label>
+      </div>
+      <div class="certificate-policy-summary">
+        <span>Gerações já utilizadas</span>
+        <strong id="certificate-policy-count">0</strong>
+        <small id="certificate-policy-last-generation">Nunca gerado</small>
+      </div>
+      <label class="check-label"><input id="certificate-policy-reset-count" type="checkbox"> Reiniciar a contagem de gerações</label>
+      <label class="check-label"><input id="certificate-policy-new-payment" type="checkbox"> Exigir um novo pagamento e comprovativo</label>
+      <p class="privacy-note">A opção de pagamento utiliza o valor e a conta definidos na configuração do laboratório.</p>
+      <div class="user-details-actions">
+        <button id="certificate-policy-cancel" class="button secondary" type="button">Cancelar</button>
+        <button class="button primary" type="submit">Guardar política</button>
+      </div>
+      <p id="certificate-policy-message" class="form-message" role="status"></p>
     </form>
   </dialog>
 

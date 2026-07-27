@@ -1320,6 +1320,42 @@ $$;
 alter table public.certificates
   add column if not exists template_snapshot jsonb not null default '{}'::jsonb;
 
+alter table public.certificates
+  add column if not exists print_access_override text not null default 'inherit',
+  add column if not exists pdf_generation_limit integer,
+  add column if not exists pdf_generation_count integer not null default 0,
+  add column if not exists last_pdf_generated_at timestamptz,
+  add column if not exists print_policy_updated_at timestamptz;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'certificates_print_access_override_check'
+  ) then
+    alter table public.certificates
+      add constraint certificates_print_access_override_check
+      check (print_access_override in ('inherit', 'free', 'paid', 'blocked'));
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'certificates_pdf_generation_limit_check'
+  ) then
+    alter table public.certificates
+      add constraint certificates_pdf_generation_limit_check
+      check (pdf_generation_limit is null or pdf_generation_limit > 0);
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'certificates_pdf_generation_count_check'
+  ) then
+    alter table public.certificates
+      add constraint certificates_pdf_generation_count_check
+      check (pdf_generation_count >= 0);
+  end if;
+end
+$$;
+
 insert into public.certificate_templates (
   module_id, program_topics, logo_path, director_signature_path,
   academic_stamp_path, coordinator_signature_path, institutional_seal_path
@@ -1468,7 +1504,13 @@ begin
   from public.certificate_templates
   where module_id = selected_certificate.module_id;
 
-  if selected_template.print_access_mode <> 'paid' then
+  if selected_template.id is null then
+    raise exception 'Configure primeiro a política de impressão do laboratório';
+  end if;
+
+  if selected_certificate.print_access_override <> 'paid'
+    and selected_template.print_access_mode <> 'paid'
+  then
     raise exception 'A impressão deste certificado não requer pagamento';
   end if;
 
@@ -1589,12 +1631,184 @@ begin
 end;
 $$;
 
+create or replace function public.admin_update_certificate_print_policy(
+  p_certificate_id uuid,
+  p_access_mode text,
+  p_generation_limit integer default null,
+  p_reset_count boolean default false,
+  p_require_new_payment boolean default false
+)
+returns public.certificates
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_certificate public.certificates%rowtype;
+  selected_template public.certificate_templates%rowtype;
+begin
+  if not public.is_admin() then
+    raise exception 'Acesso administrativo necessário';
+  end if;
+  if p_access_mode not in ('inherit', 'free', 'paid', 'blocked') then
+    raise exception 'Política de impressão inválida';
+  end if;
+  if p_generation_limit is not null and p_generation_limit <= 0 then
+    raise exception 'O limite deve ser superior a zero ou ficar vazio';
+  end if;
+
+  select * into selected_certificate
+  from public.certificates
+  where id = p_certificate_id;
+  if selected_certificate.id is null then
+    raise exception 'Certificado não encontrado';
+  end if;
+
+  if p_access_mode = 'paid' then
+    select * into selected_template
+    from public.certificate_templates
+    where module_id = selected_certificate.module_id;
+    if selected_template.id is null
+      or selected_template.print_fee <= 0
+      or nullif(trim(selected_template.payment_account_name), '') is null
+      or nullif(trim(selected_template.payment_account_number), '') is null
+    then
+      raise exception 'Configure primeiro o valor e a conta de pagamento do laboratório';
+    end if;
+  end if;
+
+  update public.certificates
+  set print_access_override = p_access_mode,
+      pdf_generation_limit = p_generation_limit,
+      pdf_generation_count = case when p_reset_count then 0 else pdf_generation_count end,
+      last_pdf_generated_at = case when p_reset_count then null else last_pdf_generated_at end,
+      print_policy_updated_at = now()
+  where id = p_certificate_id
+  returning * into selected_certificate;
+
+  if p_require_new_payment then
+    update public.certificate_print_requests
+    set status = 'awaiting_proof',
+        proof_path = null,
+        admin_note = null,
+        submitted_at = null,
+        reviewed_at = null,
+        reviewed_by = null,
+        updated_at = now()
+    where certificate_id = p_certificate_id
+      and user_id = selected_certificate.user_id;
+  end if;
+
+  insert into public.audit_logs (
+    actor_id, action, target_user_id, module_id, metadata
+  )
+  values (
+    (select auth.uid()),
+    'certificate.print_policy_changed',
+    selected_certificate.user_id,
+    selected_certificate.module_id,
+    jsonb_build_object(
+      'certificate_id', selected_certificate.id,
+      'access_mode', p_access_mode,
+      'generation_limit', p_generation_limit,
+      'count_reset', p_reset_count,
+      'new_payment_required', p_require_new_payment
+    )
+  );
+  return selected_certificate;
+end;
+$$;
+
+create or replace function public.consume_certificate_pdf_generation(p_certificate_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_certificate public.certificates%rowtype;
+  selected_template public.certificate_templates%rowtype;
+  effective_mode text;
+  approved_payment boolean;
+begin
+  select * into selected_certificate
+  from public.certificates
+  where id = p_certificate_id
+  for update;
+  if selected_certificate.id is null then
+    raise exception 'Certificado não encontrado';
+  end if;
+
+  if selected_certificate.user_id <> (select auth.uid()) then
+    if not public.is_admin() then
+      raise exception 'Acesso ao certificado negado';
+    end if;
+    return jsonb_build_object(
+      'authorized', true,
+      'administrative_access', true,
+      'generation_count', selected_certificate.pdf_generation_count,
+      'generation_limit', selected_certificate.pdf_generation_limit
+    );
+  end if;
+
+  select * into selected_template
+  from public.certificate_templates
+  where module_id = selected_certificate.module_id;
+
+  effective_mode := case
+    when selected_certificate.print_access_override <> 'inherit'
+      then selected_certificate.print_access_override
+    else coalesce(selected_template.print_access_mode, 'free')
+  end;
+
+  if effective_mode = 'blocked' then
+    raise exception 'A geração do PDF foi bloqueada pela administração';
+  end if;
+  if selected_certificate.pdf_generation_limit is not null
+    and selected_certificate.pdf_generation_count >= selected_certificate.pdf_generation_limit
+  then
+    raise exception 'O limite de gerações PDF deste certificado foi atingido';
+  end if;
+
+  if effective_mode = 'paid' then
+    select exists (
+      select 1
+      from public.certificate_print_requests
+      where certificate_id = selected_certificate.id
+        and user_id = selected_certificate.user_id
+        and status = 'approved'
+    ) into approved_payment;
+    if not approved_payment then
+      raise exception 'O pagamento ainda não foi aprovado para este certificado';
+    end if;
+  end if;
+
+  update public.certificates
+  set pdf_generation_count = pdf_generation_count + 1,
+      last_pdf_generated_at = now()
+  where id = selected_certificate.id
+  returning * into selected_certificate;
+
+  return jsonb_build_object(
+    'authorized', true,
+    'administrative_access', false,
+    'access_mode', effective_mode,
+    'generation_count', selected_certificate.pdf_generation_count,
+    'generation_limit', selected_certificate.pdf_generation_limit
+  );
+end;
+$$;
+
 revoke all on function public.create_certificate_print_request(uuid) from public, anon;
 revoke all on function public.submit_certificate_payment_proof(uuid, text) from public, anon;
 revoke all on function public.admin_review_certificate_print_request(uuid, text, text) from public, anon;
+revoke all on function public.admin_update_certificate_print_policy(uuid, text, integer, boolean, boolean) from public, anon;
+revoke all on function public.consume_certificate_pdf_generation(uuid) from public, anon;
 grant execute on function public.create_certificate_print_request(uuid) to authenticated;
 grant execute on function public.submit_certificate_payment_proof(uuid, text) to authenticated;
 grant execute on function public.admin_review_certificate_print_request(uuid, text, text) to authenticated;
+grant execute on function public.admin_update_certificate_print_policy(uuid, text, integer, boolean, boolean) to authenticated;
+grant execute on function public.consume_certificate_pdf_generation(uuid) to authenticated;
 
 insert into storage.buckets (
   id, name, public, file_size_limit, allowed_mime_types
