@@ -84,7 +84,13 @@
         <div class="chart-controls">
           <label>Série principal<select id="chart-series"></select></label>
           <label>Comparar com<select id="chart-series-secondary"><option value="">Nenhuma série</option></select></label>
-          <label>Tipo<select id="chart-type"><option value="line">Linha</option><option value="bar">Barras</option></select></label>
+          <label>Tipo de gráfico<select id="chart-type">
+            <option value="line">Linhas</option>
+            <option value="area">Áreas</option>
+            <option value="column">Colunas</option>
+            <option value="scatter">Pontos</option>
+            <option value="step">Degraus</option>
+          </select></label>
         </div>
         <div class="dcf-chart-wrap"><canvas id="dcf-chart" height="360" aria-label="Gráfico temporal do fluxo de caixa descontado"></canvas><div id="chart-empty" class="chart-empty">Execute uma avaliação para construir o gráfico.</div></div>
         <div id="chart-legend" class="chart-legend"></div>

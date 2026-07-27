@@ -181,19 +181,35 @@ function drawChart() {
     ctx.fillText(new Intl.NumberFormat("pt-PT", { notation: "compact", maximumFractionDigits: 1 }).format(value), 4, ypos + 4);
   }
   const colors = ["#e59632", "#16875f"];
+  const chartType = $("#chart-type").value;
   series.forEach((key, seriesIndex) => {
-    ctx.strokeStyle = colors[seriesIndex]; ctx.fillStyle = colors[seriesIndex]; ctx.lineWidth = 3; ctx.beginPath();
-    rows.forEach((row, index) => {
-      const xpos = x(index); const ypos = y(converted(row[key], key));
-      if ($("#chart-type").value === "bar") {
+    const points = rows.map((row, index) => ({ x: x(index), y: y(converted(row[key], key)) }));
+    ctx.strokeStyle = colors[seriesIndex]; ctx.fillStyle = colors[seriesIndex]; ctx.lineWidth = 3;
+    if (chartType === "column") {
+      points.forEach((point) => {
         const barWidth = Math.max(3, (width - pad.left - pad.right) / rows.length / series.length - 2);
         const offset = (seriesIndex - (series.length - 1) / 2) * (barWidth + 2);
-        ctx.fillRect(xpos + offset - barWidth / 2, Math.min(ypos, y(0)), barWidth, Math.abs(y(0) - ypos));
-      } else {
-        if (index === 0) ctx.moveTo(xpos, ypos); else ctx.lineTo(xpos, ypos);
+        ctx.fillRect(point.x + offset - barWidth / 2, Math.min(point.y, y(0)), barWidth, Math.abs(y(0) - point.y));
+      });
+    } else if (chartType === "scatter") {
+      points.forEach((point) => {
+        ctx.beginPath(); ctx.arc(point.x, point.y, 4.5, 0, Math.PI * 2); ctx.fill();
+      });
+    } else {
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else if (chartType === "step") {
+          ctx.lineTo(point.x, points[index - 1].y); ctx.lineTo(point.x, point.y);
+        } else ctx.lineTo(point.x, point.y);
+      });
+      if (chartType === "area") {
+        ctx.lineTo(points[points.length - 1].x, y(0)); ctx.lineTo(points[0].x, y(0)); ctx.closePath();
+        ctx.globalAlpha = .18; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.beginPath(); points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
       }
-    });
-    if ($("#chart-type").value === "line") ctx.stroke();
+      ctx.stroke();
+    }
   });
   const every = Math.max(1, Math.ceil(rows.length / 8));
   rows.forEach((row, index) => {
