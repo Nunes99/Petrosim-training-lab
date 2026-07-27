@@ -27,6 +27,7 @@ body {
     var(--background);
   color: var(--text);
   font-family:
+    PT Sans,
     Inter,
     system-ui,
     -apple-system,
