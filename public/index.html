@@ -98,8 +98,10 @@
         <form id="reserves-form" class="simulation-form">
           <div class="case-brief"><strong id="reservoir-case-name">Selecione um caso</strong><span id="reservoir-case-note">Os parâmetros de treino podem ser editados.</span></div>
           <label>Caso de Campo <span>Predefinição ou introdução manual</span><select id="reservoir-case"></select></label>
-          <div class="field-row"><label>Operador <span>Contexto</span><select id="reservoir-operator"></select></label><label>Localização <span>Moçambique/África</span><select id="reservoir-location"></select></label></div>
-          <div class="field-row"><label>Tipo de Reservatório <span>Modelo de fluido</span><select id="reservoir-type"></select></label><label>Fluido <span>Cálculo</span><select id="fluid-type"><option value="gas">Gás</option><option value="oil">Óleo</option></select></label></div>
+          <label>Operador <span>Contexto</span><select id="reservoir-operator"></select></label>
+          <label>Localização <span>Moçambique/África</span><select id="reservoir-location"></select></label>
+          <label>Tipo de Reservatório <span>Modelo de fluido</span><select id="reservoir-type"></select></label>
+          <label>Fluido <span>Cálculo</span><select id="fluid-type"><option value="gas">Gás</option><option value="oil">Óleo</option></select></label>
           <label>Área do Reservatório <span>Acres</span><input id="area-acres" type="number" min="0.01" step="0.01" value="5000" required></label>
           <label>Espessura Bruta <span>ft</span><input id="gross-thickness" type="number" min="0.01" step="0.01" value="80" required></label>
           <label>Relação entre Espessura Útil e Bruta <span>Fração</span><input id="net-to-gross" type="number" min="0.01" max="1" step="0.01" value="0.78" required></label>
@@ -132,6 +134,7 @@
 
   <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Sobre a plataforma</a></footer>
   <script type="module" src="/js/app.js"></script>
+  <script type="module" src="/js/custom-select.js"></script>
   <script type="module" src="/js/section-navigation.js"></script>
 </body>
 </html>

@@ -41,22 +41,33 @@
         <form id="economics-form" class="simulation-form">
           <div class="case-brief"><strong id="economic-case-name">Selecione um caso</strong><span>Modelo integrado: produção, preço, investimento, custos operacionais, imposto e fluxo de caixa descontado.</span></div>
           <label>Caso de Projeto <span>Predefinição ou introdução manual</span><select id="economic-case"></select></label>
-          <div class="field-row"><label>Tipo de Projeto <span>Cadeia de valor</span><select id="project-type"></select></label><label>Fase <span>Etapa de decisão</span><select id="project-phase"></select></label></div>
-          <div class="field-row"><label>Operador <span>Contexto</span><select id="project-operator"></select></label><label>Localização <span>Moçambique</span><select id="project-location"></select></label></div>
+          <label>Tipo de Projeto <span>Cadeia de valor</span><select id="project-type"></select></label>
+          <label>Fase <span>Etapa de decisão</span><select id="project-phase"></select></label>
+          <label>Operador <span>Contexto</span><select id="project-operator"></select></label>
+          <label>Localização <span>Moçambique</span><select id="project-location"></select></label>
           <label>Investimento Total <span>USD</span><input id="initial-investment" type="number" min="1" required></label>
-          <div class="field-row"><label>Capacidade Anual <span id="capacity-unit-label">Unidades/ano</span><input id="capacity" type="number" min="1" required></label><label>Utilização <span>%</span><input id="utilization" type="number" min="1" max="100" required></label></div>
+          <label>Capacidade Anual <span id="capacity-unit-label">Unidades/ano</span><input id="capacity" type="number" min="1" required></label>
+          <label>Utilização <span>%</span><input id="utilization" type="number" min="1" max="100" required></label>
           <label>Unidade da Capacidade <span>Editável</span><input id="capacity-unit" type="text" required></label>
-          <div class="field-row"><label>Preço Unitário <span>USD/unidade</span><input id="unit-price" type="number" min="0.01" step="0.01" required></label><label>Custo Variável <span>USD/unidade</span><input id="variable-cost" type="number" min="0" step="0.01" required></label></div>
+          <label>Preço Unitário <span>USD/unidade</span><input id="unit-price" type="number" min="0.01" step="0.01" required></label>
+          <label>Custo Variável <span>USD/unidade</span><input id="variable-cost" type="number" min="0" step="0.01" required></label>
           <label>Custo Operacional Fixo Anual <span>USD/ano</span><input id="fixed-opex" type="number" min="0" required></label>
           <details class="cost-details">
             <summary>Custos complementares do fluxo de caixa descontado</summary>
-            <div class="field-row"><label>Ambiental <span>USD/ano</span><input id="environmental-cost" type="number" min="0" value="0"></label><label>Segurança <span>USD/ano</span><input id="security-cost" type="number" min="0" value="0"></label></div>
-            <div class="field-row"><label>Conteúdo Local <span>USD/ano</span><input id="local-content-cost" type="number" min="0" value="0"></label><label>Tecnologia <span>USD/ano</span><input id="technology-cost" type="number" min="0" value="0"></label></div>
-            <div class="field-row"><label>Fator de Conversão <span>Volume → venda</span><input id="conversion-factor" type="number" min="0.000001" step="any" value="1"></label><label>Depreciação <span>Anos</span><input id="depreciation-years" type="number" min="1" max="40" value="10"></label></div>
+            <div class="cost-parameter-grid">
+              <label>Ambiental <span>USD/ano</span><input id="environmental-cost" type="number" min="0" value="0"></label>
+              <label>Segurança <span>USD/ano</span><input id="security-cost" type="number" min="0" value="0"></label>
+              <label>Conteúdo Local <span>USD/ano</span><input id="local-content-cost" type="number" min="0" value="0"></label>
+              <label>Tecnologia <span>USD/ano</span><input id="technology-cost" type="number" min="0" value="0"></label>
+              <label>Fator de Conversão <span>Volume → venda</span><input id="conversion-factor" type="number" min="0.000001" step="any" value="1"></label>
+              <label>Depreciação <span>Anos</span><input id="depreciation-years" type="number" min="1" max="40" value="10"></label>
+            </div>
           </details>
-          <div class="field-row"><label>Royalty <span>%</span><input id="royalty-rate" type="number" min="0" max="99" required></label><label>Imposto <span>%</span><input id="tax-rate" type="number" min="0" max="99" required></label></div>
+          <label>Royalty <span>%</span><input id="royalty-rate" type="number" min="0" max="99" required></label>
+          <label>Imposto <span>%</span><input id="tax-rate" type="number" min="0" max="99" required></label>
           <label>Taxa de Desconto <span>% ao ano</span><input id="discount-rate" type="number" min="0" max="99.99" step="0.01" required></label>
-          <div class="field-row"><label>Construção <span>Anos</span><input id="construction-years" type="number" min="1" max="8" required></label><label>Operação <span>Anos</span><input id="project-years" type="number" min="3" max="40" required></label></div>
+          <label>Construção <span>Anos</span><input id="construction-years" type="number" min="1" max="8" required></label>
+          <label>Operação <span>Anos</span><input id="project-years" type="number" min="3" max="40" required></label>
           <label>Descomissionamento <span>USD</span><input id="abandonment-cost" type="number" min="0" required></label>
           <button id="economics-submit" class="button primary full-width" type="submit" disabled>Avaliar projeto</button>
           <p id="economics-message" class="form-message" role="status"></p>
@@ -105,6 +116,7 @@
   </main>
   <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Documentação</a></footer>
   <script type="module" src="/js/economics.js"></script>
+  <script type="module" src="/js/custom-select.js"></script>
   <script type="module" src="/js/section-navigation.js"></script>
 </body>
 </html>
