@@ -212,6 +212,15 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+form.addEventListener("invalid", (event) => {
+  event.preventDefault();
+  const details = event.target.closest("details");
+  if (details) details.open = true;
+  $("#economics-message").textContent = `Reveja o campo “${event.target.closest("label")?.childNodes[0]?.textContent.trim() || event.target.id}”.`;
+  $("#economics-message").classList.add("error");
+  event.target.focus();
+}, true);
+
 ["#display-currency", "#usd-mzn-rate"].forEach((selector) => $(selector).addEventListener("change", () => {
   if (resultData) renderSummary(resultData);
 }));
