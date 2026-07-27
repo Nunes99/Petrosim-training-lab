@@ -159,8 +159,6 @@ async function init() {
     "#certificate-product-logo",
     productLogoSource,
   );
-  const hasClassicLogo = setImage("#classic-product-logo", productLogoSource);
-  document.querySelector("#classic-brandmark").classList.toggle("hidden", hasClassicLogo);
   setImage(
     "#certificate-left-signature",
     assetUrl(supabase, template.director_signature_path, defaultAssets.director_signature_path),

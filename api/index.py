@@ -439,13 +439,13 @@ def certificate_qr(
     ],
 ):
     """Render a self-contained, printable QR code without a third-party service."""
-    widget = qr.QrCodeWidget(target, barLevel="M")
+    widget = qr.QrCodeWidget(target, barLevel="H")
     widget.barFillColor = colors.HexColor("#00365B")
     bounds = widget.getBounds()
     source_width = bounds[2] - bounds[0]
     source_height = bounds[3] - bounds[1]
-    code_size = 128
-    quiet_zone = 8
+    code_size = 256
+    quiet_zone = 16
     drawing = Drawing(
         code_size + quiet_zone * 2,
         code_size + quiet_zone * 2,

@@ -48,6 +48,8 @@ def test_certificate_qr_is_printable_svg():
     assert response.headers["content-type"].startswith("image/svg+xml")
     assert response.content.startswith(b"<?xml")
     assert b"<svg" in response.content
+    assert b'width="288"' in response.content
+    assert b'height="288"' in response.content
 
 
 def test_certificate_qr_rejects_non_web_targets():
