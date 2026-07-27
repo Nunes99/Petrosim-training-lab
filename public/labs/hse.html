@@ -7,15 +7,15 @@
   <title>Simulador de Decisões de Segurança | PetroSimLab</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="section-sidebar-page">
+<body class="section-sidebar-page auth-required">
   <header class="topbar workspace-sidebar">
-    <a class="brand" href="/"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>Segurança e ambiente</small></div></a>
-    <nav class="workspace-primary"><a href="/">Visão geral</a><a href="/labs/economics">Economia</a><a class="active" href="/labs/hse">Segurança</a><a href="/dashboard">Meu painel</a></nav>
+    <a class="brand" href="/dashboard"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>Segurança e ambiente</small></div></a>
+    <nav class="workspace-primary"><a href="/dashboard">Painel</a><a href="/labs/reserves">Reservas</a><a href="/labs/economics">Economia</a><a class="active" href="/labs/hse">Segurança</a></nav>
     <nav class="lab-subnav site-section-nav" aria-label="Navegação por blocos">
       <a href="#hse-theory">Fundamentos</a><a href="#hse-simulator">Simulação</a>
       <a href="#hse-results">Análise final</a>
     </nav>
-    <a class="sidebar-login" href="/login">Entrar</a>
+    <div class="restricted-account"><span data-user-email>A validar sessão...</span><button class="sidebar-login" id="lab-sign-out" type="button">Terminar sessão</button></div>
   </header>
   <main>
     <section class="lab-hero">

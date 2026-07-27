@@ -1,6 +1,7 @@
-import { getSupabase } from "./supabase-client.js";
+import { authenticatedFetch, initializeRestrictedPage } from "./supabase-client.js";
 
 const $ = (selector) => document.querySelector(selector);
+const { supabase, session } = await initializeRestrictedPage();
 let scenarios = [];
 let current = 0;
 let answers = {};
@@ -13,7 +14,7 @@ $("#hse-theory-check").addEventListener("change", (event) => {
 
 async function loadScenarios() {
   try {
-    const response = await fetch("/api/hse/scenarios");
+    const response = await authenticatedFetch("/api/hse/scenarios");
     if (!response.ok) throw new Error("Não foi possível carregar os cenários.");
     scenarios = await response.json();
     $("#scenario-count").textContent = `0/${scenarios.length}`;
@@ -65,7 +66,7 @@ async function finish() {
   $("#scenario-step").textContent = "Simulação concluída";
   $("#scenario-stage").innerHTML = '<div class="scenario-placeholder"><strong>A preparar o debrief…</strong><p>As suas decisões estão a ser comparadas com as barreiras críticas.</p></div>';
   try {
-    const response = await fetch("/api/hse/evaluate", {
+    const response = await authenticatedFetch("/api/hse/evaluate", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answers }),
     });
@@ -84,8 +85,6 @@ async function finish() {
           Risco residual ${item.residual_risk <= 2 ? "baixo" : "elevado"}</span>
       </article>`).join("");
     try {
-      const supabase = await getSupabase();
-      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) await supabase.from("simulations").insert({
         user_id: session.user.id, module: "HSE Decision Trainer", inputs: { answers },
         results: { score: data.score, total: data.total, percentage: data.percentage, level: data.level },

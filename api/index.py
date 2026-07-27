@@ -1,8 +1,12 @@
+import json
 import os
 from datetime import date
 from math import isfinite
+from typing import Annotated
+from urllib.error import HTTPError, URLError
+from urllib.request import Request as UrlRequest, urlopen
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from api.catalog import (
     ECONOMIC_CASES, LOCATIONS, OPERATORS, PROJECT_PHASES, PROJECT_TYPES,
@@ -15,6 +19,63 @@ app = FastAPI(
     description="Scientific calculation engine for petroleum and gas training.",
     version="0.1.0",
 )
+
+
+def require_authenticated_user(
+    authorization: Annotated[str | None, Header()] = None,
+) -> dict:
+    """Validate a Supabase access token before allowing laboratory operations."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Inicie sessão para aceder aos laboratórios.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_ANON_KEY")
+    if not supabase_url or not supabase_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço de autenticação não configurado.",
+        )
+
+    token = authorization.removeprefix("Bearer ").strip()
+    request = UrlRequest(
+        f"{supabase_url.rstrip('/')}/auth/v1/user",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "apikey": supabase_key,
+        },
+        method="GET",
+    )
+    try:
+        with urlopen(request, timeout=8) as response:
+            user = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        if error.code in {401, 403}:
+            raise HTTPException(
+                status_code=401,
+                detail="Sessão inválida ou expirada.",
+                headers={"WWW-Authenticate": "Bearer"},
+            ) from error
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível validar a sessão.",
+        ) from error
+    except (URLError, TimeoutError, json.JSONDecodeError) as error:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível validar a sessão.",
+        ) from error
+
+    if not user.get("id"):
+        raise HTTPException(
+            status_code=401,
+            detail="Sessão inválida ou expirada.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
 
 class OilReservesInput(BaseModel):
@@ -216,7 +277,7 @@ def health_check():
 
 
 @app.get("/api/catalog/mozambique")
-def mozambique_catalog():
+def mozambique_catalog(_user: dict = Depends(require_authenticated_user)):
     return {
         "framework": "IM3 Framework v2",
         "disclaimer": "Os valores técnicos e comerciais são premissas pedagógicas, não reservas certificadas nem previsões dos operadores.",
@@ -240,7 +301,10 @@ def public_config():
 
 
 @app.post("/api/reserves/oil", response_model=OilReservesOutput)
-def calculate_oil_reserves(data: OilReservesInput):
+def calculate_oil_reserves(
+    data: OilReservesInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     ooip = (
         7758
         * data.area_acres
@@ -271,7 +335,10 @@ def calculate_oil_reserves(data: OilReservesInput):
 
 
 @app.post("/api/reserves/field-study", response_model=ReservoirFieldOutput)
-def evaluate_reservoir_field(data: ReservoirFieldInput):
+def evaluate_reservoir_field(
+    data: ReservoirFieldInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     effective_pay = data.net_pay_ft * data.net_to_gross
     base_ooip = (
         7758 * data.area_acres * effective_pay * data.porosity
@@ -303,7 +370,10 @@ def evaluate_reservoir_field(data: ReservoirFieldInput):
 
 
 @app.post("/api/reserves/comprehensive")
-def evaluate_comprehensive_reserves(data: ComprehensiveReservesInput):
+def evaluate_comprehensive_reserves(
+    data: ComprehensiveReservesInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     net_pay = data.gross_thickness_ft * data.net_to_gross
     constant = 7758 if data.fluid_type == "oil" else 43560
     in_place = (
@@ -357,7 +427,10 @@ def calculate_irr(initial: float, flows: list[float]) -> float | None:
 
 
 @app.post("/api/economics/evaluate", response_model=EconomicsOutput)
-def evaluate_economics(data: EconomicsInput):
+def evaluate_economics(
+    data: EconomicsInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     npv = discounted_value(
         data.initial_investment,
         data.annual_cash_flows,
@@ -411,7 +484,10 @@ def build_project_cash_flows(data: ProjectEconomicsInput, price: float) -> tuple
 
 
 @app.post("/api/economics/project", response_model=ProjectEconomicsOutput)
-def evaluate_project_economics(data: ProjectEconomicsInput):
+def evaluate_project_economics(
+    data: ProjectEconomicsInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     flows, schedule = build_project_cash_flows(data, data.oil_price)
     npv = discounted_value(data.capex, flows, data.discount_rate)
     irr = calculate_irr(data.capex, flows)
@@ -551,7 +627,10 @@ def integrated_cash_flows(data: IntegratedProjectInput, price_factor: float = 1.
 
 
 @app.post("/api/economics/integrated-project")
-def evaluate_integrated_project(data: IntegratedProjectInput):
+def evaluate_integrated_project(
+    data: IntegratedProjectInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     initial, flows, schedule = integrated_cash_flows(data)
     npv = discounted_value(initial, flows, data.discount_rate)
     irr = calculate_irr(initial, flows)
@@ -592,7 +671,7 @@ def evaluate_integrated_project(data: IntegratedProjectInput):
 
 
 @app.get("/api/hse/scenarios")
-def get_hse_scenarios():
+def get_hse_scenarios(_user: dict = Depends(require_authenticated_user)):
     return [
         {key: value for key, value in scenario.items()
          if key not in {"correct", "explanation", "consequence"}}
@@ -601,7 +680,10 @@ def get_hse_scenarios():
 
 
 @app.post("/api/hse/evaluate", response_model=HSEOutput)
-def evaluate_hse(data: HSEInput):
+def evaluate_hse(
+    data: HSEInput,
+    _user: dict = Depends(require_authenticated_user),
+):
     feedback = []
     score = 0
     for scenario in HSE_SCENARIOS:

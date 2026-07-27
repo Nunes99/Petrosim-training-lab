@@ -13,6 +13,14 @@ Each laboratory begins with a required theory section before its interactive
 exercise. The economics lab evaluates NPV, IRR, payback and profitability; the
 HSE trainer evaluates decisions in controlled operational scenarios.
 
+## Restricted student area
+
+Laboratories are available only from the authenticated student dashboard.
+The browser attaches the active Supabase access token to catalogue, scenario,
+reserve and economics requests. The FastAPI service validates that token with
+Supabase Auth before executing any laboratory calculation. Health and
+publishable client-configuration endpoints remain public.
+
 ## Initial technology stack
 
 - HTML5

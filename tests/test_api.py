@@ -1,15 +1,29 @@
 from fastapi.testclient import TestClient
 
-from api.index import app
+from api.index import app, require_authenticated_user
 
 
 client = TestClient(app)
+app.dependency_overrides[require_authenticated_user] = lambda: {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "email": "student@example.com",
+}
 
 
 def test_health_check():
     response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
+
+
+def test_laboratory_api_requires_login():
+    override = app.dependency_overrides.pop(require_authenticated_user)
+    try:
+        response = client.get("/api/catalog/mozambique")
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Inicie sessão para aceder aos laboratórios."
+    finally:
+        app.dependency_overrides[require_authenticated_user] = override
 
 
 def test_oil_reserves_calculation():

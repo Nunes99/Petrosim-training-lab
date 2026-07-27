@@ -1273,6 +1273,107 @@ input, textarea, select { border-radius: 5px; background-color: #fff; }
   }
 }
 
+/* Área autenticada dos estudantes */
+.auth-required::before {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 44%,rgba(12,139,143,.22),transparent 24%),
+    var(--workspace-blue);
+  font-size: .86rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  content: "A validar a sessão do estudante…";
+}
+.auth-required:not(.auth-ready) > * {
+  visibility: hidden;
+}
+.auth-required.auth-ready::before {
+  display: none;
+}
+.restricted-account {
+  display: grid;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 12px;
+  gap: 9px;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+.restricted-account > span {
+  display: block;
+  padding: 0 6px;
+  overflow: hidden;
+  color: #9fb5c1;
+  font-size: .7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-sidebar .restricted-account .sidebar-login {
+  margin-top: 0;
+  cursor: pointer;
+}
+.workspace-sidebar .restricted-account .sidebar-login:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+.lab-access-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: .78rem;
+}
+.lab-access-meta .status {
+  margin: 0;
+  font-size: .82rem;
+}
+.restricted-status-card .status {
+  color: var(--workspace-blue);
+}
+.dashboard-labs {
+  margin-bottom: 22px;
+}
+.dashboard-labs .panel-header p {
+  max-width: 760px;
+  margin: 5px 0 0;
+  color: var(--muted);
+}
+.dashboard-labs .module-grid {
+  margin-top: 18px;
+}
+.dashboard-labs .module-card {
+  min-height: 230px;
+}
+
+@media (max-width: 920px) {
+  .restricted-account {
+    width: auto;
+    margin-top: 0;
+    grid-template-columns: minmax(120px,1fr) auto;
+    align-items: center;
+    border-top: 0;
+  }
+  .workspace-sidebar .restricted-account .sidebar-login {
+    align-self: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .restricted-account {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+  .workspace-sidebar .restricted-account .sidebar-login {
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .simulation-form,
   .cost-parameter-grid {

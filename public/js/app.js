@@ -1,6 +1,7 @@
-import { getSupabase } from "./supabase-client.js";
+import { authenticatedFetch, initializeRestrictedPage } from "./supabase-client.js";
 
 const $ = (selector) => document.querySelector(selector);
+const { supabase, session } = await initializeRestrictedPage();
 const form = $("#reserves-form");
 const submitButton = $("#reserves-submit");
 let catalog;
@@ -63,7 +64,7 @@ function applyCase(caseId) {
 async function initialize() {
   try {
     const [healthResponse, catalogResponse] = await Promise.all([
-      fetch("/api/health"), fetch("/api/catalog/mozambique"),
+      fetch("/api/health"), authenticatedFetch("/api/catalog/mozambique"),
     ]);
     if (!healthResponse.ok || !catalogResponse.ok) throw new Error("API indisponível");
     catalog = await catalogResponse.json();
@@ -105,7 +106,7 @@ form.addEventListener("submit", async (event) => {
     uncertainty_percentage: value("#uncertainty"),
   };
   try {
-    const response = await fetch("/api/reserves/comprehensive", {
+    const response = await authenticatedFetch("/api/reserves/comprehensive", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
     });
     const data = await response.json();
@@ -122,8 +123,6 @@ form.addEventListener("submit", async (event) => {
     $("#calculation-warning").textContent = data.warnings.join(" ");
     $("#result-status").textContent = "Simulação concluída";
     try {
-      const supabase = await getSupabase();
-      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) await supabase.from("simulations").insert({
         user_id: session.user.id, module: "Reservoir Reserves Lab", inputs: payload, results: data,
       });

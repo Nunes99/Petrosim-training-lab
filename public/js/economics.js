@@ -1,6 +1,7 @@
-import { getSupabase } from "./supabase-client.js";
+import { authenticatedFetch, initializeRestrictedPage } from "./supabase-client.js";
 
 const $ = (selector) => document.querySelector(selector);
+const { supabase, session } = await initializeRestrictedPage();
 const form = $("#economics-form");
 const numeric = (selector) => Number($(selector).value);
 const integer = (value) => new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 0 }).format(value);
@@ -107,7 +108,7 @@ function applyCase(caseId) {
 
 async function initialize() {
   try {
-    const response = await fetch("/api/catalog/mozambique");
+    const response = await authenticatedFetch("/api/catalog/mozambique");
     if (!response.ok) throw new Error("Catálogo indisponível.");
     catalog = await response.json();
     fillSelect("#economic-case", catalog.economic_cases, "id", "name");
@@ -239,7 +240,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   $("#economics-status").textContent = "A modelar...";
   try {
-    const response = await fetch("/api/economics/integrated-project", {
+    const response = await authenticatedFetch("/api/economics/integrated-project", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload()),
     });
     const data = await response.json();
@@ -252,7 +253,6 @@ form.addEventListener("submit", async (event) => {
       : "Decisão IM3: revisão stage-gate e reformulação antes de avançar.";
     $("#economics-decision").classList.toggle("positive", data.decision === "invest_continue");
     try {
-      const supabase = await getSupabase(); const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) await supabase.from("simulations").insert({
         user_id: session.user.id, module: "Petroleum Economics Lab", inputs: payload(), results: data,
       });

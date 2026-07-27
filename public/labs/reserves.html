@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Laboratório restrito de reservas de reservatório PetroSimLab.">
+  <title>Laboratório de Reservas | PetroSimLab</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="section-sidebar-page auth-required">
+  <header class="topbar workspace-sidebar">
+    <a class="brand" href="/dashboard"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>Reservas de reservatório</small></div></a>
+    <nav class="workspace-primary"><a href="/dashboard">Painel</a><a class="active" href="/labs/reserves">Reservas</a><a href="/labs/economics">Economia</a><a href="/labs/hse">Segurança</a></nav>
+    <nav class="lab-subnav site-section-nav" aria-label="Secções do laboratório">
+      <a href="#reserves-theory">Fundamentos</a><a href="#reserves-simulator">Premissas</a><a href="#reserves-results">Resultados</a>
+    </nav>
+    <div class="restricted-account"><span data-user-email>A validar sessão...</span><button class="sidebar-login" id="lab-sign-out" type="button">Terminar sessão</button></div>
+  </header>
+
+  <main>
+    <section class="lab-hero">
+      <span class="eyebrow">Engenharia de reservatórios · 45 min</span>
+      <h1>Estimar reservas com rigor e transparência.</h1>
+      <p>Compare reservatórios offshore e onshore, selecione um caso de campo ou introduza dados próprios e comunique volumes P90, P50 e P10.</p>
+      <div class="lab-access-meta"><span id="api-status" class="status">A verificar API...</span><span>Área exclusiva do estudante</span></div>
+    </section>
+
+    <section class="section lab-content">
+      <div id="reserves-theory" class="theory-panel anchor-section">
+        <div>
+          <span class="eyebrow">Base teórica</span>
+          <h2>Antes de calcular</h2>
+          <p>O método volumétrico estima óleo ou gás in place combinando geometria, qualidade da rocha, saturação e comportamento PVT. Os casos usam informação pública do INP e premissas pedagógicas identificadas.</p>
+        </div>
+        <div class="theory-grid">
+          <article><strong>Volume Original</strong><span>Volume de óleo ou gás originalmente no reservatório antes da produção.</span></article>
+          <article><strong>Porosidade e Sw</strong><span>Definem o espaço poroso e a fração ocupada por água.</span></article>
+          <article><strong>Fator de Recuperação</strong><span>Percentagem do volume original tecnicamente recuperável.</span></article>
+        </div>
+        <label class="check-label theory-check"><input id="reserves-theory-check" type="checkbox"> Li os fundamentos e estou preparado para iniciar.</label>
+      </div>
+
+      <div id="reserves-simulator" class="simulator-layout anchor-section">
+        <form id="reserves-form" class="simulation-form">
+          <div class="case-brief"><strong id="reservoir-case-name">Selecione um caso</strong><span id="reservoir-case-note">Os parâmetros de treino podem ser editados.</span></div>
+          <label>Caso de Campo <span>Predefinição ou introdução manual</span><select id="reservoir-case"></select></label>
+          <label>Operador <span>Contexto</span><select id="reservoir-operator"></select></label>
+          <label>Localização <span>Moçambique/África</span><select id="reservoir-location"></select></label>
+          <label>Tipo de Reservatório <span>Modelo de fluido</span><select id="reservoir-type"></select></label>
+          <label>Fluido <span>Cálculo</span><select id="fluid-type"><option value="gas">Gás</option><option value="oil">Óleo</option></select></label>
+          <label>Área do Reservatório <span>Acres</span><input id="area-acres" type="number" min="0.01" step="0.01" value="5000" required></label>
+          <label>Espessura Bruta <span>ft</span><input id="gross-thickness" type="number" min="0.01" step="0.01" value="80" required></label>
+          <label>Relação entre Espessura Útil e Bruta <span>Fração</span><input id="net-to-gross" type="number" min="0.01" max="1" step="0.01" value="0.78" required></label>
+          <label>Porosidade <span>Fração</span><input id="porosity" type="number" min="0.001" max="1" step="0.001" value="0.22" required></label>
+          <label>Saturação de Água <span>Fração</span><input id="water-saturation" type="number" min="0" max="0.999" step="0.001" value="0.28" required></label>
+          <label>Fator Volume de Formação <span id="fvf-unit">Bg · rb/scf</span><input id="formation-volume-factor" type="number" min="0.00001" step="0.0001" value="0.0052" required></label>
+          <label>Fator de Recuperação <span>Fração</span><input id="recovery-factor" type="number" min="0" max="1" step="0.001" value="0.35" required></label>
+          <label>Incerteza dos Dados <span>± Percentagem</span><input id="uncertainty" type="range" min="0" max="40" step="1" value="15"><output id="uncertainty-value">15%</output></label>
+          <button id="reserves-submit" class="button primary full-width" type="submit" disabled>Executar simulação</button>
+          <p id="form-message" class="form-message" role="status"></p>
+        </form>
+
+        <section id="reserves-results" class="results-panel anchor-section">
+          <div class="results-header"><span>Resultados calculados</span><strong id="result-status">Aguardando dados</strong></div>
+          <div class="result-grid">
+            <article><span>P90 · conservador</span><strong id="p90-result">—</strong><small class="reserve-unit">reservas recuperáveis</small></article>
+            <article><span>P50 · base</span><strong id="p50-result">—</strong><small class="reserve-unit">reservas recuperáveis</small></article>
+            <article><span>P10 · potencial</span><strong id="p10-result">—</strong><small class="reserve-unit">reservas recuperáveis</small></article>
+            <article><span>Net pay</span><strong id="driver-result">—</strong><small>espessura efetiva (ft)</small></article>
+          </div>
+          <div class="range-visual" aria-label="Faixa de incerteza das reservas">
+            <span id="range-p90">P90</span><div><i id="range-marker"></i></div><span id="range-p10">P10</span>
+          </div>
+          <div class="formula-box"><strong id="formula-title">Equação volumétrica de gás</strong><code id="formula-code">GIIP = 43560 × A × h × NTG × φ × (1 − Sw) ÷ Bg</code><p id="calculation-warning"></p></div>
+        </section>
+      </div>
+      <div class="source-note"><strong>Dados e transparência</strong><span>Estrutura metodológica: IM3 Framework v2. Contexto público: <a href="https://inp.gov.mz/pesquisa-e-producao/" target="_blank" rel="noreferrer">INP — Pesquisa e Produção</a>. Os números das predefinições são exclusivamente pedagógicos.</span></div>
+    </section>
+  </main>
+
+  <footer><span>PetroSimLab é um produto da LMTWEB, desenvolvido pela LEMOTE.</span><a href="/about">Documentação</a></footer>
+  <script type="module" src="/js/app.js"></script>
+  <script type="module" src="/js/custom-select.js"></script>
+  <script type="module" src="/js/section-navigation.js"></script>
+</body>
+</html>

@@ -47,6 +47,7 @@ function renderSimulation(simulation) {
 async function init() {
   try {
     const { supabase, session } = await requireSession();
+    document.body.classList.add("auth-ready");
     document.querySelector("#user-email").textContent = session.user.email;
 
     const [profileResult, simulationsResult, modulesResult] = await Promise.all([

@@ -41,6 +41,10 @@
       "dest": "/public/labs/economics.html"
     },
     {
+      "src": "/labs/reserves",
+      "dest": "/public/labs/reserves.html"
+    },
+    {
       "src": "/labs/hse",
       "dest": "/public/labs/hse.html"
     },
