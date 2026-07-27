@@ -100,3 +100,25 @@ def test_dashboard_metrics_and_profile_photo_controls_are_present():
     assert '.from("profile-avatars")' in profile_script
     assert "avatar_path text" in schema
     assert "'profile-avatars'" in schema
+
+
+def test_button_system_is_shared_across_platform_controls():
+    stylesheet = CSS_PATH.read_text(encoding="utf-8")
+
+    assert "--button-height: 44px" in stylesheet
+    assert "--button-height-compact: 36px" in stylesheet
+    assert "--button-radius: 8px" in stylesheet
+    for selector in (
+        ".button",
+        ".text-button",
+        ".sidebar-login",
+        ".admin-nav button",
+        ".decision-option",
+        ".im3-select-trigger",
+        ".im3-select-option",
+        ".access-user-option",
+        ".profile-photo-upload",
+        ".theme-toggle",
+    ):
+        assert selector in stylesheet
+    assert 'input[type="file"]::file-selector-button' in stylesheet

@@ -16,6 +16,10 @@
   --danger: #c54848;
   --radius: 14px;
   --shadow: 0 16px 44px rgba(8, 28, 45, 0.1);
+  --button-height: 44px;
+  --button-height-compact: 36px;
+  --button-radius: 8px;
+  --button-padding-inline: 16px;
 }
 
 * { box-sizing: border-box; }
@@ -3734,6 +3738,121 @@ html[data-theme="dark"] .theme-toggle {
 @media (max-width: 640px) {
   .certificate-asset-grid { grid-template-columns: 1fr; }
   .app-body .metric-grid { grid-template-columns: 1fr; }
+}
+
+/* Sistema universal de botões */
+button,
+.button,
+.text-button,
+.sidebar-login,
+.side-nav a,
+.workspace-primary a,
+.profile-section-nav a,
+.lab-subnav a,
+.module-card .module-status,
+.decision-option,
+.im3-select-trigger,
+.im3-select-option,
+.access-user-option,
+.profile-photo-upload,
+.theme-toggle {
+  border-radius: var(--button-radius);
+}
+
+.app-body .side-nav a,
+.workspace-sidebar .workspace-primary a,
+.section-sidebar-page .workspace-sidebar .site-section-nav a {
+  border-radius: var(--button-radius);
+}
+
+.button,
+.text-button,
+.workspace-sidebar .sidebar-login,
+.admin-nav button,
+.side-nav a,
+.workspace-primary a,
+.profile-section-nav a,
+.lab-subnav a,
+.module-card .module-status {
+  min-height: var(--button-height);
+}
+
+.workspace-sidebar .workspace-primary a,
+.section-sidebar-page .workspace-sidebar .site-section-nav a,
+.certificate-toolbar .button {
+  min-height: var(--button-height);
+}
+
+.button {
+  padding: 0 var(--button-padding-inline);
+  line-height: 1.2;
+}
+
+.button.compact {
+  min-height: var(--button-height-compact);
+  padding: 0 12px;
+  border-radius: var(--button-radius);
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  line-height: 1.2;
+}
+
+.admin-nav button {
+  padding: 0 12px;
+}
+
+.decision-option,
+.im3-select-trigger,
+.im3-select-option {
+  min-height: var(--button-height);
+}
+
+.decision-option {
+  padding: 12px var(--button-padding-inline);
+}
+
+.im3-select-option {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.access-user-option {
+  min-height: 56px;
+}
+
+.theme-toggle {
+  width: var(--button-height);
+  height: var(--button-height);
+}
+
+.profile-photo-upload {
+  width: 32px;
+  height: 32px;
+}
+
+input[type="file"]::file-selector-button {
+  min-height: 32px;
+  margin-right: 8px;
+  padding: 0 10px;
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  border: 1px solid var(--brand-gold);
+  border-radius: var(--button-radius);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+input[type="file"]::file-selector-button:hover {
+  color: #fff;
+  background: var(--brand-navy);
+  border-color: var(--brand-navy);
 }
 
 @media print {
