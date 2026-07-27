@@ -697,12 +697,179 @@ begin
 end;
 $$;
 
+create or replace function public.admin_update_user_profile(
+  p_target_user_id uuid,
+  p_full_name text,
+  p_role text,
+  p_account_status text,
+  p_phone text,
+  p_country text,
+  p_city text,
+  p_professional_status text,
+  p_education_area text,
+  p_institution text,
+  p_job_title text,
+  p_bio text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  previous_role text;
+  previous_status text;
+begin
+  if not public.is_admin() then
+    raise exception 'Acesso reservado aos administradores'
+      using errcode = '42501';
+  end if;
+
+  if char_length(trim(coalesce(p_full_name, ''))) < 2 then
+    raise exception 'O nome completo deve ter pelo menos dois caracteres'
+      using errcode = '22023';
+  end if;
+
+  if p_professional_status not in (
+    'student', 'professor', 'researcher', 'employee', 'technician',
+    'engineer', 'manager', 'consultant', 'job_seeker', 'other'
+  ) then
+    raise exception 'Situação profissional inválida'
+      using errcode = '22023';
+  end if;
+
+  if p_role not in ('student', 'instructor', 'admin') then
+    raise exception 'Função inválida'
+      using errcode = '22023';
+  end if;
+
+  if p_account_status not in ('active', 'suspended') then
+    raise exception 'Estado de conta inválido'
+      using errcode = '22023';
+  end if;
+
+  if p_target_user_id = (select auth.uid())
+    and (p_role <> 'admin' or p_account_status <> 'active') then
+    raise exception 'Não pode remover ou suspender a conta administrativa em utilização'
+      using errcode = '42501';
+  end if;
+
+  select role, account_status
+  into previous_role, previous_status
+  from public.profiles
+  where id = p_target_user_id;
+
+  if not found then
+    raise exception 'Utilizador não encontrado'
+      using errcode = 'P0002';
+  end if;
+
+  update public.profiles
+  set
+    full_name = trim(p_full_name),
+    display_name = trim(p_full_name),
+    role = p_role,
+    account_status = p_account_status,
+    phone = nullif(trim(coalesce(p_phone, '')), ''),
+    country = nullif(trim(coalesce(p_country, '')), ''),
+    city = nullif(trim(coalesce(p_city, '')), ''),
+    professional_status = p_professional_status,
+    education_area = nullif(trim(coalesce(p_education_area, '')), ''),
+    institution = nullif(trim(coalesce(p_institution, '')), ''),
+    job_title = nullif(trim(coalesce(p_job_title, '')), ''),
+    bio = nullif(trim(coalesce(p_bio, '')), ''),
+    updated_at = now()
+  where id = p_target_user_id;
+
+  insert into public.audit_logs (actor_id, action, target_user_id, metadata)
+  values (
+    (select auth.uid()),
+    'user.profile_updated',
+    p_target_user_id,
+    jsonb_build_object(
+      'updated_fields',
+      array[
+        'full_name', 'phone', 'country', 'city', 'professional_status',
+        'education_area', 'institution', 'job_title', 'bio', 'role',
+        'account_status'
+      ],
+      'previous_role', previous_role,
+      'new_role', p_role,
+      'previous_status', previous_status,
+      'new_status', p_account_status
+    )
+  );
+end;
+$$;
+
+create or replace function public.admin_delete_user_account(
+  p_target_user_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_email text;
+  target_name text;
+begin
+  if not public.is_admin() then
+    raise exception 'Acesso reservado aos administradores'
+      using errcode = '42501';
+  end if;
+
+  if p_target_user_id = (select auth.uid()) then
+    raise exception 'Não pode eliminar a conta administrativa em utilização'
+      using errcode = '42501';
+  end if;
+
+  select email, coalesce(full_name, display_name)
+  into target_email, target_name
+  from public.profiles
+  where id = p_target_user_id;
+
+  if not found then
+    raise exception 'Utilizador não encontrado'
+      using errcode = 'P0002';
+  end if;
+
+  insert into public.audit_logs (actor_id, action, target_user_id, metadata)
+  values (
+    (select auth.uid()),
+    'user.account_deleted',
+    p_target_user_id,
+    jsonb_build_object(
+      'public_user_id', p_target_user_id,
+      'email', target_email,
+      'full_name', target_name
+    )
+  );
+
+  delete from auth.users
+  where id = p_target_user_id;
+
+  if not found then
+    raise exception 'Conta de autenticação não encontrada'
+      using errcode = 'P0002';
+  end if;
+end;
+$$;
+
 revoke all on function public.admin_set_user_role(uuid, text) from public, anon, authenticated;
 revoke all on function public.admin_set_account_status(uuid, text) from public, anon, authenticated;
 revoke all on function public.admin_set_lab_access(uuid, uuid, text, boolean, timestamptz) from public, anon, authenticated;
+revoke all on function public.admin_update_user_profile(
+  uuid, text, text, text, text, text, text, text, text, text, text, text
+) from public, anon, authenticated;
+revoke all on function public.admin_delete_user_account(uuid) from public, anon, authenticated;
 grant execute on function public.admin_set_user_role(uuid, text) to authenticated;
 grant execute on function public.admin_set_account_status(uuid, text) to authenticated;
 grant execute on function public.admin_set_lab_access(uuid, uuid, text, boolean, timestamptz) to authenticated;
+grant execute on function public.admin_update_user_profile(
+  uuid, text, text, text, text, text, text, text, text, text, text, text
+) to authenticated;
+grant execute on function public.admin_delete_user_account(uuid) to authenticated;
 
 create or replace function public.issue_certificate_from_simulation()
 returns trigger

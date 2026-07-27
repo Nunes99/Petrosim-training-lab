@@ -25,6 +25,15 @@ def test_health_check():
     assert response.json()["status"] == "healthy"
 
 
+def test_authenticated_user_identity_exposes_public_id():
+    response = client.get("/api/user")
+    assert response.status_code == 200
+    assert response.json() == {
+        "public_user_id": "00000000-0000-0000-0000-000000000001",
+        "email": "student@example.com",
+    }
+
+
 def test_certificate_qr_is_printable_svg():
     response = client.get(
         "/api/certificates/qr",

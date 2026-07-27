@@ -27,7 +27,11 @@
     <div class="admin-sidebar-footer">
       <div class="admin-account">
         <span id="admin-initials">AD</span>
-        <div><strong id="admin-name">Administrador</strong><small id="admin-email">A validar…</small></div>
+        <div>
+          <strong id="admin-name">Administrador</strong>
+          <small id="admin-email">A validar…</small>
+          <code id="admin-public-id">ID público: a validar…</code>
+        </div>
       </div>
       <button id="sign-out" class="button admin-signout" type="button"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Terminar sessão</button>
     </div>
@@ -42,7 +46,7 @@
         <label class="admin-global-search">
           <span class="sr-only">Pesquisar</span>
           <span class="material-symbols-outlined search-icon" aria-hidden="true">search</span>
-          <input id="global-admin-search" type="search" placeholder="Nome, e-mail, laboratório ou certificado">
+          <input id="global-admin-search" type="search" placeholder="Nome, e-mail, ID, laboratório ou certificado">
         </label>
         <button id="refresh-admin" class="button secondary compact" type="button"><span class="material-symbols-outlined" aria-hidden="true">refresh</span>Atualizar dados</button>
         <span id="admin-status" class="status-pill">A validar permissões…</span>
@@ -81,7 +85,7 @@
         </header>
         <section class="admin-card">
           <div class="admin-filterbar">
-            <label class="filter-search">Pesquisar utilizadores<input id="user-search" type="search" placeholder="Nome, e-mail, instituição ou área"></label>
+            <label class="filter-search">Pesquisar utilizadores<input id="user-search" type="search" placeholder="Nome, e-mail, ID, instituição ou área"></label>
             <label>Função
               <select id="user-role-filter">
                 <option value="">Todas</option>
@@ -298,6 +302,104 @@
       </section>
     </div>
   </main>
+
+  <dialog id="user-details-dialog" class="admin-user-dialog" aria-labelledby="user-details-title">
+    <form id="user-details-form" class="admin-user-details">
+      <header class="user-details-header">
+        <div>
+          <span class="eyebrow">Ficha completa do utilizador</span>
+          <h2 id="user-details-title">Detalhes do utilizador</h2>
+          <p>Consulte e atualize dados pessoais, função, estado e acessos aos laboratórios.</p>
+        </div>
+        <button id="user-details-close" class="dialog-close-button" type="button" aria-label="Fechar detalhes">×</button>
+      </header>
+
+      <div class="user-public-identity">
+        <div>
+          <span>ID público do utilizador</span>
+          <code id="user-details-public-id">—</code>
+        </div>
+        <span id="user-details-account-status" class="status-pill">—</span>
+      </div>
+
+      <div class="user-detail-summary" aria-label="Resumo da conta">
+        <article><span>Registo</span><strong id="user-details-created">—</strong></article>
+        <article><span>Atualização</span><strong id="user-details-updated">—</strong></article>
+        <article><span>Simulações</span><strong id="user-details-simulations">0</strong></article>
+        <article><span>Certificações</span><strong id="user-details-certificates">0</strong></article>
+      </div>
+
+      <section class="user-details-section">
+        <div class="admin-card-heading">
+          <div><span class="eyebrow">Identidade e contexto</span><h3>Dados pessoais e profissionais</h3></div>
+        </div>
+        <div class="professional-form-grid user-details-fields">
+          <label>Nome completo<input id="user-details-full-name" maxlength="120" required></label>
+          <label>E-mail<input id="user-details-email" type="email" disabled></label>
+          <label>Telefone<input id="user-details-phone" type="tel" maxlength="40"></label>
+          <label>País<input id="user-details-country" maxlength="80"></label>
+          <label>Cidade ou província<input id="user-details-city" maxlength="80"></label>
+          <label>Situação profissional
+            <select id="user-details-professional-status">
+              <option value="student">Estudante</option>
+              <option value="professor">Professor ou docente</option>
+              <option value="researcher">Investigador</option>
+              <option value="employee">Funcionário</option>
+              <option value="technician">Técnico</option>
+              <option value="engineer">Engenheiro</option>
+              <option value="manager">Gestor</option>
+              <option value="consultant">Consultor</option>
+              <option value="job_seeker">À procura de oportunidade</option>
+              <option value="other">Outro</option>
+            </select>
+          </label>
+          <label>Área de formação ou especialidade<input id="user-details-education-area" maxlength="120"></label>
+          <label>Instituição ou empresa<input id="user-details-institution" maxlength="140"></label>
+          <label>Cargo ou função<input id="user-details-job-title" maxlength="100"></label>
+          <label>Função na plataforma
+            <select id="user-details-role">
+              <option value="student">Estudante</option>
+              <option value="instructor">Formador</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </label>
+          <label>Estado da conta
+            <select id="user-details-status">
+              <option value="active">Ativo</option>
+              <option value="suspended">Suspenso</option>
+            </select>
+          </label>
+          <label class="form-span-2">Resumo profissional
+            <textarea id="user-details-bio" rows="4" maxlength="500"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="user-details-section">
+        <div class="admin-card-heading user-lab-heading">
+          <div><span class="eyebrow">Permissões efetivas</span><h3>Laboratórios disponíveis</h3></div>
+          <button id="user-details-manage-access" class="button secondary compact" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">key</span>Gerir acessos
+          </button>
+        </div>
+        <div id="user-details-labs" class="user-details-labs"></div>
+      </section>
+
+      <footer class="user-details-actions">
+        <button id="user-details-delete" class="button danger" type="button">
+          <span class="material-symbols-outlined" aria-hidden="true">delete</span>Eliminar utilizador
+        </button>
+        <div>
+          <button id="user-details-cancel" class="button secondary" type="button">Cancelar</button>
+          <button id="user-details-save" class="button primary" type="submit">
+            <span class="material-symbols-outlined" aria-hidden="true">save</span>Guardar alterações
+          </button>
+        </div>
+      </footer>
+      <p id="user-details-message" class="form-message" role="status"></p>
+    </form>
+  </dialog>
+
   <script type="module" src="/js/admin.js"></script>
   <script type="module" src="/js/custom-select.js"></script>
 </body>

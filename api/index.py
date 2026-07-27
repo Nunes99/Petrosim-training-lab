@@ -339,6 +339,17 @@ def health_check():
     }
 
 
+@app.get("/api/user")
+def current_user_identity(
+    user: dict = Depends(require_authenticated_user),
+):
+    """Return the stable public identifier of the authenticated user."""
+    return {
+        "public_user_id": user["id"],
+        "email": user.get("email"),
+    }
+
+
 @app.get("/api/catalog/mozambique")
 def mozambique_catalog(_user: dict = Depends(require_authenticated_user)):
     return {

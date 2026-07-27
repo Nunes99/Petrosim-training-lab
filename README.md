@@ -62,6 +62,9 @@ certification, administrative audit events, protected RPC functions, and the
 administrators can upload or replace certificate identity assets. Each active
 user can upload, view, replace, and delete files only inside their own avatar
 folder.
+The administrative RPC layer also protects full profile editing and permanent
+account deletion, records both operations in the audit log, and prevents an
+administrator from deleting or suspending the account currently in use.
 Re-run the complete script after updates; it is designed to preserve existing
 records and backfill the new profile and certificate fields.
 

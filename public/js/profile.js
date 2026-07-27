@@ -78,6 +78,7 @@ function fillProfile(data) {
   document.querySelector("#profile-heading-name").textContent = data.full_name || data.display_name || "Formando";
   document.querySelector("#profile-heading-context").textContent =
     `${statusLabels[data.professional_status] || "Formando"} · ${data.institution || "Instituição não indicada"}`;
+  document.querySelector("#profile-public-id").textContent = data.id || session.user.id;
   document.querySelector("#profile-initials").textContent = initials(data.full_name || data.display_name);
   document.querySelector("#profile-avatar-image").alt =
     `Fotografia de ${data.full_name || data.display_name || "perfil"}`;
@@ -173,9 +174,12 @@ function renderCertificates(certificates) {
     const card = document.createElement("article");
     card.className = "certificate-card";
     const seal = document.createElement("span");
-    seal.className = "certificate-seal material-symbols-outlined";
+    seal.className = "certificate-seal";
     seal.setAttribute("aria-hidden", "true");
-    seal.textContent = "workspace_premium";
+    const sealIcon = document.createElement("span");
+    sealIcon.className = "material-symbols-outlined";
+    sealIcon.textContent = "workspace_premium";
+    seal.append(sealIcon);
     const content = document.createElement("div");
     const eyebrow = document.createElement("span");
     eyebrow.className = "eyebrow";

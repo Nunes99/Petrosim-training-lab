@@ -12,6 +12,7 @@ let accessGrants = [];
 let auditLogs = [];
 let certificateTemplates = [];
 let selectedAccessUserId = null;
+let selectedDetailUserId = null;
 
 const roleLabels = { student: "Estudante", instructor: "Formador", admin: "Administrador" };
 const statusLabels = { active: "Ativo", suspended: "Suspenso" };
@@ -32,6 +33,8 @@ const viewLabels = {
 const auditLabels = {
   "user.role_changed": "Função de utilizador alterada",
   "user.status_changed": "Estado de conta alterado",
+  "user.profile_updated": "Perfil de utilizador atualizado",
+  "user.account_deleted": "Conta de utilizador eliminada",
   "lab.access_changed": "Permissão de laboratório alterada",
 };
 const defaultCertificateAssets = {
@@ -70,6 +73,7 @@ const certificateAssetFields = [
 ];
 const buttonIcons = {
   Guardar: "save",
+  Detalhes: "person",
   Acessos: "key",
   Suspender: "block",
   Reativar: "refresh",
@@ -147,6 +151,180 @@ function moduleById(id) {
   return modules.find((module) => module.id === id);
 }
 
+function moduleAccessFor(profile, module) {
+  if (profile.role === "admin") {
+    return { allowed: true, source: "Acesso administrativo" };
+  }
+  const accessLevel = profile.role === "instructor" ? "trainer" : "student";
+  const grant = accessGrants.find((item) => (
+    item.user_id === profile.id
+    && item.module_id === module.id
+    && item.access_level === accessLevel
+  ));
+  const now = Date.now();
+  const grantIsCurrent = grant
+    && (!grant.starts_at || new Date(grant.starts_at).getTime() <= now)
+    && (!grant.expires_at || new Date(grant.expires_at).getTime() > now);
+  if (grant) {
+    return {
+      allowed: Boolean(grant.is_allowed && grantIsCurrent && module.is_published),
+      source: grantIsCurrent ? "Permissão individual" : "Permissão expirada ou futura",
+    };
+  }
+  if (accessLevel === "trainer") {
+    return { allowed: false, source: "Sem atribuição de formador" };
+  }
+  return {
+    allowed: Boolean(module.default_student_access && module.is_published),
+    source: module.default_student_access ? "Acesso padrão" : "Acesso não atribuído",
+  };
+}
+
+function renderUserDetailLabs(profile) {
+  const container = document.querySelector("#user-details-labs");
+  container.replaceChildren();
+  modules.forEach((module) => {
+    const access = moduleAccessFor(profile, module);
+    const item = document.createElement("article");
+    const copy = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = module.title;
+    const meta = document.createElement("span");
+    meta.textContent = `${module.category} · ${access.source}`;
+    const status = document.createElement("span");
+    status.className = `status-pill ${access.allowed ? "success" : "blocked"}`;
+    status.textContent = access.allowed ? "Disponível" : "Sem acesso";
+    copy.append(title, meta);
+    item.append(copy, status);
+    container.append(item);
+  });
+}
+
+function setSelectValue(selector, value) {
+  const select = document.querySelector(selector);
+  select.value = value;
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+async function refreshUserDetailCounts(userId) {
+  const [simulationsResult, certificatesResult] = await Promise.all([
+    supabase.from("simulations").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("certificates").select("id", { count: "exact", head: true }).eq("user_id", userId),
+  ]);
+  if (selectedDetailUserId !== userId) return;
+  if (!simulationsResult.error) {
+    document.querySelector("#user-details-simulations").textContent =
+      simulationsResult.count ?? 0;
+  }
+  if (!certificatesResult.error) {
+    document.querySelector("#user-details-certificates").textContent =
+      certificatesResult.count ?? 0;
+  }
+}
+
+function openUserDetails(profile) {
+  if (!profile) return;
+  selectedDetailUserId = profile.id;
+  document.querySelector("#user-details-public-id").textContent = profile.id;
+  document.querySelector("#user-details-full-name").value =
+    profile.full_name || profile.display_name || "";
+  document.querySelector("#user-details-email").value = profile.email || "";
+  document.querySelector("#user-details-phone").value = profile.phone || "";
+  document.querySelector("#user-details-country").value = profile.country || "";
+  document.querySelector("#user-details-city").value = profile.city || "";
+  document.querySelector("#user-details-education-area").value = profile.education_area || "";
+  document.querySelector("#user-details-institution").value = profile.institution || "";
+  document.querySelector("#user-details-job-title").value = profile.job_title || "";
+  document.querySelector("#user-details-bio").value = profile.bio || "";
+  setSelectValue("#user-details-professional-status", profile.professional_status || "student");
+  setSelectValue("#user-details-role", profile.role);
+  setSelectValue("#user-details-status", profile.account_status);
+  document.querySelector("#user-details-created").textContent = formatDate(profile.created_at);
+  document.querySelector("#user-details-updated").textContent = formatDate(profile.updated_at);
+  document.querySelector("#user-details-simulations").textContent = "…";
+  document.querySelector("#user-details-certificates").textContent = "…";
+  const accountStatus = document.querySelector("#user-details-account-status");
+  accountStatus.className = `status-pill ${profile.account_status === "active" ? "success" : "blocked"}`;
+  accountStatus.textContent = statusLabels[profile.account_status] || profile.account_status;
+  const deleteButton = document.querySelector("#user-details-delete");
+  deleteButton.disabled = profile.id === session.user.id;
+  deleteButton.title = deleteButton.disabled
+    ? "A conta administrativa em uso não pode ser eliminada."
+    : "Eliminar permanentemente esta conta e os respetivos dados.";
+  document.querySelector("#user-details-manage-access").disabled = profile.role === "admin";
+  renderUserDetailLabs(profile);
+  setMessage("#user-details-message", "");
+  const dialog = document.querySelector("#user-details-dialog");
+  if (!dialog.open) dialog.showModal();
+  refreshUserDetailCounts(profile.id).catch(() => {
+    if (selectedDetailUserId !== profile.id) return;
+    document.querySelector("#user-details-simulations").textContent =
+      simulations.filter((item) => item.user_id === profile.id).length;
+    document.querySelector("#user-details-certificates").textContent =
+      certificates.filter((item) => item.user_id === profile.id).length;
+  });
+}
+
+async function saveUserDetails(event) {
+  event.preventDefault();
+  const profile = profileById(selectedDetailUserId);
+  if (!profile) return;
+  const submit = document.querySelector("#user-details-save");
+  submit.disabled = true;
+  setMessage("#user-details-message", "A guardar alterações…");
+  const role = document.querySelector("#user-details-role").value;
+  const accountStatus = document.querySelector("#user-details-status").value;
+  try {
+    const { error: profileError } = await supabase.rpc("admin_update_user_profile", {
+      p_target_user_id: profile.id,
+      p_full_name: document.querySelector("#user-details-full-name").value.trim(),
+      p_role: role,
+      p_account_status: accountStatus,
+      p_phone: document.querySelector("#user-details-phone").value.trim(),
+      p_country: document.querySelector("#user-details-country").value.trim(),
+      p_city: document.querySelector("#user-details-city").value.trim(),
+      p_professional_status: document.querySelector("#user-details-professional-status").value,
+      p_education_area: document.querySelector("#user-details-education-area").value.trim(),
+      p_institution: document.querySelector("#user-details-institution").value.trim(),
+      p_job_title: document.querySelector("#user-details-job-title").value.trim(),
+      p_bio: document.querySelector("#user-details-bio").value.trim(),
+    });
+    if (profileError) throw profileError;
+    await loadAdminData({ preserveView: true });
+    openUserDetails(profileById(profile.id));
+    setMessage("#user-details-message", "Dados do utilizador atualizados com sucesso.");
+  } catch (error) {
+    setMessage("#user-details-message", error.message || "Não foi possível atualizar o utilizador.", true);
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+async function deleteUserAccount() {
+  const profile = profileById(selectedDetailUserId);
+  if (!profile || profile.id === session.user.id) return;
+  const displayName = profile.full_name || profile.display_name || profile.email;
+  if (!window.confirm(
+    `Eliminar permanentemente a conta de “${displayName}”? Esta ação remove perfil, acessos, simulações e certificações e não pode ser anulada.`,
+  )) return;
+  const action = document.querySelector("#user-details-delete");
+  action.disabled = true;
+  setMessage("#user-details-message", "A eliminar utilizador…");
+  const { error } = await supabase.rpc("admin_delete_user_account", {
+    p_target_user_id: profile.id,
+  });
+  if (error) {
+    action.disabled = false;
+    setMessage("#user-details-message", error.message || "Não foi possível eliminar o utilizador.", true);
+    return;
+  }
+  selectedDetailUserId = null;
+  selectedAccessUserId = null;
+  document.querySelector("#user-details-dialog").close();
+  await loadAdminData({ preserveView: true });
+  setStatus("Utilizador eliminado", true);
+}
+
 function renderOverview() {
   const students = profiles.filter((profile) => profile.role === "student").length;
   const instructors = profiles.filter((profile) => profile.role === "instructor").length;
@@ -191,7 +369,7 @@ function renderOverview() {
 
 function userSearchText(profile) {
   return normalize([
-    profile.full_name, profile.display_name, profile.email, profile.institution,
+    profile.id, profile.full_name, profile.display_name, profile.email, profile.institution,
     profile.education_area, profile.job_title,
   ].join(" "));
 }
@@ -240,7 +418,10 @@ function createUserRow(profile) {
   name.textContent = profile.full_name || profile.display_name || "Utilizador";
   const email = document.createElement("small");
   email.textContent = profile.email || "E-mail não sincronizado";
-  userCopy.append(name, email);
+  const publicId = document.createElement("code");
+  publicId.className = "user-public-id-line";
+  publicId.textContent = `ID: ${profile.id}`;
+  userCopy.append(name, email, publicId);
   identity.append(avatar, userCopy);
   identityCell.append(identity);
 
@@ -277,6 +458,7 @@ function createUserRow(profile) {
   const actionsCell = document.createElement("td");
   const actions = document.createElement("div");
   actions.className = "table-actions";
+  const details = button("Detalhes", "button secondary compact", () => openUserDetails(profile));
   const save = button("Guardar", "button secondary compact", () => changeRole(profile, roleSelect, save));
   save.disabled = profile.id === session.user.id;
   const access = button("Acessos", "button secondary compact", () => {
@@ -291,7 +473,7 @@ function createUserRow(profile) {
     () => changeAccountStatus(profile, statusButton),
   );
   statusButton.disabled = profile.id === session.user.id;
-  actions.append(save, access, statusButton);
+  actions.append(details, save, access, statusButton);
   actionsCell.append(actions);
   row.append(identityCell, contextCell, roleCell, statusCell, dateCell, actionsCell);
   return row;
@@ -664,7 +846,11 @@ function renderActivity() {
     const module = moduleById(log.module_id);
     const meta = document.createElement("span");
     meta.textContent = `${actor?.full_name || actor?.email || "Administrador"} · ${
-      target?.full_name || module?.title || "Plataforma"
+      target?.full_name
+      || module?.title
+      || log.metadata?.full_name
+      || log.metadata?.public_user_id
+      || "Plataforma"
     } · ${formatDate(log.created_at)}`;
     copy.append(title, meta);
     item.append(marker, copy);
@@ -872,7 +1058,7 @@ async function loadAdminData({ preserveView = false } = {}) {
   ] =
     await Promise.all([
       supabase.from("profiles")
-        .select("id,email,display_name,full_name,phone,country,city,professional_status,education_area,institution,job_title,role,account_status,created_at,updated_at")
+        .select("id,email,display_name,full_name,phone,country,city,professional_status,education_area,institution,job_title,bio,avatar_path,role,account_status,created_at,updated_at")
         .order("created_at", { ascending: false }),
       supabase.from("simulations").select("id,user_id,module,module_slug,created_at", { count: "exact" })
         .order("created_at", { ascending: false }).limit(50),
@@ -899,6 +1085,18 @@ async function loadAdminData({ preserveView = false } = {}) {
   accessGrants = grantsResult.data || [];
   auditLogs = auditResult.data || [];
   certificateTemplates = templatesResult.data || [];
+  const refreshedAdmin = profileById(session.user.id);
+  if (refreshedAdmin) {
+    currentProfile = refreshedAdmin;
+    document.querySelector("#admin-name").textContent =
+      refreshedAdmin.full_name || refreshedAdmin.display_name || "Administrador";
+    document.querySelector("#admin-email").textContent =
+      refreshedAdmin.email || session.user.email;
+    document.querySelector("#admin-public-id").textContent =
+      `ID público: ${refreshedAdmin.id}`;
+    document.querySelector("#admin-initials").textContent =
+      initials(refreshedAdmin.full_name || refreshedAdmin.display_name);
+  }
   renderAll();
   setStatus("Acesso autorizado", true);
   if (!preserveView) setView("overview");
@@ -932,6 +1130,24 @@ function bindEvents() {
     renderUsers();
   });
   document.querySelector("#module-form").addEventListener("submit", saveModule);
+  document.querySelector("#user-details-form").addEventListener("submit", saveUserDetails);
+  ["#user-details-close", "#user-details-cancel"].forEach((selector) => {
+    document.querySelector(selector).addEventListener("click", () => {
+      document.querySelector("#user-details-dialog").close();
+    });
+  });
+  document.querySelector("#user-details-delete").addEventListener("click", () => {
+    deleteUserAccount().catch(handleError);
+  });
+  document.querySelector("#user-details-manage-access").addEventListener("click", () => {
+    const profile = profileById(selectedDetailUserId);
+    if (!profile || profile.role === "admin") return;
+    selectedAccessUserId = profile.id;
+    document.querySelector("#user-details-dialog").close();
+    setView("access");
+    renderAccessUsers();
+    renderAccessMatrix(profile);
+  });
   document.querySelector("#certificate-template-form").addEventListener("submit", saveCertificateTemplate);
   document.querySelector("#template-module").addEventListener("change", (event) => {
     fillCertificateTemplateForm(event.target.value);
@@ -992,6 +1208,7 @@ async function init() {
     currentProfile = profile;
     document.querySelector("#admin-name").textContent = profile.full_name || profile.display_name || "Administrador";
     document.querySelector("#admin-email").textContent = profile.email || session.user.email;
+    document.querySelector("#admin-public-id").textContent = `ID público: ${profile.id}`;
     document.querySelector("#admin-initials").textContent = initials(profile.full_name || profile.display_name);
     document.querySelector("#overview-date").textContent = new Intl.DateTimeFormat("pt-PT", {
       weekday: "long", day: "2-digit", month: "long", year: "numeric",

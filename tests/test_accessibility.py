@@ -122,3 +122,30 @@ def test_button_system_is_shared_across_platform_controls():
     ):
         assert selector in stylesheet
     assert 'input[type="file"]::file-selector-button' in stylesheet
+
+
+def test_identity_status_and_admin_user_management_are_available():
+    root = Path(__file__).resolve().parents[1]
+    stylesheet = CSS_PATH.read_text(encoding="utf-8")
+    admin = (PUBLIC_PATH / "admin.html").read_text(encoding="utf-8")
+    admin_script = (PUBLIC_PATH / "js" / "admin.js").read_text(encoding="utf-8")
+    profile = (PUBLIC_PATH / "profile.html").read_text(encoding="utf-8")
+    login = (PUBLIC_PATH / "login.html").read_text(encoding="utf-8")
+    admin_login = (PUBLIC_PATH / "admin-login.html").read_text(encoding="utf-8")
+    schema = (root / "database" / "schema.sql").read_text(encoding="utf-8")
+    product_credit = "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE."
+
+    assert 'id="profile-public-id"' in profile
+    assert 'id="user-details-dialog"' in admin
+    assert 'id="user-details-public-id"' in admin
+    assert 'id="user-details-cancel"' in admin
+    assert 'id="user-details-delete"' in admin
+    assert 'admin_update_user_profile' in admin_script
+    assert 'admin_delete_user_account' in admin_script
+    assert 'create or replace function public.admin_update_user_profile' in schema
+    assert 'create or replace function public.admin_delete_user_account' in schema
+    assert product_credit in login
+    assert product_credit in admin_login
+    assert ".status-pill," in stylesheet
+    assert ".certificate-seal > .material-symbols-outlined" in stylesheet
+    assert 'html[data-theme="dark"] .learning-auth' in stylesheet
