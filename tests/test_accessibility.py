@@ -144,8 +144,19 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'admin_delete_user_account' in admin_script
     assert 'create or replace function public.admin_update_user_profile' in schema
     assert 'create or replace function public.admin_delete_user_account' in schema
+    assert 'create or replace function public.generate_public_profile_id' in schema
+    assert "'ADM'" in schema
+    assert "'REV'" in schema
+    assert "'ST'" in schema
+    assert "role = 'student' and public_id ~ '^ST-[0-9]{5}$'" in schema
+    assert "role = 'admin' and public_id ~ '^ADM-[0-9]{5}$'" in schema
+    assert "role = 'instructor' and public_id ~ '^REV-[0-9]{5}$'" in schema
     assert product_credit in login
     assert product_credit in admin_login
     assert ".status-pill," in stylesheet
     assert ".certificate-seal > .material-symbols-outlined" in stylesheet
     assert 'html[data-theme="dark"] .learning-auth' in stylesheet
+    assert 'todo o texto da interface fica branco' in stylesheet
+    assert 'color: #fff !important' in stylesheet
+    assert ".professional-module-item .module-publish-marker" in stylesheet
+    assert ".feed-marker.material-symbols-outlined" in stylesheet

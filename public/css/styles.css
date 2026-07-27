@@ -3870,7 +3870,8 @@ input[type="file"]::file-selector-button:hover {
   display: inline-flex;
   width: max-content;
   max-width: 100%;
-  min-height: var(--button-height-compact);
+  min-width: 96px;
+  min-height: var(--button-height);
   align-items: center;
   justify-content: center;
   margin: 0;
@@ -3881,13 +3882,31 @@ input[type="file"]::file-selector-button:hover {
   border-radius: var(--button-radius);
   font-size: .76rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1;
   text-align: center;
 }
 
 .module-card .module-status {
-  min-height: var(--button-height-compact);
+  min-height: var(--button-height);
   border-radius: var(--button-radius);
+}
+
+.professional-module-item {
+  grid-template-columns: 96px minmax(180px,1fr) auto;
+}
+
+.professional-module-item .module-publish-marker,
+.user-public-identity .status-pill,
+.user-details-labs .status-pill {
+  display: inline-flex;
+  min-width: 96px;
+  min-height: var(--button-height);
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: var(--button-radius);
+  line-height: 1;
+  text-align: center;
 }
 
 .status-pill.success,
@@ -3957,6 +3976,24 @@ input[type="file"]::file-selector-button:hover {
   margin: 0;
   font-size: 30px;
   line-height: 1;
+}
+
+.button .material-symbols-outlined,
+.sidebar-login .material-symbols-outlined,
+.feed-marker.material-symbols-outlined,
+.security-stack > div > .material-symbols-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  line-height: 1;
+  text-align: center;
+}
+
+.feed-marker.material-symbols-outlined {
+  width: 32px;
+  height: 32px;
+  padding: 0;
 }
 
 /* Login com uma superfície contínua e contraste previsível */
@@ -4416,6 +4453,88 @@ html[data-theme="dark"] .risk-badge.high {
   border-color: #9a5158;
 }
 
+/* Regra final de legibilidade: todo o texto da interface fica branco à noite */
+html[data-theme="dark"] body :where(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,label,li,dt,dd,th,td,
+  code,a,button,input,textarea,select,option,output,summary,legend,
+  div,section,article,aside,nav,header,footer,main,form,table,thead,tbody,tr
+) {
+  color: #fff !important;
+}
+
+html[data-theme="dark"] ::placeholder {
+  color: rgba(255,255,255,.78) !important;
+  opacity: 1;
+}
+
+html[data-theme="dark"] .button.primary,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] input[type="file"]::file-selector-button {
+  color: #fff !important;
+  background: #0a4b72;
+  border-color: var(--brand-gold);
+}
+
+html[data-theme="dark"] .button.danger {
+  color: #fff !important;
+  background: #5a272b;
+  border-color: #9a5158;
+}
+
+html[data-theme="dark"] .feed-marker {
+  color: #fff !important;
+  background: #0a4b72;
+  border: 1px solid var(--brand-gold);
+}
+
+html[data-theme="dark"] .side-nav a.active,
+html[data-theme="dark"] .workspace-sidebar .workspace-primary a.active,
+html[data-theme="dark"] .section-sidebar-page .workspace-sidebar .site-section-nav a.active,
+html[data-theme="dark"] .section-sidebar-page .workspace-sidebar .site-section-nav a[aria-current="location"],
+html[data-theme="dark"] .admin-nav button.active,
+html[data-theme="dark"] .profile-section-nav a:hover,
+html[data-theme="dark"] .profile-section-nav a:focus-visible,
+html[data-theme="dark"] .im3-select-option[aria-selected="true"],
+html[data-theme="dark"] .access-user-option.active {
+  color: #fff !important;
+  background: #0a4b72;
+  border-color: var(--brand-gold);
+}
+
+html[data-theme="dark"] .status-pill:not(.success):not(.blocked),
+html[data-theme="dark"] .module-publish-marker:not(.published),
+html[data-theme="dark"] .module-status,
+html[data-theme="dark"] .profile-completion,
+html[data-theme="dark"] .security-kicker,
+html[data-theme="dark"] .results-header strong,
+html[data-theme="dark"] .signal-strip span,
+html[data-theme="dark"] .im3-select-menu-head span,
+html[data-theme="dark"] .status-card .status:not(.online):not(.offline),
+html[data-theme="dark"] .lab-access-meta .status:not(.online):not(.offline) {
+  color: #fff !important;
+  background: #0a4b72;
+  border-color: var(--brand-gold);
+}
+
+html[data-theme="dark"] .module-status.success {
+  background: #124936;
+  border-color: #3d8b70;
+}
+
+html[data-theme="dark"] :is(
+  .certificate-frame.qualification-certificate,
+  .template-preview-frame
+),
+html[data-theme="dark"] :is(
+  .certificate-frame.qualification-certificate,
+  .template-preview-frame
+) :where(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,label,li,code,
+  div,section,article,aside,header,footer
+) {
+  color: var(--brand-navy) !important;
+}
+
 @media (max-width: 720px) {
   .admin-user-dialog {
     width: calc(100% - 16px);
@@ -4432,6 +4551,9 @@ html[data-theme="dark"] .risk-badge.high {
   }
   .user-detail-summary,
   .user-details-fields {
+    grid-template-columns: 1fr;
+  }
+  .professional-module-item {
     grid-template-columns: 1fr;
   }
   .user-details-actions {

@@ -225,7 +225,8 @@ async function refreshUserDetailCounts(userId) {
 function openUserDetails(profile) {
   if (!profile) return;
   selectedDetailUserId = profile.id;
-  document.querySelector("#user-details-public-id").textContent = profile.id;
+  document.querySelector("#user-details-public-id").textContent =
+    profile.public_id || "ID não atribuído";
   document.querySelector("#user-details-full-name").value =
     profile.full_name || profile.display_name || "";
   document.querySelector("#user-details-email").value = profile.email || "";
@@ -369,7 +370,7 @@ function renderOverview() {
 
 function userSearchText(profile) {
   return normalize([
-    profile.id, profile.full_name, profile.display_name, profile.email, profile.institution,
+    profile.public_id, profile.full_name, profile.display_name, profile.email, profile.institution,
     profile.education_area, profile.job_title,
   ].join(" "));
 }
@@ -420,7 +421,7 @@ function createUserRow(profile) {
   email.textContent = profile.email || "E-mail não sincronizado";
   const publicId = document.createElement("code");
   publicId.className = "user-public-id-line";
-  publicId.textContent = `ID: ${profile.id}`;
+  publicId.textContent = `ID público: ${profile.public_id || "não atribuído"}`;
   userCopy.append(name, email, publicId);
   identity.append(avatar, userCopy);
   identityCell.append(identity);
@@ -849,7 +850,7 @@ function renderActivity() {
       target?.full_name
       || module?.title
       || log.metadata?.full_name
-      || log.metadata?.public_user_id
+      || log.metadata?.public_id
       || "Plataforma"
     } · ${formatDate(log.created_at)}`;
     copy.append(title, meta);
@@ -1058,7 +1059,7 @@ async function loadAdminData({ preserveView = false } = {}) {
   ] =
     await Promise.all([
       supabase.from("profiles")
-        .select("id,email,display_name,full_name,phone,country,city,professional_status,education_area,institution,job_title,bio,avatar_path,role,account_status,created_at,updated_at")
+        .select("id,public_id,email,display_name,full_name,phone,country,city,professional_status,education_area,institution,job_title,bio,avatar_path,role,account_status,created_at,updated_at")
         .order("created_at", { ascending: false }),
       supabase.from("simulations").select("id,user_id,module,module_slug,created_at", { count: "exact" })
         .order("created_at", { ascending: false }).limit(50),
@@ -1093,7 +1094,7 @@ async function loadAdminData({ preserveView = false } = {}) {
     document.querySelector("#admin-email").textContent =
       refreshedAdmin.email || session.user.email;
     document.querySelector("#admin-public-id").textContent =
-      `ID público: ${refreshedAdmin.id}`;
+      `ID público: ${refreshedAdmin.public_id || "não atribuído"}`;
     document.querySelector("#admin-initials").textContent =
       initials(refreshedAdmin.full_name || refreshedAdmin.display_name);
   }
@@ -1208,7 +1209,8 @@ async function init() {
     currentProfile = profile;
     document.querySelector("#admin-name").textContent = profile.full_name || profile.display_name || "Administrador";
     document.querySelector("#admin-email").textContent = profile.email || session.user.email;
-    document.querySelector("#admin-public-id").textContent = `ID público: ${profile.id}`;
+    document.querySelector("#admin-public-id").textContent =
+      `ID público: ${profile.public_id || "não atribuído"}`;
     document.querySelector("#admin-initials").textContent = initials(profile.full_name || profile.display_name);
     document.querySelector("#overview-date").textContent = new Intl.DateTimeFormat("pt-PT", {
       weekday: "long", day: "2-digit", month: "long", year: "numeric",

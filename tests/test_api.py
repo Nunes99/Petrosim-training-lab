@@ -6,6 +6,7 @@ from api.index import (
     RESERVES_ACCESS,
     app,
     require_authenticated_user,
+    require_public_identity,
 )
 
 
@@ -17,6 +18,10 @@ app.dependency_overrides[require_authenticated_user] = lambda: {
 app.dependency_overrides[RESERVES_ACCESS] = app.dependency_overrides[require_authenticated_user]
 app.dependency_overrides[ECONOMICS_ACCESS] = app.dependency_overrides[require_authenticated_user]
 app.dependency_overrides[HSE_ACCESS] = app.dependency_overrides[require_authenticated_user]
+app.dependency_overrides[require_public_identity] = lambda: {
+    "public_user_id": "ST-48217",
+    "email": "student@example.com",
+}
 
 
 def test_health_check():
@@ -29,7 +34,7 @@ def test_authenticated_user_identity_exposes_public_id():
     response = client.get("/api/user")
     assert response.status_code == 200
     assert response.json() == {
-        "public_user_id": "00000000-0000-0000-0000-000000000001",
+        "public_user_id": "ST-48217",
         "email": "student@example.com",
     }
 

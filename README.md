@@ -65,6 +65,10 @@ folder.
 The administrative RPC layer also protects full profile editing and permanent
 account deletion, records both operations in the audit log, and prevents an
 administrator from deleting or suspending the account currently in use.
+Profiles receive a separate public identifier automatically: `ST-00000` for
+students, `REV-00000` for instructors, and `ADM-00000` for administrators.
+The five digits are generated randomly and the internal authentication UUID is
+never used as the public identifier.
 Re-run the complete script after updates; it is designed to preserve existing
 records and backfill the new profile and certificate fields.
 

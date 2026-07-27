@@ -82,6 +82,61 @@ def require_authenticated_user(
     return user
 
 
+def require_public_identity(
+    authorization: Annotated[str | None, Header()] = None,
+    user: dict = Depends(require_authenticated_user),
+) -> dict:
+    """Load the public profile identifier without exposing the database UUID."""
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_ANON_KEY")
+    if not authorization or not supabase_url or not supabase_key:
+        raise HTTPException(
+            status_code=503,
+            detail="O serviço de identidade pública não está configurado.",
+        )
+
+    request = UrlRequest(
+        (
+            f"{supabase_url.rstrip('/')}/rest/v1/profiles"
+            f"?select=public_id,email&id=eq.{user['id']}&limit=1"
+        ),
+        headers={
+            "Authorization": authorization,
+            "apikey": supabase_key,
+            "Accept": "application/json",
+        },
+        method="GET",
+    )
+    try:
+        with urlopen(request, timeout=8) as response:
+            profiles = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        if error.code in {401, 403}:
+            raise HTTPException(
+                status_code=403,
+                detail="Não foi possível consultar a identidade pública.",
+            ) from error
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível consultar a identidade pública.",
+        ) from error
+    except (URLError, TimeoutError, json.JSONDecodeError) as error:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível consultar a identidade pública.",
+        ) from error
+
+    if not profiles or not profiles[0].get("public_id"):
+        raise HTTPException(
+            status_code=404,
+            detail="ID público ainda não atribuído ao utilizador.",
+        )
+    return {
+        "public_user_id": profiles[0]["public_id"],
+        "email": profiles[0].get("email") or user.get("email"),
+    }
+
+
 def require_lab_access(module_slug: str):
     """Create a dependency backed by the Supabase laboratory access policy."""
 
@@ -341,13 +396,10 @@ def health_check():
 
 @app.get("/api/user")
 def current_user_identity(
-    user: dict = Depends(require_authenticated_user),
+    identity: dict = Depends(require_public_identity),
 ):
     """Return the stable public identifier of the authenticated user."""
-    return {
-        "public_user_id": user["id"],
-        "email": user.get("email"),
-    }
+    return identity
 
 
 @app.get("/api/catalog/mozambique")

@@ -276,6 +276,7 @@ create trigger on_auth_user_created
 -- Plataforma profissional: perfis, controlo de acesso e certificação.
 alter table public.profiles
   add column if not exists email text,
+  add column if not exists public_id text,
   add column if not exists full_name text,
   add column if not exists phone text,
   add column if not exists country text default 'Moçambique',
@@ -319,6 +320,132 @@ begin
   end if;
 end
 $$;
+
+create or replace function public.generate_public_profile_id(p_role text)
+returns text
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  id_prefix text;
+  candidate text;
+  attempt integer;
+begin
+  id_prefix := case p_role
+    when 'admin' then 'ADM'
+    when 'instructor' then 'REV'
+    else 'ST'
+  end;
+
+  for attempt in 1..1000 loop
+    candidate := id_prefix || '-' || lpad(floor(random() * 100000)::integer::text, 5, '0');
+    exit when not exists (
+      select 1 from public.profiles where public_id = candidate
+    );
+  end loop;
+
+  if candidate is null or exists (
+    select 1 from public.profiles where public_id = candidate
+  ) then
+    raise exception 'Não foi possível gerar um ID público único'
+      using errcode = 'P0001';
+  end if;
+
+  return candidate;
+end;
+$$;
+
+do $$
+declare
+  selected_profile record;
+begin
+  for selected_profile in
+    select id, role
+    from public.profiles
+    where public_id is null
+      or public_id !~ '^(ST|ADM|REV)-[0-9]{5}$'
+      or (role = 'student' and public_id !~ '^ST-[0-9]{5}$')
+      or (role = 'admin' and public_id !~ '^ADM-[0-9]{5}$')
+      or (role = 'instructor' and public_id !~ '^REV-[0-9]{5}$')
+      or public_id in (
+        select duplicated.public_id
+        from public.profiles as duplicated
+        where duplicated.public_id is not null
+        group by duplicated.public_id
+        having count(*) > 1
+      )
+  loop
+    update public.profiles
+    set public_id = public.generate_public_profile_id(selected_profile.role)
+    where id = selected_profile.id;
+  end loop;
+end
+$$;
+
+create unique index if not exists profiles_public_id_key
+  on public.profiles (public_id);
+
+alter table public.profiles
+  alter column public_id set not null;
+
+alter table public.profiles
+  drop constraint if exists profiles_public_id_check;
+
+alter table public.profiles
+  add constraint profiles_public_id_check
+  check (
+    (role = 'student' and public_id ~ '^ST-[0-9]{5}$')
+    or (role = 'admin' and public_id ~ '^ADM-[0-9]{5}$')
+    or (role = 'instructor' and public_id ~ '^REV-[0-9]{5}$')
+  );
+
+create or replace function public.assign_public_profile_id()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  expected_prefix text;
+  existing_digits text;
+  reassigned_id text;
+begin
+  expected_prefix := case new.role
+    when 'admin' then 'ADM'
+    when 'instructor' then 'REV'
+    else 'ST'
+  end;
+
+  if new.public_id is null then
+    new.public_id := public.generate_public_profile_id(new.role);
+  elsif tg_op = 'UPDATE' and new.role is distinct from old.role then
+    existing_digits := substring(old.public_id from '([0-9]{5})$');
+    reassigned_id := expected_prefix || '-' || existing_digits;
+    if exists (
+      select 1
+      from public.profiles
+      where public_id = reassigned_id
+        and id <> new.id
+    ) then
+      new.public_id := public.generate_public_profile_id(new.role);
+    else
+      new.public_id := reassigned_id;
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_public_id_assigned on public.profiles;
+create trigger profiles_public_id_assigned
+  before insert or update of role on public.profiles
+  for each row execute procedure public.assign_public_profile_id();
+
+revoke all on function public.generate_public_profile_id(text) from public, anon, authenticated;
+revoke all on function public.assign_public_profile_id() from public, anon, authenticated;
 
 update public.profiles as profile
 set
@@ -813,6 +940,7 @@ as $$
 declare
   target_email text;
   target_name text;
+  target_public_id text;
 begin
   if not public.is_admin() then
     raise exception 'Acesso reservado aos administradores'
@@ -824,8 +952,8 @@ begin
       using errcode = '42501';
   end if;
 
-  select email, coalesce(full_name, display_name)
-  into target_email, target_name
+  select email, coalesce(full_name, display_name), public_id
+  into target_email, target_name, target_public_id
   from public.profiles
   where id = p_target_user_id;
 
@@ -840,7 +968,8 @@ begin
     'user.account_deleted',
     p_target_user_id,
     jsonb_build_object(
-      'public_user_id', p_target_user_id,
+      'database_user_id', p_target_user_id,
+      'public_id', target_public_id,
       'email', target_email,
       'full_name', target_name
     )

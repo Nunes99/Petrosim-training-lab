@@ -78,7 +78,7 @@ function fillProfile(data) {
   document.querySelector("#profile-heading-name").textContent = data.full_name || data.display_name || "Formando";
   document.querySelector("#profile-heading-context").textContent =
     `${statusLabels[data.professional_status] || "Formando"} · ${data.institution || "Instituição não indicada"}`;
-  document.querySelector("#profile-public-id").textContent = data.id || session.user.id;
+  document.querySelector("#profile-public-id").textContent = data.public_id || "ID não atribuído";
   document.querySelector("#profile-initials").textContent = initials(data.full_name || data.display_name);
   document.querySelector("#profile-avatar-image").alt =
     `Fotografia de ${data.full_name || data.display_name || "perfil"}`;
