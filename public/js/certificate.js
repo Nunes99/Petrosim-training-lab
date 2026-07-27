@@ -2,6 +2,7 @@ import { requireSession } from "./supabase-client.js";
 
 const defaultAssets = {
   logo_path: "/assets/certificates/default/lmtwebnairs-logo.png",
+  product_logo_path: "",
   director_signature_path: "/assets/certificates/default/director-signature.png",
   academic_stamp_path: "/assets/certificates/default/academic-stamp.png",
   coordinator_signature_path: "/assets/certificates/default/coordinator-signature.png",
@@ -17,7 +18,8 @@ function assetUrl(supabase, path, fallback) {
 
 function setImage(selector, source) {
   const image = document.querySelector(selector);
-  image.src = source;
+  if (source) image.src = source;
+  else image.removeAttribute("src");
   image.classList.toggle("hidden", !source);
 }
 
@@ -53,7 +55,9 @@ async function init() {
   if (error || !certificate) throw new Error("Certificado inexistente ou sem autorização de acesso.");
 
   const snapshot = certificate.template_snapshot || {};
-  const needsLiveTemplate = !Object.keys(snapshot).length;
+  const needsLiveTemplate = !Object.keys(snapshot).length
+    || !Object.hasOwn(snapshot, "product_credit_text")
+    || !Object.hasOwn(snapshot, "product_logo_path");
   const [profileResult, templateResult] = await Promise.all([
     supabase.from("profiles").select("full_name,display_name").eq("id", certificate.user_id).single(),
     needsLiveTemplate
@@ -63,7 +67,9 @@ async function init() {
   if (profileResult.error) throw profileResult.error;
   if (templateResult.error) throw templateResult.error;
   const profile = profileResult.data;
-  const template = needsLiveTemplate ? (templateResult.data || {}) : snapshot;
+  const template = needsLiveTemplate
+    ? { ...(templateResult.data || {}), ...snapshot }
+    : snapshot;
   const issuedDate = new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit", month: "long", year: "numeric",
   }).format(new Date(certificate.issued_at));
@@ -98,6 +104,9 @@ async function init() {
     template.coordinator_name || "Coordenação do Programa";
   document.querySelector("#certificate-coordinator-title").textContent =
     template.coordinator_title || "Coordenador do Programa";
+  document.querySelector("#certificate-product-credit").textContent =
+    template.product_credit_text
+    || "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.";
   const qrSource = `/api/certificates/qr?target=${encodeURIComponent(verificationUrl)}`;
 
   const topics = template.program_topics?.length
@@ -111,6 +120,10 @@ async function init() {
   }));
 
   setImage("#certificate-logo", assetUrl(supabase, template.logo_path, defaultAssets.logo_path));
+  setImage(
+    "#certificate-product-logo",
+    assetUrl(supabase, template.product_logo_path, defaultAssets.product_logo_path),
+  );
   setImage(
     "#certificate-left-signature",
     assetUrl(supabase, template.director_signature_path, defaultAssets.director_signature_path),

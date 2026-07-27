@@ -71,7 +71,7 @@ def generate() -> Path:
     page.rect(18, 18, width - 36, height - 36, fill=0, stroke=1)
     page.setStrokeColor(NAVY)
     page.setLineWidth(2.4)
-    page.roundRect(29, 29, width - 58, height - 58, 34, fill=0, stroke=1)
+    page.rect(29, 29, width - 58, height - 58, fill=0, stroke=1)
     page.setStrokeColor(SOFT_GOLD)
     page.setLineWidth(0.8)
     page.rect(37, 37, width - 74, height - 74, fill=0, stroke=1)
@@ -159,6 +159,12 @@ def generate() -> Path:
 
     verify_url = "https://petrosim-training-lab.vercel.app/certificate?code=PSL-2026-DEMONSTRACAO"
     add_qr(page, verify_url, split_x + 22, 86, 42)
+    page.setFillColor(NAVY)
+    page.setFont(bold, 5.8)
+    page.drawRightString(width - 43, 154, "PetroSimLab")
+    page.setFont(regular, 5.2)
+    page.drawRightString(width - 43, 145, "Produto da LMTWEB")
+    page.drawRightString(width - 43, 136, "Desenvolvido pela LEMOTE")
 
     page.save()
     return OUTPUT

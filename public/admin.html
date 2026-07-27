@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Centro de Administração | PetroSimLab</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/theme.js"></script>
 </head>
 <body class="admin-app auth-required">
   <aside class="admin-sidebar">
@@ -213,6 +214,9 @@
                 <label>Cargo do responsável académico<input id="template-director-title" maxlength="120" required></label>
                 <label>Nome do coordenador<input id="template-coordinator-name" maxlength="120" required></label>
                 <label>Cargo do coordenador<input id="template-coordinator-title" maxlength="120" required></label>
+                <label class="form-span-2">Identificação do produto
+                  <input id="template-product-credit" maxlength="180" required value="PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.">
+                </label>
                 <label class="form-span-2">Conteúdos certificados
                   <textarea id="template-topics" rows="5" placeholder="Um conteúdo por linha" required></textarea>
                 </label>
@@ -227,6 +231,11 @@
                   <span>Logótipo principal</span>
                   <img id="preview-logo" alt="Pré-visualização do logótipo">
                   <input id="asset-logo" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <label class="asset-upload-card">
+                  <span>Logótipo PetroSimLab</span>
+                  <img id="preview-product-logo" alt="Pré-visualização do logótipo PetroSimLab">
+                  <input id="asset-product-logo" type="file" accept="image/png,image/jpeg,image/webp">
                 </label>
                 <label class="asset-upload-card">
                   <span>Assinatura académica</span>
@@ -266,6 +275,10 @@
                 <div class="template-preview-stamps">
                   <img id="template-preview-left-stamp" alt="">
                   <img id="template-preview-right-stamp" alt="">
+                </div>
+                <div class="template-preview-product">
+                  <img id="template-preview-product-logo" alt="">
+                  <span id="template-preview-product-credit">PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.</span>
                 </div>
               </div>
               <p>A pré-visualização confirma a posição dos elementos. O certificado final utiliza o mesmo desenho horizontal para todos os laboratórios.</p>

@@ -949,8 +949,10 @@ create table if not exists public.certificate_templates (
   director_title text not null default 'Diretor Académico',
   coordinator_name text not null default 'Coordenação do Programa',
   coordinator_title text not null default 'Coordenador do Programa',
+  product_credit_text text not null default 'PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.',
   program_topics text[] not null default array[]::text[],
   logo_path text,
+  product_logo_path text,
   director_signature_path text,
   academic_stamp_path text,
   coordinator_signature_path text,
@@ -959,6 +961,11 @@ create table if not exists public.certificate_templates (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.certificate_templates
+  add column if not exists product_credit_text text not null
+    default 'PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.',
+  add column if not exists product_logo_path text;
 
 alter table public.certificates
   add column if not exists template_snapshot jsonb not null default '{}'::jsonb;

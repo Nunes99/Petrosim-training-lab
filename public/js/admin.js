@@ -36,6 +36,7 @@ const auditLabels = {
 };
 const defaultCertificateAssets = {
   logo_path: "/assets/certificates/default/lmtwebnairs-logo.png",
+  product_logo_path: "",
   director_signature_path: "/assets/certificates/default/director-signature.png",
   academic_stamp_path: "/assets/certificates/default/academic-stamp.png",
   coordinator_signature_path: "/assets/certificates/default/coordinator-signature.png",
@@ -45,6 +46,10 @@ const certificateAssetFields = [
   {
     column: "logo_path", input: "#asset-logo", preview: "#preview-logo",
     livePreview: "#template-preview-logo",
+  },
+  {
+    column: "product_logo_path", input: "#asset-product-logo",
+    preview: "#preview-product-logo", livePreview: "#template-preview-product-logo",
   },
   {
     column: "director_signature_path", input: "#asset-director-signature",
@@ -702,6 +707,7 @@ function defaultCertificateTemplate(moduleId) {
     director_title: "Diretor Académico",
     coordinator_name: "Coordenação do Programa",
     coordinator_title: "Coordenador do Programa",
+    product_credit_text: "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.",
     program_topics: ["Conteúdo técnico aplicado", "Simulação e interpretação de resultados"],
     ...defaultCertificateAssets,
   };
@@ -717,7 +723,8 @@ function setCertificateAssetPreview(field, path) {
   const url = certificateAssetUrl(path);
   [field.preview, field.livePreview].forEach((selector) => {
     const image = document.querySelector(selector);
-    image.src = url;
+    if (url) image.src = url;
+    else image.removeAttribute("src");
     image.classList.toggle("empty", !url);
   });
 }
@@ -728,6 +735,9 @@ function updateCertificateTemplatePreview() {
   const module = moduleById(document.querySelector("#template-module").value);
   document.querySelector("#template-preview-module").textContent =
     module?.title || "Laboratório PetroSimLab";
+  document.querySelector("#template-preview-product-credit").textContent =
+    document.querySelector("#template-product-credit").value
+    || "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.";
 }
 
 function fillCertificateTemplateForm(moduleId) {
@@ -742,6 +752,8 @@ function fillCertificateTemplateForm(moduleId) {
   document.querySelector("#template-director-title").value = template.director_title || "";
   document.querySelector("#template-coordinator-name").value = template.coordinator_name || "";
   document.querySelector("#template-coordinator-title").value = template.coordinator_title || "";
+  document.querySelector("#template-product-credit").value =
+    template.product_credit_text || "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.";
   document.querySelector("#template-topics").value = (template.program_topics || []).join("\n");
   certificateAssetFields.forEach((field) => {
     document.querySelector(field.input).value = "";
@@ -808,6 +820,7 @@ async function saveCertificateTemplate(event) {
     director_title: document.querySelector("#template-director-title").value.trim(),
     coordinator_name: document.querySelector("#template-coordinator-name").value.trim(),
     coordinator_title: document.querySelector("#template-coordinator-title").value.trim(),
+    product_credit_text: document.querySelector("#template-product-credit").value.trim(),
     program_topics: document.querySelector("#template-topics").value.split(/\r?\n/)
       .map((topic) => topic.trim()).filter(Boolean),
     updated_by: session.user.id,
@@ -923,7 +936,7 @@ function bindEvents() {
   document.querySelector("#template-module").addEventListener("change", (event) => {
     fillCertificateTemplateForm(event.target.value);
   });
-  ["#template-title", "#template-issuer"].forEach((selector) => {
+  ["#template-title", "#template-issuer", "#template-product-credit"].forEach((selector) => {
     document.querySelector(selector).addEventListener("input", updateCertificateTemplatePreview);
   });
   certificateAssetFields.forEach((field) => {
