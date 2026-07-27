@@ -118,4 +118,56 @@ def test_advanced_project_economics_schedule():
     result = response.json()
     assert len(result["annual_schedule"]) == 8
     assert len(result["sensitivities"]) == 3
+
+
+def test_mozambique_catalog_contains_training_cases():
+    response = client.get("/api/catalog/mozambique")
+    assert response.status_code == 200
+    result = response.json()
+    assert result["framework"] == "IM3 Framework v2"
+    assert len(result["reservoir_cases"]) >= 5
+    assert "FLNG" in result["project_types"]
+    assert "premissas pedagógicas" in result["disclaimer"]
+
+
+def test_comprehensive_gas_reserves():
+    response = client.post(
+        "/api/reserves/comprehensive",
+        json={
+            "fluid_type": "gas",
+            "reservoir_type": "dry_gas",
+            "area_acres": 1000,
+            "gross_thickness_ft": 100,
+            "net_to_gross": 0.7,
+            "porosity": 0.2,
+            "water_saturation": 0.25,
+            "formation_volume_factor": 0.005,
+            "recovery_factor": 0.7,
+            "uncertainty_percentage": 20,
+        },
+    )
+    assert response.status_code == 200
+    result = response.json()
+    assert result["unit"] == "scf"
+    assert result["recoverable_p90"] < result["recoverable_p50"] < result["recoverable_p10"]
+
+
+def test_integrated_economics_covers_construction_and_operation():
+    response = client.post(
+        "/api/economics/integrated-project",
+        json={
+            "project_type": "Gas-to-Power", "phase": "Concept",
+            "capacity": 1000000, "capacity_unit": "MWh/ano",
+            "utilization": 0.85, "unit_price": 100, "variable_cost": 30,
+            "fixed_opex": 5000000, "capex": 200000000,
+            "royalty_rate": 0, "tax_rate": 0.32, "discount_rate": 0.12,
+            "project_years": 15, "construction_years": 3,
+            "decommissioning_cost": 10000000,
+        },
+    )
+    assert response.status_code == 200
+    result = response.json()
+    assert len(result["annual_schedule"]) == 18
+    assert result["annual_schedule"][0]["stage"] == "Construção"
+    assert len(result["sensitivities"]) == 3
     assert result["breakeven_price"] > 18

@@ -369,6 +369,34 @@ output { color: var(--accent-dark); font-weight: 700; }
 .risk-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; }
 .risk-low { background: var(--success); }
 .risk-high { background: var(--danger); }
+.scenario-simulator { display: grid; gap: 18px; margin-bottom: 28px; }
+.scenario-simulator.locked { opacity: .72; }
+.scenario-progress { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; color: var(--muted); font-size: .8rem; font-weight: 700; }
+.scenario-progress > div { height: 6px; overflow: hidden; background: #dce5ea; border-radius: 999px; }
+.scenario-progress i { display: block; width: 0; height: 100%; background: var(--accent); transition: width .35s ease; }
+.scenario-stage { min-height: 430px; }
+.scenario-placeholder { display: grid; place-content: center; min-height: 430px; padding: 50px; text-align: center; color: var(--muted); background: white; border: 1px dashed var(--line); border-radius: var(--radius); }
+.scenario-placeholder strong { color: var(--ink); font-size: 1.5rem; }
+.scenario-placeholder.success { background: #e8f5ef; border-color: #9acbb6; }
+.immersive-scenario { display: grid; grid-template-columns: 1.15fr .85fr; overflow: hidden; background: white; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.scenario-visual { position: relative; min-height: 520px; background: var(--navy); }
+.scenario-visual img { width: 100%; height: 100%; object-fit: cover; }
+.scenario-visual > span { position: absolute; left: 18px; bottom: 18px; padding: 8px 12px; color: white; background: rgba(8,27,40,.82); border-radius: 6px; font-size: .8rem; }
+.scenario-console { padding: 34px; }
+.scenario-console h2 { margin: 8px 0 12px; font-size: 2rem; line-height: 1.05; }
+.scenario-console > p { color: var(--muted); line-height: 1.6; }
+.scenario-console h3 { margin: 24px 0 10px; }
+.signal-strip { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+.signal-strip span { padding: 6px 9px; color: #8b4f00; background: #fff2dd; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+.decision-options { display: grid; gap: 9px; }
+.decision-option { display: grid; gap: 3px; width: 100%; padding: 14px; text-align: left; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; }
+.decision-option:hover, .decision-option.selected { border-color: var(--accent); background: #fffaf3; transform: translateX(3px); }
+.decision-option span { color: var(--muted); font: 400 .8rem/1.35 "PT Sans", sans-serif; }
+select { width: 100%; padding: 11px 12px; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 7px; font: inherit; }
+.formula-box p { margin: 8px 0 0; color: var(--danger); font-size: .76rem; }
+.source-note { display: flex; gap: 12px; margin-top: 22px; padding: 16px 18px; color: var(--muted); background: #f7fafb; border: 1px solid var(--line); border-radius: 9px; font-size: .82rem; }
+.source-note strong { flex: 0 0 auto; color: var(--ink); }
+.source-note a { color: var(--accent-dark); text-decoration: underline; }
 
 @media (max-width: 980px) {
   .hero, .auth-layout, .simulator-layout, .admin-grid { grid-template-columns: 1fr; }
@@ -383,6 +411,8 @@ output { color: var(--accent-dark); font-weight: 700; }
   .document-layout { grid-template-columns: 1fr; }
   .document-nav { position: static; }
   .operations-brief { grid-template-columns: repeat(2, 1fr); }
+  .immersive-scenario { grid-template-columns: 1fr; }
+  .scenario-visual { min-height: 340px; }
 }
 @media (max-width: 640px) {
   .topbar nav { display: none; }

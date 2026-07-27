@@ -1,107 +1,138 @@
 import { getSupabase } from "./supabase-client.js";
 
-const apiStatus = document.querySelector("#api-status");
-const form = document.querySelector("#reserves-form");
-const formMessage = document.querySelector("#form-message");
-const resultStatus = document.querySelector("#result-status");
-const theoryCheck = document.querySelector("#reserves-theory-check");
-const submitButton = document.querySelector("#reserves-submit");
-const uncertaintyInput = document.querySelector("#uncertainty");
+const $ = (selector) => document.querySelector(selector);
+const form = $("#reserves-form");
+const submitButton = $("#reserves-submit");
+let catalog;
 
-uncertaintyInput.addEventListener("input", () => {
-  document.querySelector("#uncertainty-value").textContent = `${uncertaintyInput.value}%`;
+const value = (selector) => Number($(selector).value);
+const format = (number, unit) => {
+  const scaled = unit === "scf" ? number / 1e12 : number / 1e6;
+  const suffix = unit === "scf" ? " Tscf" : " MMSTB";
+  return new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 2 }).format(scaled) + suffix;
+};
+
+$("#uncertainty").addEventListener("input", (event) => {
+  $("#uncertainty-value").textContent = `${event.target.value}%`;
+});
+$("#reserves-theory-check").addEventListener("change", (event) => {
+  submitButton.disabled = !event.target.checked;
 });
 
-theoryCheck.addEventListener("change", () => {
-  submitButton.disabled = !theoryCheck.checked;
-});
-
-function formatNumber(value) {
-  return new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 0 }).format(value);
+function fillSelect(selector, items, valueKey, labelKey = valueKey) {
+  const select = $(selector);
+  select.innerHTML = "";
+  items.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = typeof item === "string" ? item : item[valueKey];
+    option.textContent = typeof item === "string" ? item : item[labelKey];
+    select.append(option);
+  });
 }
 
-async function checkApiHealth() {
+function syncFluidUi() {
+  const gas = $("#fluid-type").value === "gas";
+  $("#fvf-unit").textContent = gas ? "Bg · rb/scf" : "Bo · rb/STB";
+  $("#formula-title").textContent = gas ? "Equação volumétrica de gás" : "Equação volumétrica de óleo";
+  $("#formula-code").textContent = gas
+    ? "GIIP = 43560 × A × h × NTG × φ × (1 − Sw) ÷ Bg"
+    : "OOIP = 7758 × A × h × NTG × φ × (1 − Sw) ÷ Bo";
+}
+
+function applyCase(caseId) {
+  const item = catalog.reservoir_cases.find((entry) => entry.id === caseId);
+  if (!item) return;
+  $("#reservoir-case-name").textContent = item.name;
+  $("#reservoir-case-note").textContent = item.note;
+  $("#reservoir-operator").value = item.operator;
+  $("#reservoir-location").value = item.location;
+  $("#reservoir-type").value = item.reservoir_type;
+  $("#fluid-type").value = item.fluid_type;
+  $("#area-acres").value = item.area_acres;
+  $("#gross-thickness").value = item.gross_thickness_ft;
+  $("#net-to-gross").value = item.net_to_gross;
+  $("#porosity").value = item.porosity;
+  $("#water-saturation").value = item.water_saturation;
+  $("#formation-volume-factor").value = item.formation_volume_factor;
+  $("#recovery-factor").value = item.recovery_factor;
+  $("#uncertainty").value = item.uncertainty_percentage;
+  $("#uncertainty-value").textContent = `${item.uncertainty_percentage}%`;
+  syncFluidUi();
+}
+
+async function initialize() {
   try {
-    const response = await fetch("/api/health");
-    if (!response.ok) throw new Error(`API respondeu ${response.status}`);
-    const data = await response.json();
-    apiStatus.textContent = data.status === "healthy" ? "API operacional" : "Estado desconhecido";
-    apiStatus.classList.add("online");
+    const [healthResponse, catalogResponse] = await Promise.all([
+      fetch("/api/health"), fetch("/api/catalog/mozambique"),
+    ]);
+    if (!healthResponse.ok || !catalogResponse.ok) throw new Error("API indisponível");
+    catalog = await catalogResponse.json();
+    $("#api-status").textContent = "API operacional";
+    $("#api-status").classList.add("online");
+    fillSelect("#reservoir-case", catalog.reservoir_cases, "id", "name");
+    fillSelect("#reservoir-operator", catalog.operators);
+    fillSelect("#reservoir-location", catalog.locations);
+    fillSelect("#reservoir-type", catalog.reservoir_types, "id", "label");
+    applyCase(catalog.reservoir_cases[0].id);
   } catch (error) {
-    console.error("Health check failed:", error);
-    apiStatus.textContent = "API indisponível";
-    apiStatus.classList.add("offline");
+    $("#api-status").textContent = "API indisponível";
+    $("#api-status").classList.add("offline");
+    $("#form-message").textContent = error.message;
   }
 }
 
-function inputValue(selector) {
-  return Number(document.querySelector(selector).value);
-}
+$("#reservoir-case").addEventListener("change", (event) => applyCase(event.target.value));
+$("#fluid-type").addEventListener("change", syncFluidUi);
+$("#reservoir-type").addEventListener("change", (event) => {
+  const type = catalog.reservoir_types.find((item) => item.id === event.target.value);
+  if (type) { $("#fluid-type").value = type.fluid; syncFluidUi(); }
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  formMessage.textContent = "";
-  formMessage.classList.remove("error");
-  resultStatus.textContent = "A calcular...";
-
+  $("#form-message").textContent = "";
+  $("#result-status").textContent = "A calcular...";
   const payload = {
-    area_acres: inputValue("#area-acres"),
-    net_pay_ft: inputValue("#net-pay"),
-    net_to_gross: inputValue("#net-to-gross"),
-    porosity: inputValue("#porosity"),
-    water_saturation: inputValue("#water-saturation"),
-    formation_volume_factor: inputValue("#formation-volume-factor"),
-    recovery_factor: inputValue("#recovery-factor"),
-    uncertainty_percentage: inputValue("#uncertainty"),
+    fluid_type: $("#fluid-type").value,
+    reservoir_type: $("#reservoir-type").value,
+    area_acres: value("#area-acres"),
+    gross_thickness_ft: value("#gross-thickness"),
+    net_to_gross: value("#net-to-gross"),
+    porosity: value("#porosity"),
+    water_saturation: value("#water-saturation"),
+    formation_volume_factor: value("#formation-volume-factor"),
+    recovery_factor: value("#recovery-factor"),
+    uncertainty_percentage: value("#uncertainty"),
   };
-
   try {
-    const response = await fetch("/api/reserves/field-study", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+    const response = await fetch("/api/reserves/comprehensive", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
     });
     const data = await response.json();
-    if (!response.ok) {
-      const detail = Array.isArray(data.detail) ? data.detail[0]?.msg : data.detail;
-      throw new Error(detail || "Não foi possível executar a simulação.");
-    }
-
-    document.querySelector("#p90-result").textContent = formatNumber(data.p90_recoverable_stb);
-    document.querySelector("#p50-result").textContent = formatNumber(data.p50_recoverable_stb);
-    document.querySelector("#p10-result").textContent = formatNumber(data.p10_recoverable_stb);
-    const driverLabels = {
-      net_pay: "Espessura efetiva",
-      porosity: "Porosidade",
-      water_saturation: "Saturação de fluido",
-      recovery_factor: "Fator de recuperação",
-    };
-    document.querySelector("#driver-result").textContent = driverLabels[data.primary_driver] || data.primary_driver;
-    document.querySelector("#range-p90").textContent = formatNumber(data.p90_recoverable_stb);
-    document.querySelector("#range-p10").textContent = formatNumber(data.p10_recoverable_stb);
-    resultStatus.textContent = "Simulação concluída";
-
+    if (!response.ok) throw new Error(data.detail?.[0]?.msg || "Dados inválidos.");
+    $("#p90-result").textContent = format(data.recoverable_p90, data.unit);
+    $("#p50-result").textContent = format(data.recoverable_p50, data.unit);
+    $("#p10-result").textContent = format(data.recoverable_p10, data.unit);
+    $("#driver-result").textContent = `${data.net_pay_ft} ft`;
+    $("#range-p90").textContent = format(data.recoverable_p90, data.unit);
+    $("#range-p10").textContent = format(data.recoverable_p10, data.unit);
+    document.querySelectorAll(".reserve-unit").forEach((node) => {
+      node.textContent = data.unit === "scf" ? "gás recuperável · Tscf" : "óleo recuperável · MMSTB";
+    });
+    $("#calculation-warning").textContent = data.warnings.join(" ");
+    $("#result-status").textContent = "Simulação concluída";
     try {
       const supabase = await getSupabase();
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { error } = await supabase.from("simulations").insert({
-          user_id: session.user.id,
-          module: "Reservoir Reserves Lab",
-          inputs: payload,
-          results: data,
-        });
-        if (error) throw error;
-        resultStatus.textContent = "Concluída e guardada";
-      }
-    } catch (saveError) {
-      console.warn("Simulation was not saved:", saveError);
-    }
+      if (session?.user) await supabase.from("simulations").insert({
+        user_id: session.user.id, module: "Reservoir Reserves Lab", inputs: payload, results: data,
+      });
+    } catch (saveError) { console.warn("Resultado não guardado:", saveError); }
   } catch (error) {
-    formMessage.textContent = error.message || "Ocorreu um erro inesperado.";
-    formMessage.classList.add("error");
-    resultStatus.textContent = "Erro no cálculo";
+    $("#form-message").textContent = error.message;
+    $("#form-message").classList.add("error");
+    $("#result-status").textContent = "Reveja os parâmetros";
   }
 });
 
-checkApiHealth();
+initialize();

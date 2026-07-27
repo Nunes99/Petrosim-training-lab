@@ -3,6 +3,10 @@ from math import isfinite
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
+from api.catalog import (
+    ECONOMIC_CASES, LOCATIONS, OPERATORS, PROJECT_PHASES, PROJECT_TYPES,
+    RESERVOIR_CASES, RESERVOIR_TYPES, SOURCES,
+)
 
 
 app = FastAPI(
@@ -40,6 +44,19 @@ class ReservoirFieldOutput(BaseModel):
     base_ooip_stb: float
     recovery_efficiency: float
     primary_driver: str
+
+
+class ComprehensiveReservesInput(BaseModel):
+    fluid_type: str = Field(pattern="^(oil|gas)$")
+    reservoir_type: str
+    area_acres: float = Field(gt=0)
+    gross_thickness_ft: float = Field(gt=0)
+    net_to_gross: float = Field(gt=0, le=1)
+    porosity: float = Field(gt=0, le=0.6)
+    water_saturation: float = Field(ge=0, lt=1)
+    formation_volume_factor: float = Field(gt=0)
+    recovery_factor: float = Field(gt=0, le=1)
+    uncertainty_percentage: float = Field(ge=0, le=40)
 
 
 class PublicConfig(BaseModel):
@@ -94,6 +111,24 @@ class ProjectEconomicsOutput(BaseModel):
     sensitivities: list[dict[str, float | str]]
 
 
+class IntegratedProjectInput(BaseModel):
+    project_type: str
+    phase: str
+    capacity: float = Field(gt=0)
+    capacity_unit: str
+    utilization: float = Field(gt=0, le=1)
+    unit_price: float = Field(gt=0)
+    variable_cost: float = Field(ge=0)
+    fixed_opex: float = Field(ge=0)
+    capex: float = Field(gt=0)
+    royalty_rate: float = Field(ge=0, lt=1)
+    tax_rate: float = Field(ge=0, lt=1)
+    discount_rate: float = Field(ge=0, lt=1)
+    project_years: int = Field(ge=3, le=40)
+    construction_years: int = Field(ge=1, le=8)
+    decommissioning_cost: float = Field(ge=0)
+
+
 class HSEInput(BaseModel):
     answers: dict[str, str]
 
@@ -108,43 +143,49 @@ class HSEOutput(BaseModel):
 
 HSE_SCENARIOS = [
     {
-        "id": "gas_alarm",
-        "title": "Alarme de gás numa área de processo",
-        "context": "O detector portátil indica uma concentração crescente de gás inflamável.",
+        "id": "gas_alarm", "title": "Alarme de gás no módulo de compressão",
+        "location": "FLNG offshore · Bacia do Rovuma", "role": "Supervisor de área",
+        "image": "/assets/hse/gas-alarm.png",
+        "context": "Às 18:42, um detector fixo entra em alarme e a leitura portátil cresce de 5% para 12% LEL. O vento sopra em direção à rota mais curta.",
+        "signals": ["12% LEL e a subir", "Vento para bombordo", "Compressor em operação"],
         "options": [
-            {"id": "continue", "label": "Concluir rapidamente a tarefa antes de sair"},
-            {"id": "evacuate", "label": "Parar o trabalho, alertar a equipa e evacuar pela rota segura"},
-            {"id": "investigate", "label": "Procurar sozinho a origem da fuga"},
+            {"id": "continue", "label": "Terminar a tarefa", "detail": "Manter a equipa no módulo por mais cinco minutos."},
+            {"id": "evacuate", "label": "Parar, alertar e evacuar", "detail": "Usar a rota transversal contra o vento e comunicar à sala de controlo."},
+            {"id": "investigate", "label": "Procurar a fuga", "detail": "Aproximar-se sozinho do compressor com o detector portátil."},
         ],
         "correct": "evacuate",
-        "explanation": "Um alarme de gás exige interrupção, comunicação e evacuação conforme o plano de emergência.",
-        "consequence": "A permanência na área pode expor a equipa a incêndio, explosão ou atmosfera tóxica.",
+        "explanation": "O aumento da concentração invalida a condição de trabalho. A resposta protege pessoas e permite isolar o processo remotamente.",
+        "consequence": "Uma permanência ou aproximação não autorizada pode colocar a equipa dentro da nuvem inflamável.",
     },
     {
-        "id": "permit_change",
-        "title": "Alteração do escopo de trabalho",
-        "context": "Durante uma manutenção, a equipa precisa executar uma tarefa não prevista na permissão.",
+        "id": "permit_change", "title": "Isolamento divergente na manutenção",
+        "location": "Central de processamento · Sul de Moçambique", "role": "Responsável pela execução",
+        "image": "/assets/hse/permit-change.png",
+        "context": "A bomba P-204 está parada, mas a válvula marcada no campo não coincide com o certificado de isolamento. A produção pede rapidez.",
+        "signals": ["Etiqueta divergente", "Linha pressurizada próxima", "Escopo da licença mudou"],
         "options": [
-            {"id": "adapt", "label": "Adaptar o trabalho com os recursos disponíveis"},
-            {"id": "pause", "label": "Suspender, reavaliar riscos e atualizar a permissão"},
-            {"id": "verbal", "label": "Continuar após autorização verbal de um colega"},
+            {"id": "adapt", "label": "Adaptar no campo", "detail": "Aplicar um cadeado na válvula que parece correta."},
+            {"id": "pause", "label": "Suspender e revalidar", "detail": "Parar, testar energia zero e corrigir isolamento e licença."},
+            {"id": "verbal", "label": "Aceitar confirmação verbal", "detail": "Prosseguir com a indicação de um operador experiente."},
         ],
         "correct": "pause",
-        "explanation": "Mudanças de escopo anulam pressupostos da análise de risco e exigem nova avaliação formal.",
-        "consequence": "Executar uma tarefa fora da permissão remove barreiras planeadas e aumenta a probabilidade de incidente.",
+        "explanation": "A divergência elimina a confiança no isolamento. É necessário identificar positivamente o equipamento e provar energia zero.",
+        "consequence": "Abrir equipamento ainda pressurizado pode causar libertação súbita de gás ou líquido.",
     },
     {
-        "id": "spill_response",
-        "title": "Pequeno derrame de hidrocarboneto",
-        "context": "É identificado um derrame próximo de uma drenagem, sem vítimas.",
+        "id": "spill_response", "title": "Película de hidrocarboneto no cais",
+        "location": "Terminal de LNG · Costa da África Oriental", "role": "Operador de carregamento",
+        "image": "/assets/hse/spill-response.png",
+        "context": "Durante a transferência, observa uma película junto à drenagem. A origem parece ser a ligação da mangueira e não há vítimas.",
+        "signals": ["Transferência ativa", "Dreno a menos de 2 m", "Kit de derrame disponível"],
         "options": [
-            {"id": "wash", "label": "Lavar o produto para a drenagem"},
-            {"id": "ignore", "label": "Aguardar a equipa do turno seguinte"},
-            {"id": "isolate", "label": "Isolar a fonte, proteger a drenagem e comunicar o incidente"},
+            {"id": "wash", "label": "Lavar o pavimento", "detail": "Diluir a película com água até desaparecer."},
+            {"id": "ignore", "label": "Monitorizar até ao fim", "detail": "Continuar a transferência e informar na passagem de turno."},
+            {"id": "isolate", "label": "Parar, conter e comunicar", "detail": "Interromper a transferência, proteger o dreno e ativar a resposta."},
         ],
         "correct": "isolate",
-        "explanation": "A resposta inicial deve controlar a fonte, impedir dispersão e ativar o procedimento de comunicação.",
-        "consequence": "A dispersão para a drenagem amplia o impacto ambiental e dificulta a contenção.",
+        "explanation": "Controlar a fonte e proteger a drenagem limita a escalada antes da limpeza especializada.",
+        "consequence": "O produto na água amplia o impacto ambiental e pode interromper toda a operação do terminal.",
     },
 ]
 
@@ -164,6 +205,18 @@ def health_check():
         "status": "healthy",
         "service": "petrosim-api",
         "version": "0.1.0",
+    }
+
+
+@app.get("/api/catalog/mozambique")
+def mozambique_catalog():
+    return {
+        "framework": "IM3 Framework v2",
+        "disclaimer": "Os valores técnicos e comerciais são premissas pedagógicas, não reservas certificadas nem previsões dos operadores.",
+        "operators": OPERATORS, "locations": LOCATIONS,
+        "reservoir_types": RESERVOIR_TYPES, "reservoir_cases": RESERVOIR_CASES,
+        "project_types": PROJECT_TYPES, "project_phases": PROJECT_PHASES,
+        "economic_cases": ECONOMIC_CASES, "sources": SOURCES,
     }
 
 
@@ -240,6 +293,34 @@ def evaluate_reservoir_field(data: ReservoirFieldInput):
         recovery_efficiency=round(data.recovery_factor * 100, 2),
         primary_driver=primary_driver,
     )
+
+
+@app.post("/api/reserves/comprehensive")
+def evaluate_comprehensive_reserves(data: ComprehensiveReservesInput):
+    net_pay = data.gross_thickness_ft * data.net_to_gross
+    constant = 7758 if data.fluid_type == "oil" else 43560
+    in_place = (
+        constant * data.area_acres * net_pay * data.porosity
+        * (1 - data.water_saturation) / data.formation_volume_factor
+    )
+    recoverable = in_place * data.recovery_factor
+    spread = data.uncertainty_percentage / 100
+    unit = "STB" if data.fluid_type == "oil" else "scf"
+    warnings = []
+    if data.fluid_type == "gas" and data.formation_volume_factor > 0.02:
+        warnings.append("Bg parece elevado para rb/scf; confirme a unidade.")
+    if data.fluid_type == "oil" and data.formation_volume_factor < 0.8:
+        warnings.append("Bo parece baixo para rb/STB; confirme a unidade.")
+    return {
+        "fluid_type": data.fluid_type, "reservoir_type": data.reservoir_type,
+        "volume_in_place": round(in_place, 2),
+        "recoverable_p90": round(recoverable * (1 - spread), 2),
+        "recoverable_p50": round(recoverable, 2),
+        "recoverable_p10": round(recoverable * (1 + spread), 2),
+        "unit": unit, "net_pay_ft": round(net_pay, 2),
+        "recovery_efficiency": round(data.recovery_factor * 100, 2),
+        "warnings": warnings,
+    }
 
 
 def discounted_value(initial: float, flows: list[float], rate: float) -> float:
@@ -368,15 +449,88 @@ def evaluate_project_economics(data: ProjectEconomicsInput):
     )
 
 
+def integrated_cash_flows(data: IntegratedProjectInput, price_factor: float = 1.0, capex_factor: float = 1.0):
+    initial = data.capex * capex_factor / data.construction_years
+    flows = []
+    schedule = [{
+        "year": 0, "stage": "Construção", "volume": 0, "revenue": 0,
+        "opex": 0, "tax": 0, "capex": round(initial, 2),
+        "free_cash_flow": round(-initial, 2),
+    }]
+    for year in range(1, data.construction_years):
+        construction_capex = data.capex * capex_factor / data.construction_years
+        flows.append(-construction_capex)
+        schedule.append({
+            "year": year, "stage": "Construção", "volume": 0, "revenue": 0,
+            "opex": 0, "tax": 0, "capex": round(construction_capex, 2),
+            "free_cash_flow": round(-construction_capex, 2),
+        })
+    for operation_year in range(1, data.project_years + 1):
+        calendar_year = data.construction_years - 1 + operation_year
+        ramp = 0.65 if operation_year == 1 else 0.85 if operation_year == 2 else 1.0
+        volume = data.capacity * data.utilization * ramp
+        revenue = volume * data.unit_price * price_factor
+        royalty = revenue * data.royalty_rate
+        opex = volume * data.variable_cost + data.fixed_opex
+        taxable = max(revenue - royalty - opex, 0)
+        tax = taxable * data.tax_rate
+        decom = data.decommissioning_cost if operation_year == data.project_years else 0
+        cash = revenue - royalty - opex - tax - decom
+        flows.append(cash)
+        schedule.append({
+            "year": calendar_year, "stage": "Operação", "volume": round(volume, 2),
+            "revenue": round(revenue, 2), "opex": round(opex, 2),
+            "tax": round(tax, 2), "capex": 0, "free_cash_flow": round(cash, 2),
+        })
+    return initial, flows, schedule
+
+
+@app.post("/api/economics/integrated-project")
+def evaluate_integrated_project(data: IntegratedProjectInput):
+    initial, flows, schedule = integrated_cash_flows(data)
+    npv = discounted_value(initial, flows, data.discount_rate)
+    irr = calculate_irr(initial, flows)
+    cumulative = -initial
+    payback = None
+    for row in schedule[1:]:
+        previous = cumulative
+        cumulative += row["free_cash_flow"]
+        if cumulative >= 0 and row["free_cash_flow"] > 0:
+            payback = row["year"] - 1 + (-previous / row["free_cash_flow"])
+            break
+    sensitivities = []
+    for label, price_factor, capex_factor in [
+        ("Stress", 0.75, 1.20), ("Base", 1.0, 1.0), ("Upside", 1.20, 0.90),
+    ]:
+        scenario_initial, scenario_flows, _ = integrated_cash_flows(data, price_factor, capex_factor)
+        sensitivities.append({
+            "scenario": label,
+            "npv": round(discounted_value(scenario_initial, scenario_flows, data.discount_rate), 2),
+        })
+    lower, upper = 0.1, 3.0
+    for _ in range(70):
+        midpoint = (lower + upper) / 2
+        scenario_initial, scenario_flows, _ = integrated_cash_flows(data, midpoint, 1.0)
+        if discounted_value(scenario_initial, scenario_flows, data.discount_rate) >= 0:
+            upper = midpoint
+        else:
+            lower = midpoint
+    breakeven_price = data.unit_price * ((lower + upper) / 2)
+    return {
+        "npv": round(npv, 2),
+        "irr_percentage": round(irr * 100, 2) if irr is not None else None,
+        "payback_years": round(payback, 2) if payback is not None else None,
+        "breakeven_price": round(breakeven_price, 2),
+        "decision": "invest_continue" if npv > 0 else "review_stage_gate",
+        "annual_schedule": schedule, "sensitivities": sensitivities,
+    }
+
+
 @app.get("/api/hse/scenarios")
 def get_hse_scenarios():
     return [
-        {
-            "id": scenario["id"],
-            "title": scenario["title"],
-            "context": scenario["context"],
-            "options": scenario["options"],
-        }
+        {key: value for key, value in scenario.items()
+         if key not in {"correct", "explanation", "consequence"}}
         for scenario in HSE_SCENARIOS
     ]
 
