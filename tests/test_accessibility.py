@@ -146,7 +146,7 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'id="certificate-model-select"' in certificate
     assert 'id="certificate-payment-panel"' in certificate
     assert 'id="certificate-payment-proof"' in certificate
-    assert 'id="certificate-print-datetime"' in certificate
+    assert "Gerar PDF para imprimir" in certificate
     assert 'id="qualification-certificate"' in certificate
     assert 'id="classic-certificate"' in certificate
     assert 'class="brand-mark classic-brandmark"' in certificate
@@ -184,7 +184,7 @@ def test_identity_status_and_admin_user_management_are_available():
     assert ".certificate-frame.classic-certificate" in stylesheet
     assert ".section-sidebar-page > footer" in stylesheet
     assert "flex: 1 0 auto" in stylesheet
-    assert "body.certificate-page:not(.print-authorized)" in stylesheet
-    assert "grid-template-rows: 8mm 200mm" in stylesheet
+    assert "o documento oficial é o PDF do servidor" in stylesheet
+    assert "authenticatedFetch" in certificate_script
     assert 'html[data-theme="dark"] .formula-box code' in stylesheet
     assert "color: #ffe0a3 !important" in stylesheet

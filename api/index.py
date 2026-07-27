@@ -1,10 +1,13 @@
 import json
 import os
-from datetime import date
+from datetime import date, datetime
 from math import isfinite
+from pathlib import Path
 from typing import Annotated
+from urllib.parse import quote
 from urllib.error import HTTPError, URLError
 from urllib.request import Request as UrlRequest, urlopen
+from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response
 from pydantic import BaseModel, Field, field_validator
@@ -12,6 +15,7 @@ from reportlab.graphics import renderSVG
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
+from api.certificate_pdf import build_certificate_pdf
 from api.catalog import (
     ECONOMIC_CASES, LOCATIONS, OPERATORS, PROJECT_PHASES, PROJECT_TYPES,
     RESERVOIR_CASES, RESERVOIR_TYPES, SOURCES,
@@ -23,6 +27,37 @@ app = FastAPI(
     description="Scientific calculation engine for petroleum and gas training.",
     version="0.1.0",
 )
+
+
+def supabase_rest_rows(
+    resource: str,
+    query: str,
+    authorization: str,
+) -> list[dict]:
+    """Read RLS-protected Supabase rows with the caller's access token."""
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_ANON_KEY")
+    if not supabase_url or not supabase_key:
+        raise HTTPException(status_code=503, detail="Supabase não configurado.")
+    request = UrlRequest(
+        f"{supabase_url.rstrip('/')}/rest/v1/{resource}?{query}",
+        headers={
+            "Authorization": authorization,
+            "apikey": supabase_key,
+            "Accept": "application/json",
+        },
+        method="GET",
+    )
+    try:
+        with urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        if error.code in {401, 403}:
+            raise HTTPException(status_code=403, detail="Acesso ao certificado negado.") from error
+        raise HTTPException(status_code=503, detail="Não foi possível consultar o certificado.") from error
+    except (URLError, TimeoutError, json.JSONDecodeError) as error:
+        raise HTTPException(status_code=503, detail="Não foi possível consultar o certificado.") from error
+    return payload if isinstance(payload, list) else []
 
 
 def require_authenticated_user(
@@ -466,6 +501,132 @@ def certificate_qr(
         headers={
             "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
             "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@app.get("/api/certificates/{certificate_id}/pdf")
+def certificate_pdf(
+    certificate_id: UUID,
+    model: Annotated[str, Query(pattern=r"^(qualification|classic)$")] = "qualification",
+    authorization: Annotated[str | None, Header()] = None,
+    user: dict = Depends(require_authenticated_user),
+):
+    """Generate the authorized certificate as a clean, single-page PDF."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Sessão necessária.")
+    certificate_rows = supabase_rest_rows(
+        "certificates",
+        (
+            "select=id,user_id,module_id,certificate_code,final_score,issued_at,template_snapshot"
+            f"&id=eq.{quote(str(certificate_id))}&limit=1"
+        ),
+        authorization,
+    )
+    if not certificate_rows:
+        raise HTTPException(status_code=404, detail="Certificado inexistente ou sem autorização.")
+    certificate = certificate_rows[0]
+    module_id = certificate["module_id"]
+    owner_id = certificate["user_id"]
+
+    module_rows = supabase_rest_rows(
+        "training_modules",
+        f"select=title,description,duration_minutes&id=eq.{quote(module_id)}&limit=1",
+        authorization,
+    )
+    profile_rows = supabase_rest_rows(
+        "profiles",
+        f"select=full_name,display_name&id=eq.{quote(owner_id)}&limit=1",
+        authorization,
+    )
+    template_rows = supabase_rest_rows(
+        "certificate_templates",
+        f"select=*&module_id=eq.{quote(module_id)}&limit=1",
+        authorization,
+    )
+    if not module_rows or not profile_rows:
+        raise HTTPException(status_code=404, detail="Dados do certificado incompletos.")
+    module = module_rows[0]
+    profile = profile_rows[0]
+    live_template = template_rows[0] if template_rows else {}
+
+    if live_template.get("print_access_mode") == "paid" and user["id"] == owner_id:
+        request_rows = supabase_rest_rows(
+            "certificate_print_requests",
+            (
+                "select=status"
+                f"&certificate_id=eq.{quote(str(certificate_id))}"
+                f"&user_id=eq.{quote(owner_id)}&limit=1"
+            ),
+            authorization,
+        )
+        if not request_rows or request_rows[0].get("status") != "approved":
+            raise HTTPException(
+                status_code=403,
+                detail="O pagamento ainda não foi aprovado para este certificado.",
+            )
+
+    snapshot = certificate.get("template_snapshot") or {}
+    template = {**live_template, **snapshot}
+    verification_base = template.get("verification_base_url") or (
+        "https://petrosim-training-lab.vercel.app/certificate"
+    )
+    separator = "&" if "?" in verification_base else "?"
+    verification_url = (
+        f"{verification_base}{separator}code={quote(certificate['certificate_code'])}"
+    )
+    try:
+        issued_at = datetime.fromisoformat(certificate["issued_at"].replace("Z", "+00:00"))
+        issued_date = issued_at.strftime("%d/%m/%Y")
+    except (TypeError, ValueError):
+        issued_date = str(certificate.get("issued_at") or "")
+
+    supabase_url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    public_root = (Path(__file__).resolve().parents[1] / "public").resolve()
+
+    def load_asset(path: str) -> bytes | None:
+        if path.startswith("/"):
+            candidate = (public_root / path.lstrip("/")).resolve()
+            if not candidate.is_relative_to(public_root) or not candidate.is_file():
+                return None
+            return candidate.read_bytes()
+        if not supabase_url:
+            return None
+        asset_url = (
+            f"{supabase_url}/storage/v1/object/public/certificate-assets/"
+            f"{quote(path, safe='/')}"
+        )
+        try:
+            with urlopen(asset_url, timeout=8) as response:
+                return response.read()
+        except (HTTPError, URLError, TimeoutError):
+            return None
+
+    pdf_payload = build_certificate_pdf(
+        {
+            "student_name": profile.get("full_name") or profile.get("display_name")
+            or "Formando PetroSimLab",
+            "module_title": module.get("title") or "Laboratório PetroSimLab",
+            "module_description": module.get("description") or "Formação técnica aplicada.",
+            "duration_minutes": module.get("duration_minutes") or "—",
+            "final_score": certificate.get("final_score") or 0,
+            "certificate_code": certificate["certificate_code"],
+            "issued_date": issued_date,
+            "verification_url": verification_url,
+            "product_credit": template.get("product_credit_text")
+            or "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.",
+            "template": template,
+        },
+        model=model,
+        asset_loader=load_asset,
+    )
+    filename = f"certificado-{certificate['certificate_code']}.pdf"
+    return Response(
+        content=pdf_payload,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "private, no-store",
         },
     )
 

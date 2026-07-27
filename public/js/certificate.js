@@ -1,4 +1,4 @@
-import { requireSession } from "./supabase-client.js";
+import { authenticatedFetch, requireSession } from "./supabase-client.js";
 
 const defaultAssets = {
   logo_path: "/assets/certificates/default/lmtwebnairs-logo.png",
@@ -9,6 +9,7 @@ const defaultAssets = {
   institutional_seal_path: "/assets/certificates/default/institutional-seal.png",
 };
 let paymentContext = null;
+let loadedCertificate = null;
 
 function assetUrl(supabase, path, fallback) {
   const value = path || fallback;
@@ -62,17 +63,6 @@ function applyCertificateModel(requestedModel, syncUrl = false) {
     url.searchParams.set("model", model);
     window.history.replaceState({}, "", url);
   }
-}
-
-function updatePrintDateTime() {
-  document.querySelector("#certificate-print-datetime").textContent =
-    new Intl.DateTimeFormat("pt-PT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date());
 }
 
 function setPrintAuthorized(authorized) {
@@ -210,6 +200,7 @@ async function init() {
     : certificateQuery.eq("certificate_code", certificateCode);
   const { data: certificate, error } = await certificateQuery.single();
   if (error || !certificate) throw new Error("Certificado inexistente ou sem autorização de acesso.");
+  loadedCertificate = certificate;
 
   const snapshot = certificate.template_snapshot || {};
   const needsLiveTemplate = !Object.keys(snapshot).length
@@ -306,20 +297,47 @@ async function init() {
   applyCertificateModel(requestedModel);
   await loadQrCodes(qrSource);
   await configurePrintAccess(supabase, session, certificate, liveTemplate);
-  updatePrintDateTime();
   document.body.classList.add("auth-ready");
 }
 
-document.querySelector("#print-certificate").addEventListener("click", () => {
-  if (!document.body.classList.contains("print-authorized")) return;
-  updatePrintDateTime();
-  window.print();
+document.querySelector("#print-certificate").addEventListener("click", async () => {
+  if (!document.body.classList.contains("print-authorized") || !loadedCertificate) return;
+  const button = document.querySelector("#print-certificate");
+  const originalText = button.lastChild.textContent;
+  button.disabled = true;
+  button.lastChild.textContent = "A gerar PDF…";
+  try {
+    const model = document.querySelector("#certificate-model-select").value;
+    const response = await authenticatedFetch(
+      `/api/certificates/${encodeURIComponent(loadedCertificate.id)}/pdf?model=${
+        encodeURIComponent(model)
+      }`,
+    );
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      throw new Error(errorPayload.detail || "Não foi possível gerar o PDF.");
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `certificado-${loadedCertificate.certificate_code}.pdf`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  } catch (error) {
+    document.querySelector("#certificate-error").textContent =
+      error.message || "Não foi possível gerar o PDF.";
+  } finally {
+    button.lastChild.textContent = originalText;
+    button.disabled = !document.body.classList.contains("print-authorized");
+  }
 });
 document.querySelector("#certificate-model-select").addEventListener("change", (event) => {
   applyCertificateModel(event.target.value, true);
 });
 document.querySelector("#certificate-payment-form").addEventListener("submit", submitPaymentProof);
-window.addEventListener("beforeprint", updatePrintDateTime);
 
 init().catch((error) => {
   document.querySelector("#certificate-error").textContent = error.message;

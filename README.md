@@ -86,10 +86,10 @@ certificate data to an external QR service.
 Certificate printing can be configured per laboratory as free or payment-gated.
 For paid printing, the administrator defines the amount, currency and receiving
 account. The student uploads a PNG, JPEG, WebP or PDF payment proof to the
-private `certificate-payment-proofs` bucket. Printing and PDF saving are
-released only after an administrator approves the request. The printable
-document uses one A4 landscape page with its own date/time and centered
-`Certificado | PetroSimLab` heading, avoiding the browser URL footer.
+private `certificate-payment-proofs` bucket. PDF generation is released only
+after an administrator approves the request. The protected API generates one
+clean A4 landscape PDF containing only the certificate, instead of printing the
+browser page, so browser titles, URLs, dates and other page chrome are excluded.
 
 Every page supports light and dark themes. The icon-only theme control stores
 only the visual preference on the current device and follows the system theme

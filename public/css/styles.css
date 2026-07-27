@@ -5000,10 +5000,6 @@ html[data-theme="dark"] .formula-box p {
   border-color: var(--brand-gold);
 }
 
-.certificate-print-header {
-  display: none;
-}
-
 html[data-theme="dark"] .certificate-payment-panel,
 html[data-theme="dark"] .certificate-payment-policy,
 html[data-theme="dark"] .certificate-payment-details div {
@@ -5026,79 +5022,18 @@ html[data-theme="dark"] .certificate-payment-heading h2 {
   }
 }
 
-/* Uma única folha A4 horizontal, com cabeçalho próprio e sem URL automática. */
+/* A página é apenas pré-visualização; o documento oficial é o PDF do servidor. */
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 0;
-  }
-
-  html,
-  body.certificate-page {
-    width: 297mm;
-    height: 210mm;
-    min-height: 210mm;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .certificate-toolbar,
-  .certificate-payment-panel,
-  .certificate-error,
-  .theme-toggle {
+  body.certificate-page > * {
     display: none !important;
   }
 
-  body.certificate-page:not(.print-authorized) .certificate-document {
-    display: none !important;
-  }
-
-  body.certificate-page:not(.print-authorized)::after {
+  body.certificate-page::after {
     display: grid;
-    width: 297mm;
-    height: 210mm;
+    min-height: 90vh;
     place-items: center;
     color: #00365b;
-    content: "Impressão não autorizada. Aguarde a validação do pagamento.";
+    content: "Utilize o botão Gerar PDF para imprimir o certificado oficial.";
     font: 700 15pt "PT Sans", sans-serif;
-  }
-
-  .certificate-document {
-    display: grid;
-    width: 297mm;
-    height: 210mm;
-    grid-template-rows: 8mm 200mm;
-    align-content: start;
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    box-shadow: none;
-  }
-
-  .certificate-print-header {
-    display: grid;
-    width: 287mm;
-    height: 8mm;
-    grid-template-columns: 1fr 1fr 1fr;
-    align-items: center;
-    margin: 0 auto;
-    color: #273f4d;
-    font-size: 7.5pt;
-  }
-
-  .certificate-print-header strong {
-    color: #00365b;
-    font-size: 8pt;
-    text-align: center;
-  }
-
-  .certificate-frame.qualification-certificate,
-  .certificate-frame.classic-certificate {
-    width: 287mm;
-    height: 200mm;
-    min-height: 200mm;
-    margin: 0 auto;
   }
 }

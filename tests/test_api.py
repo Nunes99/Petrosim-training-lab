@@ -1,5 +1,10 @@
+from io import BytesIO
+
+import pytest
+from pypdf import PdfReader
 from fastapi.testclient import TestClient
 
+from api.certificate_pdf import build_certificate_pdf
 from api.index import (
     ECONOMICS_ACCESS,
     HSE_ACCESS,
@@ -58,6 +63,28 @@ def test_certificate_qr_rejects_non_web_targets():
         params={"target": "javascript:alert(1)"},
     )
     assert response.status_code == 422
+
+
+@pytest.mark.parametrize("model", ["qualification", "classic"])
+def test_certificate_pdf_is_a_single_clean_a4_page(model):
+    payload = build_certificate_pdf(
+        {
+            "student_name": "Formando PetroSimLab",
+            "module_title": "Laboratório de Reservas",
+            "module_description": "Formação técnica aplicada.",
+            "duration_minutes": 45,
+            "final_score": 100,
+            "certificate_code": "PSL-2026-TESTE",
+            "issued_date": "28/07/2026",
+            "verification_url": "https://example.com/certificate?code=PSL-2026-TESTE",
+            "product_credit": "Produto da LMTWEB, desenvolvido pela LEMOTE.",
+            "template": {},
+        },
+        model=model,
+    )
+    reader = PdfReader(BytesIO(payload))
+    assert payload.startswith(b"%PDF")
+    assert len(reader.pages) == 1
 
 
 def test_laboratory_api_requires_login():
