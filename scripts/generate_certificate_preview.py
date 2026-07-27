@@ -18,6 +18,7 @@ OUTPUT = ROOT / "output" / "pdf" / "petrosim-certificate-model.pdf"
 
 NAVY = colors.HexColor("#00365B")
 GOLD = colors.HexColor("#C9A55B")
+GOLD_TEXT = colors.HexColor("#8A631D")
 SOFT_GOLD = colors.HexColor("#EAC78B")
 CREAM = colors.HexColor("#FFF8E4")
 
@@ -84,17 +85,17 @@ def generate() -> Path:
     right_center = split_x + (width - split_x) / 2 - 8
     logo = ASSETS / "lmtwebnairs-logo.png"
     page.drawImage(str(logo), left_center - 62, height - 150, 124, 82, mask="auto", preserveAspectRatio=True)
-    centered_text(page, "LMTWEBNAIRS", left_center, height - 168, bold, 12, GOLD)
-    centered_text(page, "FORMAÇÃO TÉCNICA APLICADA", left_center, height - 181, regular, 6.5, GOLD)
+    centered_text(page, "LMTWEBNAIRS", left_center, height - 168, bold, 12, GOLD_TEXT)
+    centered_text(page, "FORMAÇÃO TÉCNICA APLICADA", left_center, height - 181, regular, 6.5, GOLD_TEXT)
 
     page.setStrokeColor(colors.HexColor("#DDCDA9"))
     page.line(92, height - 200, split_x - 72, height - 200)
-    centered_text(page, "CERTIFICADO DE QUALIFICAÇÃO", left_center, height - 228, bold, 17, GOLD)
+    centered_text(page, "CERTIFICADO DE QUALIFICAÇÃO", left_center, height - 228, bold, 17, GOLD_TEXT)
     centered_text(page, "Qualificação profissional", left_center, height - 252, regular, 10)
-    centered_text(page, "PSL-2026-DEMONSTRAÇÃO", left_center, height - 306, bold, 11, GOLD)
+    centered_text(page, "PSL-2026-DEMONSTRAÇÃO", left_center, height - 306, bold, 11, GOLD_TEXT)
     centered_text(page, "Documento de qualificação", left_center, height - 334, regular, 9)
     centered_text(page, "Número de registo", left_center, height - 372, regular, 8)
-    centered_text(page, "PSL-2026-DEMONSTRAÇÃO", left_center, height - 394, bold, 10, GOLD)
+    centered_text(page, "PSL-2026-DEMONSTRAÇÃO", left_center, height - 394, bold, 10, GOLD_TEXT)
     centered_text(page, "Cidade de Maputo, Moçambique", left_center, 142, bold, 9)
     centered_text(page, "27 de Julho de 2026", left_center, 125, regular, 8.5)
 
@@ -113,7 +114,7 @@ def generate() -> Path:
     centered_text(page, "Direção Académica", left_center, 57, bold, 8.5)
     centered_text(page, "Diretor Académico", left_center, 44, regular, 7)
 
-    centered_text(page, "O presente documento certifica que", right_center, height - 102, regular, 11, GOLD)
+    centered_text(page, "O presente documento certifica que", right_center, height - 102, regular, 11, GOLD_TEXT)
     centered_text(page, "NOME DO FORMANDO", right_center, height - 135, bold, 16)
     centered_text(page, "concluiu com sucesso e aproveitamento satisfatório o laboratório", right_center, height - 164, regular, 9.5)
     centered_text(page, "LABORATÓRIO DE RESERVAS DE RESERVATÓRIO", right_center, height - 199, bold, 13)
@@ -157,12 +158,7 @@ def generate() -> Path:
     centered_text(page, "Coordenador do Programa", right_center, 44, regular, 7)
 
     verify_url = "https://petrosim-training-lab.vercel.app/certificate?code=PSL-2026-DEMONSTRACAO"
-    add_qr(page, verify_url, split_x + 12, 92, 34)
-    page.setFont(regular, 5.7)
-    page.setFillColor(NAVY)
-    page.drawString(split_x + 52, 111, "Verifique este certificado")
-    page.setFont(bold, 5.4)
-    page.drawString(split_x + 52, 101, "PSL-2026-DEMONSTRACAO")
+    add_qr(page, verify_url, split_x + 22, 86, 42)
 
     page.save()
     return OUTPUT

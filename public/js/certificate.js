@@ -21,6 +21,19 @@ function setImage(selector, source) {
   image.classList.toggle("hidden", !source);
 }
 
+function loadQrCode(source) {
+  const image = document.querySelector("#certificate-qr");
+  return new Promise((resolve, reject) => {
+    image.addEventListener("load", resolve, { once: true });
+    image.addEventListener(
+      "error",
+      () => reject(new Error("Não foi possível gerar o QR de verificação.")),
+      { once: true },
+    );
+    image.src = source;
+  });
+}
+
 async function init() {
   const parameters = new URLSearchParams(window.location.search);
   const certificateId = parameters.get("id");
@@ -85,7 +98,7 @@ async function init() {
     template.coordinator_name || "Coordenação do Programa";
   document.querySelector("#certificate-coordinator-title").textContent =
     template.coordinator_title || "Coordenador do Programa";
-  document.querySelector("#certificate-verification-url").textContent = verificationUrl;
+  const qrSource = `/api/certificates/qr?target=${encodeURIComponent(verificationUrl)}`;
 
   const topics = template.program_topics?.length
     ? template.program_topics
@@ -114,6 +127,7 @@ async function init() {
     "#certificate-right-stamp",
     assetUrl(supabase, template.institutional_seal_path, defaultAssets.institutional_seal_path),
   );
+  await loadQrCode(qrSource);
   document.body.classList.add("auth-ready");
 }
 

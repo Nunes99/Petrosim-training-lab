@@ -25,6 +25,25 @@ def test_health_check():
     assert response.json()["status"] == "healthy"
 
 
+def test_certificate_qr_is_printable_svg():
+    response = client.get(
+        "/api/certificates/qr",
+        params={"target": "https://petrosim-training-lab.vercel.app/certificate?code=PSL-2026-TESTE"},
+    )
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/svg+xml")
+    assert response.content.startswith(b"<?xml")
+    assert b"<svg" in response.content
+
+
+def test_certificate_qr_rejects_non_web_targets():
+    response = client.get(
+        "/api/certificates/qr",
+        params={"target": "javascript:alert(1)"},
+    )
+    assert response.status_code == 422
+
+
 def test_laboratory_api_requires_login():
     override = app.dependency_overrides.pop(require_authenticated_user)
     try:

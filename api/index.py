@@ -6,8 +6,12 @@ from typing import Annotated
 from urllib.error import HTTPError, URLError
 from urllib.request import Request as UrlRequest, urlopen
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response
 from pydantic import BaseModel, Field, field_validator
+from reportlab.graphics import renderSVG
+from reportlab.graphics.barcode import qr
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors
 from api.catalog import (
     ECONOMIC_CASES, LOCATIONS, OPERATORS, PROJECT_PHASES, PROJECT_TYPES,
     RESERVOIR_CASES, RESERVOIR_TYPES, SOURCES,
@@ -356,6 +360,50 @@ def public_config():
         supabase_url=url,
         supabase_anon_key=anon_key,
         configured=bool(url and anon_key),
+    )
+
+
+@app.get("/api/certificates/qr")
+def certificate_qr(
+    target: Annotated[
+        str,
+        Query(
+            min_length=8,
+            max_length=500,
+            pattern=r"^https?://",
+            description="Endereço HTTPS de validação a codificar.",
+        ),
+    ],
+):
+    """Render a self-contained, printable QR code without a third-party service."""
+    widget = qr.QrCodeWidget(target, barLevel="M")
+    widget.barFillColor = colors.HexColor("#00365B")
+    bounds = widget.getBounds()
+    source_width = bounds[2] - bounds[0]
+    source_height = bounds[3] - bounds[1]
+    code_size = 128
+    quiet_zone = 8
+    drawing = Drawing(
+        code_size + quiet_zone * 2,
+        code_size + quiet_zone * 2,
+        transform=[
+            code_size / source_width,
+            0,
+            0,
+            code_size / source_height,
+            quiet_zone,
+            quiet_zone,
+        ],
+    )
+    drawing.add(widget)
+    payload = renderSVG.drawToString(drawing).encode("utf-8")
+    return Response(
+        content=payload,
+        media_type="image/svg+xml",
+        headers={
+            "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
 
 
