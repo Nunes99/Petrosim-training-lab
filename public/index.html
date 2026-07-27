@@ -8,24 +8,23 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="section-sidebar-page">
-  <header class="topbar">
+  <header class="topbar workspace-sidebar">
     <a class="brand" href="/">
       <span class="brand-mark">PS</span>
       <div><strong>PetroSimLab</strong><small>Laboratório de formação</small></div>
     </a>
-    <nav aria-label="Navegação principal">
-      <a href="#home">Início</a>
-      <a href="#modules">Laboratórios</a>
+    <nav class="workspace-primary" aria-label="Navegação principal">
+      <a class="active" href="/">Visão geral</a>
+      <a href="/labs/economics">Economia</a>
+      <a href="/labs/hse">Segurança</a>
       <a href="/about">Sobre</a>
-      <a href="#reserves">Simulador</a>
-      <a class="button secondary" href="/login">Entrar</a>
+      <a href="/login">Entrar</a>
+    </nav>
+    <nav class="lab-subnav site-section-nav" aria-label="Navegação por blocos">
+      <a href="#home">Apresentação</a><a href="#modules">Laboratórios</a>
+      <a href="#reserves">Reservas</a>
     </nav>
   </header>
-  <nav class="lab-subnav site-section-nav" aria-label="Navegação por blocos">
-    <a href="#home">01 · Apresentação</a><a href="#modules">02 · Laboratórios</a>
-    <a href="#reserves">03 · Reservas</a><a href="/labs/economics">04 · Economia</a>
-    <a href="/labs/hse">05 · Segurança</a>
-  </nav>
 
   <main>
     <section id="home" class="hero">
