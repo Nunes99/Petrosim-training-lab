@@ -1,4 +1,4 @@
-const response = await fetch("/api/health");
+import { getSupabase } from "./supabase-client.js";
 
 const apiStatus = document.querySelector("#api-status");
 const form = document.querySelector("#reserves-form");
@@ -97,6 +97,25 @@ form.addEventListener("submit", async (event) => {
       `${data.recovery_percentage.toFixed(2)}%`;
 
     resultStatus.textContent = "Simulação concluída";
+
+    try {
+      const supabase = await getSupabase();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      if (user) {
+        const { error } = await supabase.from("simulations").insert({
+          user_id: user.id,
+          module: "Reservoir Reserves Lab",
+          inputs: payload,
+          results: data,
+        });
+        if (error) throw error;
+        resultStatus.textContent = "Simulação concluída e guardada";
+      }
+    } catch (saveError) {
+      console.warn("Simulation was not saved:", saveError);
+    }
   } catch (error) {
     console.error("Simulation failed:", error);
 

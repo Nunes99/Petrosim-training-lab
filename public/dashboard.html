@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | PetroSim</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">PS</span>
+      <div><strong>PetroSim</strong><small>Training Lab</small></div>
+    </a>
+    <button id="sign-out" class="button secondary" type="button">Sair</button>
+  </header>
+  <main class="section">
+    <span class="eyebrow">Área do aluno</span>
+    <h1>Minhas simulações</h1>
+    <p id="dashboard-status">A carregar...</p>
+    <div id="simulation-list" class="module-grid"></div>
+  </main>
+  <script type="module">
+    import { getSupabase } from "/js/supabase-client.js";
+
+    const status = document.querySelector("#dashboard-status");
+    const list = document.querySelector("#simulation-list");
+    const supabase = await getSupabase();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "/login";
+    } else {
+      const { data, error } = await supabase
+        .from("simulations")
+        .select("id, module, inputs, results, created_at")
+        .order("created_at", { ascending: false });
+
+      status.textContent = error
+        ? `Erro: ${error.message}`
+        : data.length
+          ? `${data.length} simulação(ões) guardada(s).`
+          : "Ainda não existem simulações guardadas.";
+
+      for (const simulation of data || []) {
+        const card = document.createElement("article");
+        card.className = "module-card";
+        const heading = document.createElement("h3");
+        heading.textContent = simulation.module;
+        const date = document.createElement("p");
+        date.textContent = new Date(simulation.created_at).toLocaleString("pt");
+        const result = document.createElement("pre");
+        result.textContent = JSON.stringify(simulation.results, null, 2);
+        card.append(heading, date, result);
+        list.append(card);
+      }
+    }
+
+    document.querySelector("#sign-out").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    });
+  </script>
+</body>
+</html>

@@ -364,6 +364,35 @@ footer {
   color: var(--muted);
 }
 
+.auth-page {
+  display: grid;
+  min-height: calc(100vh - 81px);
+  padding: 40px 20px;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(100%, 440px);
+}
+
+.auth-card h1 {
+  margin: 0 0 12px;
+}
+
+.form-message:not(:empty) {
+  color: var(--success);
+}
+
+.form-message.error {
+  color: var(--danger);
+}
+
+.module-card pre {
+  overflow: auto;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
 @media (max-width: 900px) {
   nav {
     display: none;

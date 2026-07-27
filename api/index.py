@@ -1,3 +1,4 @@
+import os
 from math import isfinite
 
 from fastapi import FastAPI, HTTPException
@@ -27,6 +28,12 @@ class OilReservesOutput(BaseModel):
     recovery_percentage: float
 
 
+class PublicConfig(BaseModel):
+    supabase_url: str | None
+    supabase_anon_key: str | None
+    configured: bool
+
+
 @app.get("/")
 def root():
     return {
@@ -43,6 +50,18 @@ def health_check():
         "service": "petrosim-api",
         "version": "0.1.0",
     }
+
+
+@app.get("/config", response_model=PublicConfig)
+def public_config():
+    """Expose only the publishable Supabase values needed by the browser."""
+    url = os.getenv("SUPABASE_URL")
+    anon_key = os.getenv("SUPABASE_ANON_KEY")
+    return PublicConfig(
+        supabase_url=url,
+        supabase_anon_key=anon_key,
+        configured=bool(url and anon_key),
+    )
 
 
 @app.post("/reserves/oil", response_model=OilReservesOutput)
