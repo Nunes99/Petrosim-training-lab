@@ -28,7 +28,7 @@ MVP 0.1
 
 1. Create a virtual environment and install `requirements.txt`.
 2. Copy `.env.example` to `.env` and provide the public Supabase values.
-3. Load the environment variables and run `uvicorn app:app --reload`.
+3. Load the environment variables and run `uvicorn api.index:app --reload`.
 4. Serve `public/` through Vercel CLI (`vercel dev`) for the same routes used in production.
 
 ## Supabase
