@@ -3,63 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | PetroSim</title>
+  <meta name="description" content="Painel de aprendizagem PetroSim Training Lab.">
+  <title>Painel do aluno | PetroSim</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
-  <header class="topbar">
+<body class="app-body">
+  <aside class="sidebar">
     <a class="brand" href="/">
       <span class="brand-mark">PS</span>
       <div><strong>PetroSim</strong><small>Training Lab</small></div>
     </a>
-    <button id="sign-out" class="button secondary" type="button">Sair</button>
-  </header>
-  <main class="section">
-    <span class="eyebrow">Área do aluno</span>
-    <h1>Minhas simulações</h1>
-    <p id="dashboard-status">A carregar...</p>
-    <div id="simulation-list" class="module-grid"></div>
+    <nav class="side-nav" aria-label="Navegação do aluno">
+      <a class="active" href="/dashboard">Visão geral</a>
+      <a href="/#modules">Laboratórios</a>
+      <a href="/#reserves">Nova simulação</a>
+      <a id="admin-link" class="hidden" href="/admin">Administração</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span id="user-email" class="user-email">A carregar...</span>
+      <button id="sign-out" class="button ghost full-width" type="button">Terminar sessão</button>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">Área do aluno</span>
+        <h1>Bem-vindo, <span id="student-name">formando</span></h1>
+        <p>Acompanhe o seu progresso e retome os exercícios técnicos.</p>
+      </div>
+      <a class="button primary" href="/#reserves">Nova simulação</a>
+    </header>
+
+    <section class="metric-grid" aria-label="Indicadores de aprendizagem">
+      <article class="metric-card">
+        <span>Simulações realizadas</span>
+        <strong id="simulation-count">—</strong>
+        <small>registos guardados</small>
+      </article>
+      <article class="metric-card">
+        <span>Laboratórios disponíveis</span>
+        <strong id="module-count">—</strong>
+        <small>conteúdos publicados</small>
+      </article>
+      <article class="metric-card">
+        <span>Última atividade</span>
+        <strong id="last-activity">—</strong>
+        <small>na plataforma</small>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <span class="eyebrow">Histórico</span>
+          <h2>Simulações recentes</h2>
+        </div>
+        <span id="dashboard-status" class="status-pill">A carregar...</span>
+      </div>
+      <div id="simulation-list" class="history-list"></div>
+    </section>
   </main>
-  <script type="module">
-    import { getSupabase } from "/js/supabase-client.js";
-
-    const status = document.querySelector("#dashboard-status");
-    const list = document.querySelector("#simulation-list");
-    const supabase = await getSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      window.location.href = "/login";
-    } else {
-      const { data, error } = await supabase
-        .from("simulations")
-        .select("id, module, inputs, results, created_at")
-        .order("created_at", { ascending: false });
-
-      status.textContent = error
-        ? `Erro: ${error.message}`
-        : data.length
-          ? `${data.length} simulação(ões) guardada(s).`
-          : "Ainda não existem simulações guardadas.";
-
-      for (const simulation of data || []) {
-        const card = document.createElement("article");
-        card.className = "module-card";
-        const heading = document.createElement("h3");
-        heading.textContent = simulation.module;
-        const date = document.createElement("p");
-        date.textContent = new Date(simulation.created_at).toLocaleString("pt");
-        const result = document.createElement("pre");
-        result.textContent = JSON.stringify(simulation.results, null, 2);
-        card.append(heading, date, result);
-        list.append(card);
-      }
-    }
-
-    document.querySelector("#sign-out").addEventListener("click", async () => {
-      await supabase.auth.signOut();
-      window.location.href = "/";
-    });
-  </script>
+  <script type="module" src="/js/dashboard.js"></script>
 </body>
 </html>

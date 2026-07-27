@@ -22,7 +22,7 @@ for petroleum and gas engineering.
 
 ## Current version
 
-MVP 0.1
+MVP 0.2
 
 ## Local development
 
@@ -34,9 +34,23 @@ MVP 0.1
 ## Supabase
 
 Create a Supabase project and run `database/schema.sql` in its SQL editor.
-The schema enables Row Level Security, so each authenticated user can only
-access their own profile and simulations. Never expose a service-role key in
-the browser.
+The schema enables Row Level Security, student profiles, training modules and
+administrative policies. Re-run the complete script after updates; it is
+designed to preserve existing records.
+
+To assign the first administrator, replace the e-mail and run this separately
+in the Supabase SQL editor:
+
+```sql
+update public.profiles
+set role = 'admin'
+where id = (
+  select id from auth.users where email = 'admin@example.com'
+);
+```
+
+The administration console is then available at `/admin`. Never expose a
+service-role key in the browser.
 
 ## GitHub to Vercel
 

@@ -3,24 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Acesso à plataforma PetroSim Training Lab.">
   <title>Entrar | PetroSim</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="/">
-      <span class="brand-mark">PS</span>
-      <div><strong>PetroSim</strong><small>Training Lab</small></div>
-    </a>
-  </header>
-  <main class="auth-page">
-    <form id="auth-form" class="simulation-form auth-card">
-      <span class="eyebrow">Área do aluno</span>
-      <h1 id="auth-title">Entrar</h1>
-      <label>E-mail<input id="email" type="email" autocomplete="email" required></label>
-      <label>Senha<input id="password" type="password" minlength="8" autocomplete="current-password" required></label>
+<body class="auth-body">
+  <a class="brand auth-brand" href="/">
+    <span class="brand-mark">PS</span>
+    <div><strong>PetroSim</strong><small>Training Lab</small></div>
+  </a>
+  <main class="auth-layout">
+    <section class="auth-intro">
+      <span class="eyebrow">Engenharia aplicada</span>
+      <h1>Treine decisões técnicas com segurança.</h1>
+      <p>Entre no ambiente de simulação para acompanhar resultados, repetir cenários e construir experiência operacional.</p>
+      <div class="trust-list">
+        <span>✓ Simulações orientadas por dados</span>
+        <span>✓ Histórico individual de desempenho</span>
+        <span>✓ Ambiente seguro para aprendizagem</span>
+      </div>
+    </section>
+    <form id="auth-form" class="auth-card">
+      <span class="eyebrow">Conta PetroSim</span>
+      <h2 id="auth-title">Entrar na plataforma</h2>
+      <p class="muted">Utilize as suas credenciais para continuar.</p>
+      <label>E-mail<input id="email" type="email" autocomplete="email" placeholder="nome@empresa.com" required></label>
+      <label>Senha<input id="password" type="password" minlength="8" autocomplete="current-password" placeholder="Mínimo de 8 caracteres" required></label>
       <button id="auth-submit" class="button primary full-width" type="submit">Entrar</button>
-      <button id="auth-mode" class="button secondary full-width" type="button">Criar uma conta</button>
+      <button id="auth-mode" class="button ghost full-width" type="button">Criar uma conta</button>
       <p id="auth-message" class="form-message" role="status"></p>
     </form>
   </main>

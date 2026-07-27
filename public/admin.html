@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Administração da plataforma PetroSim.">
+  <title>Administração | PetroSim</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="app-body">
+  <aside class="sidebar">
+    <a class="brand" href="/">
+      <span class="brand-mark">PS</span>
+      <div><strong>PetroSim</strong><small>Admin Console</small></div>
+    </a>
+    <nav class="side-nav" aria-label="Navegação administrativa">
+      <a class="active" href="/admin">Visão geral</a>
+      <a href="#modules-admin">Laboratórios</a>
+      <a href="#recent-activity">Atividade</a>
+      <a href="/dashboard">Área do aluno</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span id="admin-email" class="user-email">A verificar acesso...</span>
+      <button id="sign-out" class="button ghost full-width" type="button">Terminar sessão</button>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">Administração</span>
+        <h1>Centro de operações</h1>
+        <p>Visibilidade sobre utilizadores, conteúdos e atividade técnica.</p>
+      </div>
+      <span id="admin-status" class="status-pill">A validar permissões...</span>
+    </header>
+
+    <section class="metric-grid">
+      <article class="metric-card"><span>Utilizadores</span><strong id="user-count">—</strong><small>perfis registados</small></article>
+      <article class="metric-card"><span>Simulações</span><strong id="admin-simulation-count">—</strong><small>execuções guardadas</small></article>
+      <article class="metric-card"><span>Laboratórios</span><strong id="admin-module-count">—</strong><small>módulos configurados</small></article>
+    </section>
+
+    <section id="modules-admin" class="admin-grid">
+      <form id="module-form" class="panel form-panel">
+        <div class="panel-header">
+          <div><span class="eyebrow">Catálogo</span><h2>Novo laboratório</h2></div>
+        </div>
+        <label>Título<input id="module-title" maxlength="100" required></label>
+        <label>Identificador<input id="module-slug" pattern="[a-z0-9-]+" placeholder="reservoir-reserves" required></label>
+        <label>Descrição<textarea id="module-description" rows="4" maxlength="500" required></textarea></label>
+        <div class="field-row">
+          <label>Categoria<input id="module-category" maxlength="60" value="Reservoir Engineering" required></label>
+          <label>Duração (min)<input id="module-duration" type="number" min="5" max="600" value="45" required></label>
+        </div>
+        <label class="check-label"><input id="module-published" type="checkbox"> Publicar imediatamente</label>
+        <button class="button primary" type="submit">Guardar laboratório</button>
+        <p id="module-message" class="form-message" role="status"></p>
+      </form>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div><span class="eyebrow">Conteúdos</span><h2>Laboratórios</h2></div>
+        </div>
+        <div id="module-admin-list" class="admin-list"></div>
+      </section>
+    </section>
+
+    <section id="recent-activity" class="panel">
+      <div class="panel-header">
+        <div><span class="eyebrow">Monitorização</span><h2>Atividade recente</h2></div>
+      </div>
+      <div id="activity-list" class="history-list"></div>
+    </section>
+  </main>
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

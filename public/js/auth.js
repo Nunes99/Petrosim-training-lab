@@ -14,11 +14,9 @@ function setMessage(text, isError = false) {
 
 modeButton.addEventListener("click", () => {
   signUpMode = !signUpMode;
-  title.textContent = signUpMode ? "Criar conta" : "Entrar";
+  title.textContent = signUpMode ? "Criar a sua conta" : "Entrar na plataforma";
   submitButton.textContent = signUpMode ? "Criar conta" : "Entrar";
-  modeButton.textContent = signUpMode
-    ? "Já tenho uma conta"
-    : "Criar uma conta";
+  modeButton.textContent = signUpMode ? "Já tenho uma conta" : "Criar uma conta";
   setMessage("");
 });
 
@@ -37,15 +35,13 @@ form.addEventListener("submit", async (event) => {
       : await supabase.auth.signInWithPassword({ email, password });
 
     if (result.error) throw result.error;
-
     if (signUpMode && !result.data.session) {
-      setMessage("Conta criada. Confirme o e-mail antes de entrar.");
+      setMessage("Conta criada. Confirme o e-mail para iniciar sessão.");
       return;
     }
-
     window.location.href = "/dashboard";
   } catch (error) {
-    setMessage(error.message || "Falha na autenticação.", true);
+    setMessage(error.message || "Não foi possível autenticar.", true);
   } finally {
     submitButton.disabled = false;
   }
