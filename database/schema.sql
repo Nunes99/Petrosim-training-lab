@@ -1243,10 +1243,11 @@ create policy "Admins can read audit logs"
   on public.audit_logs for select to authenticated
   using ((select public.is_admin()));
 
--- Modelo único de certificado com identidade configurável por laboratório.
+-- Modelos de certificado com identidade e opção visual configuráveis por laboratório.
 create table if not exists public.certificate_templates (
   id uuid primary key default gen_random_uuid(),
   module_id uuid not null unique references public.training_modules(id) on delete cascade,
+  layout_style text not null default 'qualification',
   issuer_name text not null default 'LMTWEBNAIRS',
   certificate_title text not null default 'Certificado de Qualificação',
   qualification_label text not null default 'Qualificação profissional',
@@ -1270,9 +1271,24 @@ create table if not exists public.certificate_templates (
 );
 
 alter table public.certificate_templates
+  add column if not exists layout_style text not null default 'qualification',
   add column if not exists product_credit_text text not null
     default 'PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.',
   add column if not exists product_logo_path text;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'certificate_templates_layout_style_check'
+  ) then
+    alter table public.certificate_templates
+      add constraint certificate_templates_layout_style_check
+      check (layout_style in ('qualification', 'classic'));
+  end if;
+end
+$$;
 
 alter table public.certificates
   add column if not exists template_snapshot jsonb not null default '{}'::jsonb;
@@ -1326,6 +1342,13 @@ where certificate.template_snapshot = '{}'::jsonb
     select 1 from public.certificate_templates
     where module_id = certificate.module_id
   );
+
+update public.certificates as certificate
+set template_snapshot = certificate.template_snapshot
+  || jsonb_build_object('layout_style', template.layout_style)
+from public.certificate_templates as template
+where template.module_id = certificate.module_id
+  and not (certificate.template_snapshot ? 'layout_style');
 
 drop trigger if exists certificate_templates_updated_at on public.certificate_templates;
 create trigger certificate_templates_updated_at

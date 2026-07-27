@@ -21,19 +21,46 @@ function setImage(selector, source) {
   if (source) image.src = source;
   else image.removeAttribute("src");
   image.classList.toggle("hidden", !source);
+  return Boolean(source);
 }
 
-function loadQrCode(source) {
-  const image = document.querySelector("#certificate-qr");
-  return new Promise((resolve, reject) => {
-    image.addEventListener("load", resolve, { once: true });
-    image.addEventListener(
-      "error",
-      () => reject(new Error("Não foi possível gerar o QR de verificação.")),
-      { once: true },
-    );
-    image.src = source;
+function setText(selectors, value) {
+  selectors.forEach((selector) => {
+    const element = document.querySelector(selector);
+    if (element) element.textContent = value;
   });
+}
+
+function loadQrCodes(source) {
+  return Promise.all([...document.querySelectorAll("[data-certificate-qr]")].map((image) => (
+    new Promise((resolve, reject) => {
+      image.addEventListener("load", resolve, { once: true });
+      image.addEventListener(
+        "error",
+        () => reject(new Error("Não foi possível gerar o QR de verificação.")),
+        { once: true },
+      );
+      image.src = source;
+    })
+  )));
+}
+
+function applyCertificateModel(requestedModel, syncUrl = false) {
+  const model = requestedModel === "classic" ? "classic" : "qualification";
+  const qualification = document.querySelector("#qualification-certificate");
+  const classic = document.querySelector("#classic-certificate");
+  qualification.classList.toggle("hidden", model !== "qualification");
+  qualification.setAttribute("aria-hidden", String(model !== "qualification"));
+  classic.classList.toggle("hidden", model !== "classic");
+  classic.setAttribute("aria-hidden", String(model !== "classic"));
+  document.querySelector("#certificate-model-select").value = model;
+  document.body.dataset.certificateModel = model;
+
+  if (syncUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("model", model);
+    window.history.replaceState({}, "", url);
+  }
 }
 
 async function init() {
@@ -57,7 +84,8 @@ async function init() {
   const snapshot = certificate.template_snapshot || {};
   const needsLiveTemplate = !Object.keys(snapshot).length
     || !Object.hasOwn(snapshot, "product_credit_text")
-    || !Object.hasOwn(snapshot, "product_logo_path");
+    || !Object.hasOwn(snapshot, "product_logo_path")
+    || !Object.hasOwn(snapshot, "layout_style");
   const [profileResult, templateResult] = await Promise.all([
     supabase.from("profiles").select("full_name,display_name").eq("id", certificate.user_id).single(),
     needsLiveTemplate
@@ -76,18 +104,22 @@ async function init() {
   const verificationBase = template.verification_base_url || `${window.location.origin}/certificate`;
   const separator = verificationBase.includes("?") ? "&" : "?";
   const verificationUrl = `${verificationBase}${separator}code=${encodeURIComponent(certificate.certificate_code)}`;
+  const studentName = profile.full_name || profile.display_name || "Formando PetroSimLab";
+  const moduleTitle = certificate.training_modules?.title || "Laboratório PetroSimLab";
+  const moduleDescription = certificate.training_modules?.description
+    || "Programa de formação técnica aplicada.";
+  const duration = `${certificate.training_modules?.duration_minutes || "—"} minutos`;
+  const finalScore = `${certificate.final_score}%`;
+  const productCredit = template.product_credit_text
+    || "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.";
 
-  document.querySelector("#certificate-student").textContent =
-    profile.full_name || profile.display_name || "Formando PetroSimLab";
-  document.querySelector("#certificate-module").textContent =
-    certificate.training_modules?.title || "Laboratório PetroSimLab";
-  document.querySelector("#certificate-description").textContent =
-    certificate.training_modules?.description || "Programa de formação técnica aplicada.";
-  document.querySelector("#certificate-score").textContent = `${certificate.final_score}%`;
-  document.querySelector("#certificate-date").textContent = issuedDate;
-  document.querySelector("#certificate-duration").textContent =
-    `${certificate.training_modules?.duration_minutes || "—"} minutos`;
-  document.querySelector("#certificate-code").textContent = certificate.certificate_code;
+  setText(["#certificate-student", "#classic-certificate-student"], studentName);
+  setText(["#certificate-module", "#classic-certificate-module"], moduleTitle);
+  setText(["#certificate-description", "#classic-certificate-description"], moduleDescription);
+  setText(["#certificate-score", "#classic-certificate-score"], finalScore);
+  setText(["#certificate-date", "#classic-certificate-date"], issuedDate);
+  setText(["#certificate-duration", "#classic-certificate-duration"], duration);
+  setText(["#certificate-code", "#classic-certificate-code"], certificate.certificate_code);
   document.querySelector("#certificate-register").textContent = certificate.certificate_code;
   document.querySelector("#certificate-issuer").textContent = template.issuer_name || "LMTWEBNAIRS";
   document.querySelector("#certificate-title").textContent =
@@ -104,9 +136,7 @@ async function init() {
     template.coordinator_name || "Coordenação do Programa";
   document.querySelector("#certificate-coordinator-title").textContent =
     template.coordinator_title || "Coordenador do Programa";
-  document.querySelector("#certificate-product-credit").textContent =
-    template.product_credit_text
-    || "PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.";
+  setText(["#certificate-product-credit", "#classic-product-credit"], productCredit);
   const qrSource = `/api/certificates/qr?target=${encodeURIComponent(verificationUrl)}`;
 
   const topics = template.program_topics?.length
@@ -120,10 +150,17 @@ async function init() {
   }));
 
   setImage("#certificate-logo", assetUrl(supabase, template.logo_path, defaultAssets.logo_path));
+  const productLogoSource = assetUrl(
+    supabase,
+    template.product_logo_path,
+    defaultAssets.product_logo_path,
+  );
   setImage(
     "#certificate-product-logo",
-    assetUrl(supabase, template.product_logo_path, defaultAssets.product_logo_path),
+    productLogoSource,
   );
+  const hasClassicLogo = setImage("#classic-product-logo", productLogoSource);
+  document.querySelector("#classic-brandmark").classList.toggle("hidden", hasClassicLogo);
   setImage(
     "#certificate-left-signature",
     assetUrl(supabase, template.director_signature_path, defaultAssets.director_signature_path),
@@ -140,11 +177,16 @@ async function init() {
     "#certificate-right-stamp",
     assetUrl(supabase, template.institutional_seal_path, defaultAssets.institutional_seal_path),
   );
-  await loadQrCode(qrSource);
+  const requestedModel = parameters.get("model") || template.layout_style || "qualification";
+  applyCertificateModel(requestedModel);
+  await loadQrCodes(qrSource);
   document.body.classList.add("auth-ready");
 }
 
 document.querySelector("#print-certificate").addEventListener("click", () => window.print());
+document.querySelector("#certificate-model-select").addEventListener("change", (event) => {
+  applyCertificateModel(event.target.value, true);
+});
 
 init().catch((error) => {
   document.querySelector("#certificate-error").textContent = error.message;

@@ -197,16 +197,22 @@
         <section class="admin-card certificate-branding-manager">
           <div class="admin-card-heading">
             <div>
-              <span class="eyebrow">Modelo institucional</span>
-              <h2>Identidade do certificado por laboratório</h2>
-              <p>O desenho permanece único. Apenas os dados institucionais, logótipo, assinaturas e carimbos podem variar.</p>
+              <span class="eyebrow">Dois modelos disponíveis</span>
+              <h2>Modelo e identidade por laboratório</h2>
+              <p>Defina o modelo padrão de emissão e personalize os dados institucionais, logótipos, assinaturas e carimbos.</p>
             </div>
-            <span class="status-pill">Modelo protegido</span>
+            <span class="status-pill">Seleção opcional</span>
           </div>
           <div class="certificate-branding-layout">
             <form id="certificate-template-form" class="certificate-template-form">
               <label>Laboratório
                 <select id="template-module" required></select>
+              </label>
+              <label>Modelo padrão de emissão
+                <select id="template-layout-style" required>
+                  <option value="qualification">Institucional de qualificação</option>
+                  <option value="classic">PetroSimLab inicial</option>
+                </select>
               </label>
               <div class="professional-form-grid">
                 <label>Entidade emissora<input id="template-issuer" maxlength="120" required></label>
@@ -285,7 +291,7 @@
                   <span id="template-preview-product-credit">PetroSimLab, produto da LMTWEB, desenvolvido pela LEMOTE.</span>
                 </div>
               </div>
-              <p>A pré-visualização confirma a posição dos elementos. O certificado final utiliza o mesmo desenho horizontal para todos os laboratórios.</p>
+              <p>A pré-visualização acompanha o modelo padrão. Na página do certificado, o estudante pode alternar entre os dois modelos antes de imprimir.</p>
             </aside>
           </div>
         </section>

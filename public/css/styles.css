@@ -4523,16 +4523,251 @@ html[data-theme="dark"] .module-status.success {
 
 html[data-theme="dark"] :is(
   .certificate-frame.qualification-certificate,
+  .certificate-frame.classic-certificate,
   .template-preview-frame
 ),
 html[data-theme="dark"] :is(
   .certificate-frame.qualification-certificate,
+  .certificate-frame.classic-certificate,
   .template-preview-frame
 ) :where(
   h1,h2,h3,h4,h5,h6,p,span,small,strong,label,li,code,
   div,section,article,aside,header,footer
 ) {
   color: var(--brand-navy) !important;
+}
+
+/* Certificados opcionais: modelo institucional e modelo inicial PetroSimLab */
+.certificate-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.certificate-model-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-navy);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.certificate-model-control select {
+  width: 238px;
+  min-height: var(--button-height);
+  padding: 0 34px 0 12px;
+  border-radius: var(--button-radius);
+}
+
+.certificate-frame.classic-certificate {
+  position: relative;
+  display: grid;
+  min-height: 760px;
+  grid-template-rows: auto 1fr auto auto;
+  padding: 48px 58px 38px;
+  overflow: hidden;
+  color: var(--brand-navy);
+  background:
+    linear-gradient(135deg,rgba(234,199,139,.16),transparent 23%),
+    linear-gradient(-45deg,rgba(0,54,91,.09),transparent 26%),
+    #fffdf7;
+  border: 12px solid var(--brand-navy);
+  outline: 3px solid var(--brand-gold);
+  outline-offset: -22px;
+}
+
+.classic-certificate-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.classic-brand-visual {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  place-items: center;
+}
+
+.classic-brand-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.classic-brandmark {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  color: var(--brand-navy);
+  background: var(--brand-gold-soft);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.classic-certificate-brand strong,
+.classic-certificate-brand span {
+  display: block;
+}
+
+.classic-certificate-brand strong {
+  color: var(--brand-navy);
+  font-size: 1.2rem;
+}
+
+.classic-certificate-brand span {
+  color: #526a78;
+  font-size: .7rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.classic-certificate-copy {
+  align-self: center;
+  width: min(850px,90%);
+  margin: 34px auto;
+  text-align: center;
+}
+
+.classic-certificate-kicker {
+  color: var(--brand-gold-strong);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.classic-certificate-copy p {
+  margin: 12px 0;
+  color: #526a78;
+  font-size: 1rem;
+}
+
+.classic-certificate-copy h1 {
+  margin: 8px 0;
+  color: var(--brand-navy);
+  font-size: clamp(2.5rem,5vw,4.8rem);
+  letter-spacing: -.045em;
+}
+
+.classic-certificate-copy h2 {
+  margin: 10px 0;
+  color: var(--brand-gold-strong);
+  font-size: clamp(1.5rem,3vw,2.5rem);
+}
+
+.classic-certificate-details {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  border-top: 1px solid #cbd5db;
+  border-bottom: 1px solid #cbd5db;
+}
+
+.classic-certificate-details div {
+  padding: 18px;
+  text-align: center;
+  border-right: 1px solid #cbd5db;
+}
+
+.classic-certificate-details div:last-child {
+  border-right: 0;
+}
+
+.classic-certificate-details span,
+.classic-certificate-details strong {
+  display: block;
+}
+
+.classic-certificate-details span {
+  color: #607482;
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.classic-certificate-details strong {
+  margin-top: 5px;
+  color: var(--brand-navy);
+}
+
+.classic-certificate-footer {
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  align-items: end;
+  gap: 16px;
+  padding-top: 24px;
+}
+
+.classic-certificate-footer > img {
+  display: block;
+  width: 58px;
+  height: 58px;
+  padding: 3px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid #9babb5;
+}
+
+.classic-certificate-footer span,
+.classic-certificate-footer strong {
+  display: block;
+}
+
+.classic-certificate-footer span {
+  color: #607482;
+  font-size: .67rem;
+}
+
+.classic-certificate-footer strong {
+  color: var(--brand-navy);
+  font-size: .78rem;
+}
+
+.classic-certificate-signature {
+  max-width: 280px;
+  text-align: right;
+}
+
+.template-preview-frame[data-layout-style="classic"] {
+  background:
+    linear-gradient(135deg,rgba(234,199,139,.18),transparent 25%),
+    #fffdf7;
+  border-color: var(--brand-navy);
+  outline-color: var(--brand-gold);
+}
+
+.template-preview-frame[data-layout-style="classic"] > img:first-child,
+.template-preview-frame[data-layout-style="classic"] .template-preview-signatures,
+.template-preview-frame[data-layout-style="classic"] .template-preview-stamps {
+  display: none;
+}
+
+.template-preview-frame[data-layout-style="classic"] > span {
+  margin-top: 18%;
+}
+
+/* A fórmula deve permanecer legível sobre uma superfície escura própria. */
+html[data-theme="dark"] .formula-box {
+  color: #fff !important;
+  background: #0a2b3e;
+  border-color: var(--brand-gold);
+  box-shadow: inset 0 0 0 1px rgba(234,199,139,.12);
+}
+
+html[data-theme="dark"] .formula-box strong {
+  color: #fff !important;
+}
+
+html[data-theme="dark"] .formula-box code {
+  color: #ffe0a3 !important;
+}
+
+html[data-theme="dark"] .formula-box p {
+  color: #ffc4c4 !important;
 }
 
 @media (max-width: 720px) {
@@ -4565,6 +4800,45 @@ html[data-theme="dark"] :is(
   }
   .user-details-actions .button {
     width: 100%;
+  }
+  .certificate-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .certificate-page {
+    padding-top: 182px;
+  }
+  .certificate-toolbar-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .certificate-model-control {
+    justify-content: space-between;
+  }
+  .certificate-model-control select {
+    width: min(245px,70vw);
+  }
+  .certificate-frame.classic-certificate {
+    min-height: 650px;
+    padding: 32px 20px 25px;
+  }
+  .classic-certificate-details {
+    grid-template-columns: 1fr;
+  }
+  .classic-certificate-details div {
+    padding: 10px;
+    border-right: 0;
+    border-bottom: 1px solid #cbd5db;
+  }
+  .classic-certificate-details div:last-child {
+    border-bottom: 0;
+  }
+  .classic-certificate-footer {
+    grid-template-columns: 54px 1fr;
+  }
+  .classic-certificate-signature {
+    grid-column: 1 / -1;
+    text-align: left;
   }
 }
 
@@ -4611,4 +4885,20 @@ html[data-theme="dark"] :is(
     font-size: 5.5pt;
   }
   .certificate-product-brand img { max-width: 23mm; height: 10mm; }
+  .certificate-frame.classic-certificate {
+    width: 287mm;
+    min-height: 200mm;
+    height: 200mm;
+    padding: 11mm 15mm 10mm;
+    border-width: 3mm;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .classic-certificate-copy {
+    margin-top: 5mm;
+    margin-bottom: 5mm;
+  }
+  .classic-certificate-copy h1 { font-size: 31pt; }
+  .classic-certificate-copy h2 { font-size: 18pt; }
+  .classic-certificate-footer { padding-top: 5mm; }
 }

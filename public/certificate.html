@@ -12,10 +12,18 @@
 <body class="certificate-page auth-required">
   <header class="certificate-toolbar">
     <a href="/profile">← Voltar ao perfil</a>
-    <button id="print-certificate" class="button primary" type="button"><span class="material-symbols-outlined" aria-hidden="true">print</span>Imprimir ou guardar em PDF</button>
+    <div class="certificate-toolbar-actions">
+      <label class="certificate-model-control">Modelo
+        <select id="certificate-model-select" aria-label="Modelo visual do certificado">
+          <option value="qualification">Institucional de qualificação</option>
+          <option value="classic">PetroSimLab inicial</option>
+        </select>
+      </label>
+      <button id="print-certificate" class="button primary" type="button"><span class="material-symbols-outlined" aria-hidden="true">print</span>Imprimir ou guardar em PDF</button>
+    </div>
   </header>
   <main id="certificate-document" class="certificate-document">
-    <div class="certificate-frame qualification-certificate">
+    <div id="qualification-certificate" class="certificate-frame qualification-certificate">
       <div class="qualification-layout">
         <section class="qualification-identity">
           <header class="qualification-brand">
@@ -65,7 +73,7 @@
 
           <div class="qualification-closing">
             <div class="qualification-verification">
-              <img id="certificate-qr" alt="Código QR para validar o certificado">
+              <img id="certificate-qr" data-certificate-qr alt="Código QR para validar o certificado">
             </div>
             <div class="qualification-signatory right">
               <div class="signature-assets">
@@ -83,6 +91,46 @@
           </div>
         </section>
       </div>
+    </div>
+
+    <div id="classic-certificate" class="certificate-frame classic-certificate hidden" aria-hidden="true">
+      <header class="classic-certificate-brand">
+        <div class="classic-brand-visual">
+          <span id="classic-brandmark" class="classic-brandmark" aria-hidden="true">PS</span>
+          <img id="classic-product-logo" class="hidden" alt="Logótipo PetroSimLab">
+        </div>
+        <div>
+          <strong>PetroSimLab</strong>
+          <span>Formação técnica aplicada</span>
+        </div>
+      </header>
+
+      <section class="classic-certificate-copy">
+        <span class="classic-certificate-kicker">Certificado de conclusão</span>
+        <p>Certificamos que</p>
+        <h1 id="classic-certificate-student">—</h1>
+        <p>concluiu com aproveitamento o laboratório</p>
+        <h2 id="classic-certificate-module">—</h2>
+        <p id="classic-certificate-description">Programa de simulação técnica e tomada de decisão aplicado à indústria de energia.</p>
+      </section>
+
+      <section class="classic-certificate-details">
+        <div><span>Resultado final</span><strong id="classic-certificate-score">—</strong></div>
+        <div><span>Data de emissão</span><strong id="classic-certificate-date">—</strong></div>
+        <div><span>Carga de referência</span><strong id="classic-certificate-duration">—</strong></div>
+      </section>
+
+      <footer class="classic-certificate-footer">
+        <img id="classic-certificate-qr" data-certificate-qr alt="Código QR para validar o certificado">
+        <div class="classic-certificate-code">
+          <span>Código de verificação</span>
+          <strong id="classic-certificate-code">—</strong>
+        </div>
+        <div class="classic-certificate-signature">
+          <strong>PetroSimLab</strong>
+          <span id="classic-product-credit">Produto da LMTWEB · Desenvolvido pela LEMOTE</span>
+        </div>
+      </footer>
     </div>
   </main>
   <p id="certificate-error" class="certificate-error"></p>

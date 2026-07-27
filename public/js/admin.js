@@ -885,6 +885,7 @@ function certificateAssetUrl(path) {
 function defaultCertificateTemplate(moduleId) {
   return {
     module_id: moduleId,
+    layout_style: "qualification",
     issuer_name: "LMTWEBNAIRS",
     certificate_title: "Certificado de Qualificação",
     qualification_label: "Qualificação profissional",
@@ -917,8 +918,13 @@ function setCertificateAssetPreview(field, path) {
 }
 
 function updateCertificateTemplatePreview() {
+  const layoutStyle = document.querySelector("#template-layout-style").value;
+  const preview = document.querySelector(".template-preview-frame");
+  preview.dataset.layoutStyle = layoutStyle;
   document.querySelector("#template-preview-title").textContent =
-    document.querySelector("#template-title").value || "Certificado de Qualificação";
+    layoutStyle === "classic"
+      ? "Certificado de conclusão"
+      : document.querySelector("#template-title").value || "Certificado de Qualificação";
   const module = moduleById(document.querySelector("#template-module").value);
   document.querySelector("#template-preview-module").textContent =
     module?.title || "Laboratório PetroSimLab";
@@ -930,6 +936,8 @@ function updateCertificateTemplatePreview() {
 function fillCertificateTemplateForm(moduleId) {
   const template = certificateTemplates.find((item) => item.module_id === moduleId)
     || defaultCertificateTemplate(moduleId);
+  document.querySelector("#template-layout-style").value =
+    template.layout_style === "classic" ? "classic" : "qualification";
   document.querySelector("#template-issuer").value = template.issuer_name || "";
   document.querySelector("#template-title").value = template.certificate_title || "";
   document.querySelector("#template-qualification").value = template.qualification_label || "";
@@ -998,6 +1006,7 @@ async function saveCertificateTemplate(event) {
   const existing = certificateTemplates.find((template) => template.module_id === moduleId);
   const payload = {
     module_id: moduleId,
+    layout_style: document.querySelector("#template-layout-style").value,
     issuer_name: document.querySelector("#template-issuer").value.trim(),
     certificate_title: document.querySelector("#template-title").value.trim(),
     qualification_label: document.querySelector("#template-qualification").value.trim(),
@@ -1153,6 +1162,10 @@ function bindEvents() {
   document.querySelector("#template-module").addEventListener("change", (event) => {
     fillCertificateTemplateForm(event.target.value);
   });
+  document.querySelector("#template-layout-style").addEventListener(
+    "change",
+    updateCertificateTemplatePreview,
+  );
   ["#template-title", "#template-issuer", "#template-product-credit"].forEach((selector) => {
     document.querySelector(selector).addEventListener("input", updateCertificateTemplatePreview);
   });

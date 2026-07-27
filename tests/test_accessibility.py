@@ -130,6 +130,8 @@ def test_identity_status_and_admin_user_management_are_available():
     admin = (PUBLIC_PATH / "admin.html").read_text(encoding="utf-8")
     admin_script = (PUBLIC_PATH / "js" / "admin.js").read_text(encoding="utf-8")
     profile = (PUBLIC_PATH / "profile.html").read_text(encoding="utf-8")
+    certificate = (PUBLIC_PATH / "certificate.html").read_text(encoding="utf-8")
+    certificate_script = (PUBLIC_PATH / "js" / "certificate.js").read_text(encoding="utf-8")
     login = (PUBLIC_PATH / "login.html").read_text(encoding="utf-8")
     admin_login = (PUBLIC_PATH / "admin-login.html").read_text(encoding="utf-8")
     schema = (root / "database" / "schema.sql").read_text(encoding="utf-8")
@@ -140,6 +142,12 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'id="user-details-public-id"' in admin
     assert 'id="user-details-cancel"' in admin
     assert 'id="user-details-delete"' in admin
+    assert 'id="template-layout-style"' in admin
+    assert 'id="certificate-model-select"' in certificate
+    assert 'id="qualification-certificate"' in certificate
+    assert 'id="classic-certificate"' in certificate
+    assert 'data-certificate-qr' in certificate
+    assert 'applyCertificateModel' in certificate_script
     assert 'admin_update_user_profile' in admin_script
     assert 'admin_delete_user_account' in admin_script
     assert 'create or replace function public.admin_update_user_profile' in schema
@@ -151,6 +159,7 @@ def test_identity_status_and_admin_user_management_are_available():
     assert "role = 'student' and public_id ~ '^ST-[0-9]{5}$'" in schema
     assert "role = 'admin' and public_id ~ '^ADM-[0-9]{5}$'" in schema
     assert "role = 'instructor' and public_id ~ '^REV-[0-9]{5}$'" in schema
+    assert "layout_style in ('qualification', 'classic')" in schema
     assert product_credit in login
     assert product_credit in admin_login
     assert ".status-pill," in stylesheet
@@ -160,3 +169,6 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'color: #fff !important' in stylesheet
     assert ".professional-module-item .module-publish-marker" in stylesheet
     assert ".feed-marker.material-symbols-outlined" in stylesheet
+    assert ".certificate-frame.classic-certificate" in stylesheet
+    assert 'html[data-theme="dark"] .formula-box code' in stylesheet
+    assert "color: #ffe0a3 !important" in stylesheet
