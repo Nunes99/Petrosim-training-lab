@@ -4,50 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Laboratório de economia do petróleo PetroSimLab.">
-  <title>Petroleum Economics Lab | PetroSimLab</title>
+  <title>Laboratório de Economia do Petróleo | PetroSimLab</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>Economics Lab</small></div></a>
+    <a class="brand" href="/"><span class="brand-mark">PS</span><div><strong>PetroSimLab</strong><small>Economia do petróleo</small></div></a>
     <nav><a href="/#modules">Laboratórios</a><a href="/dashboard">Meu painel</a></nav>
   </header>
+  <nav class="lab-subnav site-section-nav" aria-label="Secções do laboratório">
+    <a href="#theory">01 · Fundamentos</a><a href="#assumptions">02 · Premissas</a>
+    <a href="#dashboard-results">03 · Painel</a><a href="#chart-builder">04 · Gráficos</a>
+    <a href="#dcf-table-section">05 · Tabela financeira</a>
+  </nav>
   <main>
     <section class="lab-hero">
-      <span class="eyebrow">Petroleum economics · 60 min</span>
+      <span class="eyebrow">Economia do petróleo · 60 min</span>
       <h1>Decisões de investimento orientadas por valor.</h1>
-      <p>Explore fluxo de caixa, NPV, IRR, payback e índice de rentabilidade em projetos de energia.</p>
+      <p>Explore fluxo de caixa, valor presente líquido, taxa interna de retorno, prazo de recuperação e rentabilidade em projetos de energia.</p>
     </section>
-    <nav class="lab-subnav" aria-label="Secções do laboratório">
-      <a href="#theory">01 · Fundamentos</a><a href="#assumptions">02 · Premissas</a>
-      <a href="#dashboard-results">03 · Dashboard</a><a href="#dcf-table-section">04 · Tabela DCF</a>
-    </nav>
     <section class="section lab-content">
       <div id="theory" class="theory-panel anchor-section">
         <span class="eyebrow">Leitura obrigatória</span>
         <h2>Fundamentos da avaliação económica</h2>
         <p>O valor do dinheiro muda no tempo. A taxa de desconto representa o custo de oportunidade e o risco; por isso, fluxos futuros precisam ser trazidos ao valor presente.</p>
         <div class="theory-grid">
-          <article><strong>NPV / VAL</strong><span>Valor presente dos fluxos menos o investimento. Positivo indica criação de valor.</span></article>
-          <article><strong>IRR / TIR</strong><span>Taxa que torna o NPV igual a zero. Deve superar a taxa mínima de atratividade.</span></article>
-          <article><strong>Payback</strong><span>Tempo necessário para recuperar o investimento, sem substituir a análise de valor.</span></article>
+          <article><strong>Valor presente líquido</strong><span>Valor presente dos fluxos menos o investimento. Positivo indica criação de valor.</span></article>
+          <article><strong>Taxa interna de retorno</strong><span>Taxa que torna o valor presente líquido igual a zero. Deve superar a taxa mínima de atratividade.</span></article>
+          <article><strong>Prazo de recuperação</strong><span>Tempo necessário para recuperar o investimento, sem substituir a análise de valor.</span></article>
           <article><strong>Sensibilidade</strong><span>Teste de como preço, produção, custos ou taxa alteram a decisão.</span></article>
         </div>
         <label class="check-label theory-check"><input id="theory-check" type="checkbox"> Li e compreendi os fundamentos da avaliação económica.</label>
       </div>
       <div id="assumptions" class="simulator-layout anchor-section economics-workspace">
         <form id="economics-form" class="simulation-form">
-          <div class="case-brief"><strong id="economic-case-name">Selecione um caso</strong><span>Modelo integrado do IM3 Framework: produção, preço, CAPEX, OPEX, imposto e DCF.</span></div>
-          <label>Caso de projeto <span>preset ou manual</span><select id="economic-case"></select></label>
-          <div class="field-row"><label>Tipo de projeto <span>cadeia de valor</span><select id="project-type"></select></label><label>Fase <span>stage-gate</span><select id="project-phase"></select></label></div>
+          <div class="case-brief"><strong id="economic-case-name">Selecione um caso</strong><span>Modelo integrado: produção, preço, investimento, custos operacionais, imposto e fluxo de caixa descontado.</span></div>
+          <label>Caso de projeto <span>predefinição ou introdução manual</span><select id="economic-case"></select></label>
+          <div class="field-row"><label>Tipo de projeto <span>cadeia de valor</span><select id="project-type"></select></label><label>Fase <span>etapa de decisão</span><select id="project-phase"></select></label></div>
           <div class="field-row"><label>Operador <span>contexto</span><select id="project-operator"></select></label><label>Localização <span>Moçambique</span><select id="project-location"></select></label></div>
-          <label>CAPEX total <span>USD</span><input id="initial-investment" type="number" min="1" required></label>
+          <label>Investimento total <span>USD</span><input id="initial-investment" type="number" min="1" required></label>
           <div class="field-row"><label>Capacidade anual <span id="capacity-unit-label">unidades/ano</span><input id="capacity" type="number" min="1" required></label><label>Utilização <span>%</span><input id="utilization" type="number" min="1" max="100" required></label></div>
           <label>Unidade da capacidade <span>editável</span><input id="capacity-unit" type="text" required></label>
           <div class="field-row"><label>Preço unitário <span>USD/unidade</span><input id="unit-price" type="number" min="0.01" step="0.01" required></label><label>Custo variável <span>USD/unidade</span><input id="variable-cost" type="number" min="0" step="0.01" required></label></div>
-          <label>OPEX fixo anual <span>USD/ano</span><input id="fixed-opex" type="number" min="0" required></label>
+          <label>Custo operacional fixo anual <span>USD/ano</span><input id="fixed-opex" type="number" min="0" required></label>
           <details class="cost-details">
-            <summary>Custos complementares do DCF</summary>
+            <summary>Custos complementares do fluxo de caixa descontado</summary>
             <div class="field-row"><label>Ambiental <span>USD/ano</span><input id="environmental-cost" type="number" min="0" value="0"></label><label>Segurança <span>USD/ano</span><input id="security-cost" type="number" min="0" value="0"></label></div>
             <div class="field-row"><label>Conteúdo local <span>USD/ano</span><input id="local-content-cost" type="number" min="0" value="0"></label><label>Tecnologia <span>USD/ano</span><input id="technology-cost" type="number" min="0" value="0"></label></div>
             <div class="field-row"><label>Fator de conversão <span>volume → venda</span><input id="conversion-factor" type="number" min="0.000001" step="any" value="1"></label><label>Depreciação <span>anos</span><input id="depreciation-years" type="number" min="1" max="40" value="10"></label></div>
@@ -66,30 +67,30 @@
           </div>
           <div class="results-header"><span>Análise económica</span><strong id="economics-status">Aguardando dados</strong></div>
           <div class="result-grid">
-            <article><span>NPV / VAL</span><strong id="npv-result">—</strong><small>USD</small></article>
-            <article><span>IRR / TIR</span><strong id="irr-result">—</strong><small>percentagem</small></article>
-            <article><span>Payback</span><strong id="payback-result">—</strong><small>anos</small></article>
-            <article><span>Breakeven</span><strong id="pi-result">—</strong><small>USD/unidade</small></article>
+            <article><span>Valor presente líquido</span><strong id="npv-result">—</strong><small>moeda selecionada</small></article>
+            <article><span>Taxa interna de retorno</span><strong id="irr-result">—</strong><small>percentagem</small></article>
+            <article><span>Prazo de recuperação</span><strong id="payback-result">—</strong><small>anos</small></article>
+            <article><span>Preço de equilíbrio</span><strong id="pi-result">—</strong><small>moeda selecionada por unidade</small></article>
           </div>
           <div id="economics-decision" class="decision-box">Complete a leitura e execute a avaliação.</div>
           <div class="chart-panel">
-            <strong>Sensibilidade do NPV</strong>
-            <div id="sensitivity-chart" class="bar-chart" aria-label="Comparação de NPV por cenário"></div>
+            <strong>Sensibilidade do valor presente líquido</strong>
+            <div id="sensitivity-chart" class="bar-chart" aria-label="Comparação do valor presente líquido por cenário"></div>
           </div>
         </section>
       </div>
-      <section class="panel chart-builder-panel">
+      <section id="chart-builder" class="panel chart-builder-panel anchor-section">
         <div class="panel-header"><div><span class="eyebrow">Construtor de gráficos</span><h2>Parâmetros ao longo do tempo</h2></div></div>
         <div class="chart-controls">
           <label>Série principal<select id="chart-series"></select></label>
           <label>Comparar com<select id="chart-series-secondary"><option value="">Nenhuma série</option></select></label>
           <label>Tipo<select id="chart-type"><option value="line">Linha</option><option value="bar">Barras</option></select></label>
         </div>
-        <div class="dcf-chart-wrap"><canvas id="dcf-chart" height="360" aria-label="Gráfico temporal do DCF"></canvas><div id="chart-empty" class="chart-empty">Execute uma avaliação para construir o gráfico.</div></div>
+        <div class="dcf-chart-wrap"><canvas id="dcf-chart" height="360" aria-label="Gráfico temporal do fluxo de caixa descontado"></canvas><div id="chart-empty" class="chart-empty">Execute uma avaliação para construir o gráfico.</div></div>
         <div id="chart-legend" class="chart-legend"></div>
       </section>
       <section id="dcf-table-section" class="panel anchor-section">
-        <div class="panel-header"><div><span class="eyebrow">Método DCF · do presente para o futuro</span><h2>Tabela financeira completa</h2></div><button id="download-dcf" class="button secondary" type="button" disabled>Exportar CSV</button></div>
+        <div class="panel-header"><div><span class="eyebrow">Fluxo de caixa descontado · do presente para o futuro</span><h2>Tabela financeira completa</h2></div><button id="download-dcf" class="button secondary" type="button" disabled>Exportar tabela</button></div>
         <div class="table-responsive dcf-table-wrap"><table class="data-table dcf-table"><thead id="dcf-table-head"></thead><tbody id="cashflow-table"><tr><td>Execute a avaliação para gerar o perfil anual.</td></tr></tbody></table></div>
       </section>
       <div class="source-note"><strong>Âmbito dos dados</strong><span>O catálogo segue as dimensões do IM3 Framework v2 e o contexto público do <a href="https://www.inp.gov.mz/oportunidades-de-investimento/" target="_blank" rel="noreferrer">INP</a>. Custos, preços e capacidades são premissas de treino editáveis, não projeções dos operadores.</span></div>

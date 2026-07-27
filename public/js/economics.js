@@ -18,7 +18,41 @@ const DCF_COLUMNS = [
 ];
 const MONEY_SERIES = DCF_COLUMNS.filter((key) => key.endsWith("_USD") || key === "Net_Price_For_DCF");
 const CHART_SERIES = DCF_COLUMNS.filter((key) => !["Stage", "Decision_Flag"].includes(key));
-const LABELS = Object.fromEntries(DCF_COLUMNS.map((key) => [key, key.replaceAll("_", " ")]));
+const LABELS = {
+  Year: "Ano", Project_Year: "Ano do projeto", Stage: "Fase", Volume: "Volume",
+  Net_Price_For_DCF: "Preço líquido para o fluxo descontado", Conversion_Factor: "Fator de conversão",
+  Revenue_USD: "Receita", CAPEX_USD: "Investimento de capital", OPEX_USD: "Custo operacional",
+  Environmental_Cost_USD: "Custo ambiental", Security_Cost_USD: "Custo de segurança",
+  Local_Content_Cost_USD: "Custo de conteúdo local", Technology_Cost_USD: "Custo de tecnologia",
+  Decommissioning_Cost_USD: "Custo de descomissionamento", Total_Cash_Cost_USD: "Custo total de caixa",
+  Depreciable_CAPEX_Base_USD: "Base de capital depreciável", Depreciation_USD: "Depreciação",
+  EBITDA_USD: "Resultado antes de juros, impostos, depreciação e amortização",
+  EBIT_USD: "Resultado antes de juros e impostos", Tax_USD: "Imposto",
+  Free_Cash_Flow_USD: "Fluxo de caixa livre", Discount_Rate: "Taxa de desconto",
+  Discount_Factor: "Fator de desconto", PV_FCF_USD: "Valor presente do fluxo de caixa livre",
+  Cumulative_FCF_USD: "Fluxo de caixa livre acumulado",
+  Cumulative_PV_FCF_USD: "Valor presente acumulado do fluxo de caixa livre",
+  NPV_To_Date_USD: "Valor presente líquido acumulado", Decision_Flag: "Indicador de decisão",
+};
+const PROJECT_LABELS = {
+  FLNG: "Gás natural liquefeito flutuante", LNG: "Gás natural liquefeito",
+  "Gas-to-Power": "Gás para eletricidade", Pipeline: "Gasoduto ou oleoduto",
+  Refinery: "Refinaria", Petrochemical: "Petroquímica", "Gas Distribution": "Distribuição de gás",
+  Storage: "Armazenamento", "Gas Processing Plant": "Central de processamento de gás",
+  Fertilizer: "Fertilizantes", CCUS: "Captura, utilização e armazenamento de carbono",
+  Hydrogen: "Hidrogénio", "Upstream Oil": "Produção de petróleo",
+  "Upstream Gas": "Produção de gás", Other: "Outro",
+};
+const PHASE_LABELS = {
+  Concept: "Conceito", "Pre-FEED": "Pré-engenharia", FEED: "Engenharia de base",
+  FID: "Decisão final de investimento", Construction: "Construção",
+  Commissioning: "Comissionamento", Operation: "Operação", Expansion: "Expansão",
+  Decommissioning: "Descomissionamento",
+};
+const VALUE_LABELS = {
+  "Construção": "Construção", "Operação": "Operação", CONSTRUCT: "Em construção",
+  INVEST_CONTINUE: "Investir ou continuar", REVIEW_STAGE_GATE: "Rever antes de avançar",
+};
 
 function currency() { return $("#display-currency").value; }
 function rate() { return currency() === "MZN" ? numeric("#usd-mzn-rate") : 1; }
@@ -31,7 +65,7 @@ function money(value) {
   }).format(Number(value) * rate());
 }
 function tableValue(value, key) {
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return VALUE_LABELS[value] || value;
   if (MONEY_SERIES.includes(key)) return new Intl.NumberFormat("pt-PT", {
     style: "currency", currency: currency(), maximumFractionDigits: 2,
   }).format(converted(value, key));
@@ -43,10 +77,11 @@ $("#theory-check").addEventListener("change", (event) => {
   $("#economics-submit").disabled = !event.target.checked;
 });
 
-function fillSelect(selector, items, valueKey, labelKey = valueKey) {
+function fillSelect(selector, items, valueKey, labelKey = valueKey, translations = {}) {
   $(selector).innerHTML = items.map((item) => {
     const value = typeof item === "string" ? item : item[valueKey];
-    const label = typeof item === "string" ? item : item[labelKey];
+    const rawLabel = typeof item === "string" ? item : item[labelKey];
+    const label = translations[value] || rawLabel;
     return `<option value="${value}">${label}</option>`;
   }).join("");
 }
@@ -76,11 +111,11 @@ async function initialize() {
     if (!response.ok) throw new Error("Catálogo indisponível.");
     catalog = await response.json();
     fillSelect("#economic-case", catalog.economic_cases, "id", "name");
-    fillSelect("#project-type", catalog.project_types);
-    fillSelect("#project-phase", catalog.project_phases);
+    fillSelect("#project-type", catalog.project_types, undefined, undefined, PROJECT_LABELS);
+    fillSelect("#project-phase", catalog.project_phases, undefined, undefined, PHASE_LABELS);
     fillSelect("#project-operator", catalog.operators);
     fillSelect("#project-location", catalog.locations);
-    fillSelect("#chart-series", CHART_SERIES);
+    fillSelect("#chart-series", CHART_SERIES, undefined, undefined, LABELS);
     $("#chart-series-secondary").insertAdjacentHTML("beforeend",
       CHART_SERIES.map((key) => `<option value="${key}">${LABELS[key]}</option>`).join(""));
     $("#chart-series").value = "Free_Cash_Flow_USD";
@@ -99,9 +134,10 @@ function renderTable(rows) {
 }
 
 function renderSensitivity(items) {
+  const scenarioLabels = { Stress: "Cenário adverso", Base: "Cenário base", Upside: "Cenário favorável" };
   const max = Math.max(...items.map((item) => Math.abs(item.npv)), 1);
   $("#sensitivity-chart").innerHTML = items.map((item) => `
-    <div class="bar-row"><span>${item.scenario}</span><div><i class="${item.npv < 0 ? "negative" : ""}"
+    <div class="bar-row"><span>${scenarioLabels[item.scenario] || item.scenario}</span><div><i class="${item.npv < 0 ? "negative" : ""}"
       style="width:${Math.max(Math.abs(item.npv) / max * 100, 3)}%"></i></div><strong>${money(item.npv)}</strong></div>
   `).join("");
 }
@@ -232,7 +268,7 @@ $("#capacity-unit").addEventListener("input", (event) => { $("#capacity-unit-lab
 $("#download-dcf").addEventListener("click", () => {
   if (!resultData) return;
   const rows = resultData.annual_schedule;
-  const csv = [DCF_COLUMNS.join(","), ...rows.map((row) => DCF_COLUMNS.map((key) =>
+  const csv = [DCF_COLUMNS.map((key) => `${LABELS[key]}${MONEY_SERIES.includes(key) ? ` (${currency()})` : ""}`).join(","), ...rows.map((row) => DCF_COLUMNS.map((key) =>
     JSON.stringify(MONEY_SERIES.includes(key) ? converted(row[key], key) : row[key])).join(","))].join("\n");
   const link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));

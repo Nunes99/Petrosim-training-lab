@@ -2,6 +2,11 @@ import { formatDate, requireSession } from "./supabase-client.js";
 
 const status = document.querySelector("#dashboard-status");
 const list = document.querySelector("#simulation-list");
+const moduleLabels = {
+  "Reservoir Reserves Lab": "Laboratório de Reservas",
+  "Petroleum Economics Lab": "Laboratório de Economia do Petróleo",
+  "HSE Decision Trainer": "Simulador de Decisões de Segurança",
+};
 
 function renderEmpty(message) {
   list.innerHTML = "";
@@ -17,7 +22,7 @@ function renderSimulation(simulation) {
 
   const info = document.createElement("div");
   const title = document.createElement("strong");
-  title.textContent = simulation.module;
+  title.textContent = moduleLabels[simulation.module] || simulation.module;
   const date = document.createElement("span");
   date.textContent = formatDate(simulation.created_at);
   info.append(title, date);

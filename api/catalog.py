@@ -119,7 +119,7 @@ ECONOMIC_CASES = [
         "decommissioning_cost": 900000000,
     },
     {
-        "id": "temane_power", "name": "Temane — Gas-to-Power (treino)", "project_type": "Gas-to-Power",
+        "id": "temane_power", "name": "Temane — Gás para eletricidade (treino)", "project_type": "Gas-to-Power",
         "phase": "Operation", "location": "Temane", "operator": "Sasol",
         "capacity": 3940000, "capacity_unit": "MWh/ano", "utilization": 0.86,
         "unit_price": 92, "variable_cost": 38, "fixed_opex": 36000000,
