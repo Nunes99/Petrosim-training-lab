@@ -18,8 +18,12 @@
       <h1>Decisões de investimento orientadas por valor.</h1>
       <p>Explore fluxo de caixa, NPV, IRR, payback e índice de rentabilidade em projetos de energia.</p>
     </section>
+    <nav class="lab-subnav" aria-label="Secções do laboratório">
+      <a href="#theory">01 · Fundamentos</a><a href="#assumptions">02 · Premissas</a>
+      <a href="#dashboard-results">03 · Dashboard</a><a href="#dcf-table-section">04 · Tabela DCF</a>
+    </nav>
     <section class="section lab-content">
-      <div class="theory-panel">
+      <div id="theory" class="theory-panel anchor-section">
         <span class="eyebrow">Leitura obrigatória</span>
         <h2>Fundamentos da avaliação económica</h2>
         <p>O valor do dinheiro muda no tempo. A taxa de desconto representa o custo de oportunidade e o risco; por isso, fluxos futuros precisam ser trazidos ao valor presente.</p>
@@ -31,7 +35,7 @@
         </div>
         <label class="check-label theory-check"><input id="theory-check" type="checkbox"> Li e compreendi os fundamentos da avaliação económica.</label>
       </div>
-      <div class="simulator-layout">
+      <div id="assumptions" class="simulator-layout anchor-section economics-workspace">
         <form id="economics-form" class="simulation-form">
           <div class="case-brief"><strong id="economic-case-name">Selecione um caso</strong><span>Modelo integrado do IM3 Framework: produção, preço, CAPEX, OPEX, imposto e DCF.</span></div>
           <label>Caso de projeto <span>preset ou manual</span><select id="economic-case"></select></label>
@@ -42,6 +46,12 @@
           <label>Unidade da capacidade <span>editável</span><input id="capacity-unit" type="text" required></label>
           <div class="field-row"><label>Preço unitário <span>USD/unidade</span><input id="unit-price" type="number" min="0.01" step="0.01" required></label><label>Custo variável <span>USD/unidade</span><input id="variable-cost" type="number" min="0" step="0.01" required></label></div>
           <label>OPEX fixo anual <span>USD/ano</span><input id="fixed-opex" type="number" min="0" required></label>
+          <details class="cost-details">
+            <summary>Custos complementares do DCF</summary>
+            <div class="field-row"><label>Ambiental <span>USD/ano</span><input id="environmental-cost" type="number" min="0" value="0"></label><label>Segurança <span>USD/ano</span><input id="security-cost" type="number" min="0" value="0"></label></div>
+            <div class="field-row"><label>Conteúdo local <span>USD/ano</span><input id="local-content-cost" type="number" min="0" value="0"></label><label>Tecnologia <span>USD/ano</span><input id="technology-cost" type="number" min="0" value="0"></label></div>
+            <div class="field-row"><label>Fator de conversão <span>volume → venda</span><input id="conversion-factor" type="number" min="0.000001" step="0.0001" value="1"></label><label>Depreciação <span>anos</span><input id="depreciation-years" type="number" min="1" max="40" value="10"></label></div>
+          </details>
           <div class="field-row"><label>Royalty <span>%</span><input id="royalty-rate" type="number" min="0" max="99" required></label><label>Imposto <span>%</span><input id="tax-rate" type="number" min="0" max="99" required></label></div>
           <label>Taxa de desconto <span>% ao ano</span><input id="discount-rate" type="number" min="0" max="99.99" step="0.01" required></label>
           <div class="field-row"><label>Construção <span>anos</span><input id="construction-years" type="number" min="1" max="8" required></label><label>Operação <span>anos</span><input id="project-years" type="number" min="3" max="40" required></label></div>
@@ -49,7 +59,11 @@
           <button id="economics-submit" class="button primary full-width" type="submit" disabled>Avaliar projeto</button>
           <p id="economics-message" class="form-message" role="status"></p>
         </form>
-        <section class="results-panel">
+        <section id="dashboard-results" class="results-panel anchor-section">
+          <div class="currency-toolbar">
+            <label>Moeda de visualização<select id="display-currency"><option value="USD">USD · Dólar</option><option value="MZN">MZN · Metical</option></select></label>
+            <label>Taxa USD → MZN<input id="usd-mzn-rate" type="number" min="0.01" step="0.01" value="63.90"></label>
+          </div>
           <div class="results-header"><span>Análise económica</span><strong id="economics-status">Aguardando dados</strong></div>
           <div class="result-grid">
             <article><span>NPV / VAL</span><strong id="npv-result">—</strong><small>USD</small></article>
@@ -64,9 +78,19 @@
           </div>
         </section>
       </div>
-      <section class="panel">
-        <div class="panel-header"><div><span class="eyebrow">Modelo anual</span><h2>Fluxo de caixa do projeto</h2></div></div>
-        <div class="table-responsive"><table class="data-table"><thead><tr><th>Ano / fase</th><th>Volume</th><th>Receita</th><th>OPEX</th><th>CAPEX</th><th>Fluxo livre</th></tr></thead><tbody id="cashflow-table"><tr><td colspan="6">Execute a avaliação para gerar o perfil anual.</td></tr></tbody></table></div>
+      <section class="panel chart-builder-panel">
+        <div class="panel-header"><div><span class="eyebrow">Construtor de gráficos</span><h2>Parâmetros ao longo do tempo</h2></div></div>
+        <div class="chart-controls">
+          <label>Série principal<select id="chart-series"></select></label>
+          <label>Comparar com<select id="chart-series-secondary"><option value="">Nenhuma série</option></select></label>
+          <label>Tipo<select id="chart-type"><option value="line">Linha</option><option value="bar">Barras</option></select></label>
+        </div>
+        <div class="dcf-chart-wrap"><canvas id="dcf-chart" height="360" aria-label="Gráfico temporal do DCF"></canvas><div id="chart-empty" class="chart-empty">Execute uma avaliação para construir o gráfico.</div></div>
+        <div id="chart-legend" class="chart-legend"></div>
+      </section>
+      <section id="dcf-table-section" class="panel anchor-section">
+        <div class="panel-header"><div><span class="eyebrow">Método DCF · do presente para o futuro</span><h2>Tabela financeira completa</h2></div><button id="download-dcf" class="button secondary" type="button" disabled>Exportar CSV</button></div>
+        <div class="table-responsive dcf-table-wrap"><table class="data-table dcf-table"><thead id="dcf-table-head"></thead><tbody id="cashflow-table"><tr><td>Execute a avaliação para gerar o perfil anual.</td></tr></tbody></table></div>
       </section>
       <div class="source-note"><strong>Âmbito dos dados</strong><span>O catálogo segue as dimensões do IM3 Framework v2 e o contexto público do <a href="https://www.inp.gov.mz/oportunidades-de-investimento/" target="_blank" rel="noreferrer">INP</a>. Custos, preços e capacidades são premissas de treino editáveis, não projeções dos operadores.</span></div>
     </section>

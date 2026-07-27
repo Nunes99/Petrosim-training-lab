@@ -397,6 +397,34 @@ select { width: 100%; padding: 11px 12px; color: var(--ink); background: white; 
 .source-note { display: flex; gap: 12px; margin-top: 22px; padding: 16px 18px; color: var(--muted); background: #f7fafb; border: 1px solid var(--line); border-radius: 9px; font-size: .82rem; }
 .source-note strong { flex: 0 0 auto; color: var(--ink); }
 .source-note a { color: var(--accent-dark); text-decoration: underline; }
+.anchor-section { scroll-margin-top: 132px; }
+.lab-subnav {
+  position: sticky; top: 74px; z-index: 15; display: flex; gap: 8px; padding: 10px 8%;
+  overflow-x: auto; background: rgba(244,247,249,.96); border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+}
+.lab-subnav a { flex: 0 0 auto; padding: 8px 12px; color: var(--muted); background: white; border: 1px solid var(--line); border-radius: 999px; font-size: .8rem; font-weight: 700; }
+.lab-subnav a:hover { color: var(--ink); border-color: var(--accent); }
+.economics-workspace { align-items: start; }
+.economics-workspace .simulation-form { max-height: calc(100vh - 116px); overflow-y: auto; scrollbar-width: thin; }
+.economics-workspace .results-panel { position: sticky; top: 126px; }
+.currency-toolbar, .chart-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; padding: 14px; background: #f3f6f8; border-radius: 10px; }
+.currency-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cost-details { padding: 14px; border: 1px solid var(--line); border-radius: 9px; }
+.cost-details summary { cursor: pointer; color: var(--accent-dark); font-weight: 800; }
+.cost-details[open] summary { margin-bottom: 14px; }
+.chart-builder-panel { margin-top: 24px; }
+.dcf-chart-wrap { position: relative; min-height: 380px; overflow-x: auto; padding: 12px; background: #fbfcfd; border: 1px solid var(--line); border-radius: 10px; }
+.dcf-chart-wrap canvas { display: block; }
+.chart-empty { position: absolute; inset: 0; display: grid; place-content: center; color: var(--muted); text-align: center; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; color: var(--muted); font-size: .78rem; }
+.chart-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; }
+.dcf-table-wrap { max-height: 620px; border: 1px solid var(--line); border-radius: 9px; }
+.dcf-table { min-width: 4200px; }
+.dcf-table thead { position: sticky; top: 0; z-index: 2; background: var(--navy); color: white; }
+.dcf-table th, .dcf-table td { padding: 10px 12px; }
+.dcf-table tbody tr:nth-child(even) { background: #f7fafb; }
+.dcf-table tbody tr:hover { background: #fff5e7; }
 
 @media (max-width: 980px) {
   .hero, .auth-layout, .simulator-layout, .admin-grid { grid-template-columns: 1fr; }
@@ -413,6 +441,9 @@ select { width: 100%; padding: 11px 12px; color: var(--ink); background: white; 
   .operations-brief { grid-template-columns: repeat(2, 1fr); }
   .immersive-scenario { grid-template-columns: 1fr; }
   .scenario-visual { min-height: 340px; }
+  .economics-workspace .simulation-form { max-height: none; overflow: visible; }
+  .economics-workspace .results-panel { position: static; }
+  .chart-controls { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .topbar nav { display: none; }
@@ -423,4 +454,7 @@ select { width: 100%; padding: 11px 12px; color: var(--ink); background: white; 
   .history-result { text-align: left; }
   .field-row { grid-template-columns: 1fr; }
   .side-nav { grid-template-columns: 1fr; }
+  .currency-toolbar { grid-template-columns: 1fr; }
+  .lab-subnav { padding-inline: 5%; }
+  .source-note { flex-direction: column; }
 }

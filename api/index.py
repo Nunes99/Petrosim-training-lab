@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from math import isfinite
 
 from fastapi import FastAPI, HTTPException
@@ -127,6 +128,12 @@ class IntegratedProjectInput(BaseModel):
     project_years: int = Field(ge=3, le=40)
     construction_years: int = Field(ge=1, le=8)
     decommissioning_cost: float = Field(ge=0)
+    conversion_factor: float = Field(gt=0, default=1)
+    environmental_cost: float = Field(ge=0, default=0)
+    security_cost: float = Field(ge=0, default=0)
+    local_content_cost: float = Field(ge=0, default=0)
+    technology_cost: float = Field(ge=0, default=0)
+    depreciation_years: int = Field(ge=1, le=40, default=10)
 
 
 class HSEInput(BaseModel):
@@ -450,37 +457,95 @@ def evaluate_project_economics(data: ProjectEconomicsInput):
 
 
 def integrated_cash_flows(data: IntegratedProjectInput, price_factor: float = 1.0, capex_factor: float = 1.0):
+    base_year = date.today().year
     initial = data.capex * capex_factor / data.construction_years
+    depreciable_base = data.capex * capex_factor
+    annual_depreciation = depreciable_base / min(data.depreciation_years, data.project_years)
     flows = []
     schedule = [{
-        "year": 0, "stage": "Construção", "volume": 0, "revenue": 0,
-        "opex": 0, "tax": 0, "capex": round(initial, 2),
-        "free_cash_flow": round(-initial, 2),
+        "Year": base_year, "Project_Year": 0, "Stage": "Construção", "Volume": 0,
+        "Net_Price_For_DCF": round(data.unit_price * price_factor, 4),
+        "Conversion_Factor": data.conversion_factor, "Revenue_USD": 0,
+        "CAPEX_USD": round(initial, 2), "OPEX_USD": 0,
+        "Environmental_Cost_USD": 0, "Security_Cost_USD": 0,
+        "Local_Content_Cost_USD": 0, "Technology_Cost_USD": 0,
+        "Decommissioning_Cost_USD": 0, "Total_Cash_Cost_USD": round(initial, 2),
+        "Depreciable_CAPEX_Base_USD": round(depreciable_base, 2), "Depreciation_USD": 0,
+        "EBITDA_USD": 0, "EBIT_USD": 0, "Tax_USD": 0,
+        "Free_Cash_Flow_USD": round(-initial, 2), "Discount_Rate": data.discount_rate,
+        "Discount_Factor": 1, "PV_FCF_USD": round(-initial, 2),
+        "Cumulative_FCF_USD": round(-initial, 2), "Cumulative_PV_FCF_USD": round(-initial, 2),
+        "NPV_To_Date_USD": round(-initial, 2), "Decision_Flag": "CONSTRUCT",
     }]
+    cumulative_fcf = -initial
+    cumulative_pv = -initial
     for year in range(1, data.construction_years):
         construction_capex = data.capex * capex_factor / data.construction_years
         flows.append(-construction_capex)
+        discount_factor = 1 / ((1 + data.discount_rate) ** year)
+        pv_fcf = -construction_capex * discount_factor
+        cumulative_fcf -= construction_capex
+        cumulative_pv += pv_fcf
         schedule.append({
-            "year": year, "stage": "Construção", "volume": 0, "revenue": 0,
-            "opex": 0, "tax": 0, "capex": round(construction_capex, 2),
-            "free_cash_flow": round(-construction_capex, 2),
+            "Year": base_year + year, "Project_Year": year, "Stage": "Construção", "Volume": 0,
+            "Net_Price_For_DCF": round(data.unit_price * price_factor, 4),
+            "Conversion_Factor": data.conversion_factor, "Revenue_USD": 0,
+            "CAPEX_USD": round(construction_capex, 2), "OPEX_USD": 0,
+            "Environmental_Cost_USD": 0, "Security_Cost_USD": 0,
+            "Local_Content_Cost_USD": 0, "Technology_Cost_USD": 0,
+            "Decommissioning_Cost_USD": 0, "Total_Cash_Cost_USD": round(construction_capex, 2),
+            "Depreciable_CAPEX_Base_USD": round(depreciable_base, 2), "Depreciation_USD": 0,
+            "EBITDA_USD": 0, "EBIT_USD": 0, "Tax_USD": 0,
+            "Free_Cash_Flow_USD": round(-construction_capex, 2), "Discount_Rate": data.discount_rate,
+            "Discount_Factor": round(discount_factor, 8), "PV_FCF_USD": round(pv_fcf, 2),
+            "Cumulative_FCF_USD": round(cumulative_fcf, 2),
+            "Cumulative_PV_FCF_USD": round(cumulative_pv, 2),
+            "NPV_To_Date_USD": round(cumulative_pv, 2), "Decision_Flag": "CONSTRUCT",
         })
     for operation_year in range(1, data.project_years + 1):
         calendar_year = data.construction_years - 1 + operation_year
         ramp = 0.65 if operation_year == 1 else 0.85 if operation_year == 2 else 1.0
         volume = data.capacity * data.utilization * ramp
-        revenue = volume * data.unit_price * price_factor
+        net_price = data.unit_price * price_factor
+        revenue = volume * data.conversion_factor * net_price
         royalty = revenue * data.royalty_rate
         opex = volume * data.variable_cost + data.fixed_opex
-        taxable = max(revenue - royalty - opex, 0)
-        tax = taxable * data.tax_rate
+        environmental = data.environmental_cost
+        security = data.security_cost
+        local_content = data.local_content_cost
+        technology = data.technology_cost
         decom = data.decommissioning_cost if operation_year == data.project_years else 0
-        cash = revenue - royalty - opex - tax - decom
+        depreciation = annual_depreciation if operation_year <= data.depreciation_years else 0
+        total_cash_cost = royalty + opex + environmental + security + local_content + technology + decom
+        ebitda = revenue - royalty - opex - environmental - security - local_content - technology
+        ebit = ebitda - depreciation
+        tax = max(ebit, 0) * data.tax_rate
+        cash = ebitda - tax - decom
         flows.append(cash)
+        discount_factor = 1 / ((1 + data.discount_rate) ** calendar_year)
+        pv_fcf = cash * discount_factor
+        cumulative_fcf += cash
+        cumulative_pv += pv_fcf
         schedule.append({
-            "year": calendar_year, "stage": "Operação", "volume": round(volume, 2),
-            "revenue": round(revenue, 2), "opex": round(opex, 2),
-            "tax": round(tax, 2), "capex": 0, "free_cash_flow": round(cash, 2),
+            "Year": base_year + calendar_year, "Project_Year": calendar_year,
+            "Stage": "Operação", "Volume": round(volume, 2),
+            "Net_Price_For_DCF": round(net_price, 4), "Conversion_Factor": data.conversion_factor,
+            "Revenue_USD": round(revenue, 2), "CAPEX_USD": 0, "OPEX_USD": round(opex, 2),
+            "Environmental_Cost_USD": round(environmental, 2),
+            "Security_Cost_USD": round(security, 2),
+            "Local_Content_Cost_USD": round(local_content, 2),
+            "Technology_Cost_USD": round(technology, 2),
+            "Decommissioning_Cost_USD": round(decom, 2),
+            "Total_Cash_Cost_USD": round(total_cash_cost, 2),
+            "Depreciable_CAPEX_Base_USD": round(depreciable_base, 2),
+            "Depreciation_USD": round(depreciation, 2), "EBITDA_USD": round(ebitda, 2),
+            "EBIT_USD": round(ebit, 2), "Tax_USD": round(tax, 2),
+            "Free_Cash_Flow_USD": round(cash, 2), "Discount_Rate": data.discount_rate,
+            "Discount_Factor": round(discount_factor, 8), "PV_FCF_USD": round(pv_fcf, 2),
+            "Cumulative_FCF_USD": round(cumulative_fcf, 2),
+            "Cumulative_PV_FCF_USD": round(cumulative_pv, 2),
+            "NPV_To_Date_USD": round(cumulative_pv, 2),
+            "Decision_Flag": "INVEST_CONTINUE" if cumulative_pv >= 0 else "REVIEW_STAGE_GATE",
         })
     return initial, flows, schedule
 
@@ -494,9 +559,9 @@ def evaluate_integrated_project(data: IntegratedProjectInput):
     payback = None
     for row in schedule[1:]:
         previous = cumulative
-        cumulative += row["free_cash_flow"]
-        if cumulative >= 0 and row["free_cash_flow"] > 0:
-            payback = row["year"] - 1 + (-previous / row["free_cash_flow"])
+        cumulative += row["Free_Cash_Flow_USD"]
+        if cumulative >= 0 and row["Free_Cash_Flow_USD"] > 0:
+            payback = row["Project_Year"] - 1 + (-previous / row["Free_Cash_Flow_USD"])
             break
     sensitivities = []
     for label, price_factor, capex_factor in [

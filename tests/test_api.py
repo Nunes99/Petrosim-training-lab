@@ -168,6 +168,9 @@ def test_integrated_economics_covers_construction_and_operation():
     assert response.status_code == 200
     result = response.json()
     assert len(result["annual_schedule"]) == 18
-    assert result["annual_schedule"][0]["stage"] == "Construção"
+    assert result["annual_schedule"][0]["Stage"] == "Construção"
+    assert result["annual_schedule"][0]["Year"] >= 2026
+    assert "Net_Price_For_DCF" in result["annual_schedule"][-1]
+    assert "Cumulative_PV_FCF_USD" in result["annual_schedule"][-1]
     assert len(result["sensitivities"]) == 3
     assert result["breakeven_price"] > 18
