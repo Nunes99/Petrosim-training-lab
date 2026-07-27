@@ -146,6 +146,8 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'id="certificate-model-select"' in certificate
     assert 'id="qualification-certificate"' in certificate
     assert 'id="classic-certificate"' in certificate
+    assert 'class="brand-mark classic-brandmark"' in certificate
+    assert "<small>Formação técnica aplicada</small>" in certificate
     assert 'data-certificate-qr' in certificate
     assert 'applyCertificateModel' in certificate_script
     assert 'admin_update_user_profile' in admin_script
@@ -170,5 +172,7 @@ def test_identity_status_and_admin_user_management_are_available():
     assert ".professional-module-item .module-publish-marker" in stylesheet
     assert ".feed-marker.material-symbols-outlined" in stylesheet
     assert ".certificate-frame.classic-certificate" in stylesheet
+    assert ".section-sidebar-page > footer" in stylesheet
+    assert "flex: 1 0 auto" in stylesheet
     assert 'html[data-theme="dark"] .formula-box code' in stylesheet
     assert "color: #ffe0a3 !important" in stylesheet
