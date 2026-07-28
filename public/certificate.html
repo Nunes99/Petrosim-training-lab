@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/js/theme.js"></script>
 </head>
-<body class="certificate-page auth-required">
+<body class="certificate-page auth-required certificate-locked">
   <header class="certificate-toolbar">
     <a href="/profile">← Voltar ao perfil</a>
     <div class="certificate-toolbar-actions">
@@ -43,7 +43,7 @@
     <p id="certificate-payment-message" class="form-message" role="status"></p>
   </section>
   <main id="certificate-document" class="certificate-document">
-    <div id="qualification-certificate" class="certificate-frame qualification-certificate">
+    <div id="qualification-certificate" class="certificate-frame qualification-certificate" aria-hidden="true" inert>
       <div class="qualification-layout">
         <section class="qualification-identity">
           <header class="qualification-brand">
@@ -148,6 +148,12 @@
           <span id="classic-product-credit">Produto da LMTWEB · Desenvolvido pela LEMOTE</span>
         </div>
       </footer>
+    </div>
+    <div id="certificate-protection-overlay" class="certificate-protection-overlay" role="status" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+      <strong id="certificate-protection-title">Certificado protegido</strong>
+      <p id="certificate-protection-description">O conteúdo será revelado após a autorização administrativa.</p>
+      <small>Pré-visualização censurada para proteção do documento oficial.</small>
     </div>
   </main>
   <p id="certificate-error" class="certificate-error"></p>

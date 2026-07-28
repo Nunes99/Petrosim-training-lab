@@ -52,10 +52,13 @@ function applyCertificateModel(requestedModel, syncUrl = false) {
   const model = requestedModel === "classic" ? "classic" : "qualification";
   const qualification = document.querySelector("#qualification-certificate");
   const classic = document.querySelector("#classic-certificate");
+  const locked = document.body.classList.contains("certificate-locked");
   qualification.classList.toggle("hidden", model !== "qualification");
   qualification.setAttribute("aria-hidden", String(model !== "qualification"));
+  qualification.inert = locked || model !== "qualification";
   classic.classList.toggle("hidden", model !== "classic");
   classic.setAttribute("aria-hidden", String(model !== "classic"));
+  classic.inert = locked || model !== "classic";
   document.querySelector("#certificate-model-select").value = model;
   document.body.dataset.certificateModel = model;
 
@@ -66,9 +69,20 @@ function applyCertificateModel(requestedModel, syncUrl = false) {
   }
 }
 
-function setPrintAuthorized(authorized) {
+function setPrintAuthorized(authorized, protection = {}) {
   document.body.classList.toggle("print-authorized", authorized);
+  document.body.classList.toggle("certificate-locked", !authorized);
   document.querySelector("#print-certificate").disabled = !authorized;
+  const overlay = document.querySelector("#certificate-protection-overlay");
+  overlay.hidden = authorized;
+  overlay.setAttribute("aria-hidden", String(authorized));
+  if (!authorized) {
+    document.querySelector("#certificate-protection-title").textContent =
+      protection.title || "Certificado protegido";
+    document.querySelector("#certificate-protection-description").textContent =
+      protection.description || "O conteúdo será revelado após a autorização administrativa.";
+  }
+  applyCertificateModel(document.body.dataset.certificateModel || "qualification");
 }
 
 function renderPaymentRequest(request) {
@@ -110,7 +124,21 @@ function renderPaymentRequest(request) {
   } else if (request.status === "approved") {
     description.textContent = "Pagamento validado. A impressão oficial está liberada.";
   }
-  setPrintAuthorized(request.status === "approved");
+  const protectionCopy = {
+    awaiting_proof: {
+      title: "Certificado protegido",
+      description: "Envie o comprovativo de pagamento para solicitar a liberação do documento.",
+    },
+    pending: {
+      title: "Comprovativo em análise",
+      description: "O certificado permanecerá censurado até à validação da administração.",
+    },
+    rejected: {
+      title: "Autorização não concedida",
+      description: "Envie um novo comprovativo válido para solicitar outra análise.",
+    },
+  };
+  setPrintAuthorized(request.status === "approved", protectionCopy[request.status]);
 }
 
 function renderPrintRestriction(title, description, statusText) {
@@ -124,7 +152,7 @@ function renderPrintRestriction(title, description, statusText) {
   document.querySelector(".certificate-payment-details").classList.add("hidden");
   document.querySelector("#certificate-payment-instructions").classList.add("hidden");
   document.querySelector("#certificate-payment-form").classList.add("hidden");
-  setPrintAuthorized(false);
+  setPrintAuthorized(false, { title, description });
 }
 
 async function configurePrintAccess(supabase, session, certificate, printPolicy) {
@@ -263,6 +291,14 @@ async function init() {
   const liveTemplate = templateResult.data || {};
   loadedPrintPolicy = { supabase, session, policy: liveTemplate };
   const template = needsLiveTemplate ? { ...liveTemplate, ...snapshot } : snapshot;
+  const requestedModel = parameters.get("model") || template.layout_style || "qualification";
+  applyCertificateModel(requestedModel);
+  await configurePrintAccess(supabase, session, certificate, liveTemplate);
+  if (!document.body.classList.contains("print-authorized")) {
+    document.body.classList.add("auth-ready");
+    return;
+  }
+
   const issuedDate = new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit", month: "long", year: "numeric",
   }).format(new Date(certificate.issued_at));
@@ -340,10 +376,7 @@ async function init() {
     "#certificate-right-stamp",
     assetUrl(supabase, template.institutional_seal_path, defaultAssets.institutional_seal_path),
   );
-  const requestedModel = parameters.get("model") || template.layout_style || "qualification";
-  applyCertificateModel(requestedModel);
   await loadQrCodes(qrSource);
-  await configurePrintAccess(supabase, session, certificate, liveTemplate);
   document.body.classList.add("auth-ready");
 }
 

@@ -146,6 +146,10 @@ def test_identity_status_and_admin_user_management_are_available():
     assert 'id="certificate-model-select"' in certificate
     assert 'id="certificate-payment-panel"' in certificate
     assert 'id="certificate-payment-proof"' in certificate
+    assert 'class="certificate-page auth-required certificate-locked"' in certificate
+    assert 'id="certificate-protection-overlay"' in certificate
+    assert "certificate-locked" in certificate_script
+    assert "Comprovativo em análise" in certificate_script
     assert "Gerar PDF para imprimir" in certificate
     assert 'id="qualification-certificate"' in certificate
     assert 'id="classic-certificate"' in certificate
